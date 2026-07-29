@@ -1,0 +1,49 @@
+name: Baseline Integrity
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install PHP CLI and unzip
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y php-cli unzip
+
+      - name: Verify original ZIP checksum
+        run: |
+          grep 'packages/10-video-wall-and-educational-broadcasting-foundation-0.1.0.zip' CHECKSUMS.sha256 | sha256sum --check --strict
+
+      - name: Test archive integrity
+        run: unzip -t packages/10-video-wall-and-educational-broadcasting-foundation-0.1.0.zip
+
+      - name: Extract package for syntax checks
+        run: |
+          rm -rf .tmp
+          mkdir -p .tmp
+          unzip -q packages/10-video-wall-and-educational-broadcasting-foundation-0.1.0.zip -d .tmp
+
+      - name: Verify extracted-file checksums
+        run: |
+          cd .tmp
+          grep '  video-wall/' ../CHECKSUMS.sha256 | sha256sum --check --strict
+
+      - name: PHP syntax lint
+        run: find .tmp/video-wall -type f -name '*.php' -print0 | sort -z | xargs -0 -n1 php -l
+
+      - name: JavaScript syntax check
+        run: node --check .tmp/video-wall/assets/js/video-wall.js
+
+      - name: Confirm declared plugin version
+        run: |
+          grep -F 'Version: 0.1.0' .tmp/video-wall/video-wall.php
+          grep -F "define('SVW_VERSION','0.1.0')" .tmp/video-wall/video-wall.php

@@ -1,0 +1,17 @@
+4147bef0ed9a198a3c3844b899375fe48367e487a6f4ff2b433af2d8cd92af13  packages/10-video-wall-and-educational-broadcasting-foundation-0.1.0.zip
+
+# Checksums of regular files after extracting the original package
+a785e501c95cd59e985c3e152004514871a5da8e8ef0ed51ef391b8eb8319a65  video-wall/assets/css/admin.css
+4db72849668eee23436133ff204f4e2d889008f488c917ea110643675a639a4e  video-wall/assets/css/video-wall.css
+23bcce40b2f85c5d82fe95aded09115c40bdbc83418a4dc58fd78e932979787f  video-wall/assets/js/video-wall.js
+23d42ad63457156894502ec3da7b736d3c0b9a6dd7193ad8c27a24e29e089056  video-wall/includes/class-svw-activator.php
+e9efb1730ca487331127b245c8f0bdd641330fe62c4ee26e456d96ea2ed716ad  video-wall/includes/class-svw-admin.php
+b392d5e1e8a9b4380cf09177b1b93acb29ea2312e29d888aabd039a9cb5c1c49  video-wall/includes/class-svw-frontend.php
+bc7f55328500b6909dc13c4bfd442e80d8ca83b4b3a6921549ce0eaf65f7a67c  video-wall/includes/class-svw-helpers.php
+5ad53941801e95e51af677a3be03271a5bb19b9383446f346b8eb5bd4a432d99  video-wall/includes/class-svw-interactions.php
+13c4276826e1d374261944deac9c3959c2b4dc83fc28e152a5354daf83c38cc8  video-wall/includes/class-svw-plugin.php
+2c649be72e819fc3cdbe7c03a0b20dd9af9cc54f9604f073e43819748de6e587  video-wall/includes/class-svw-privacy.php
+b66c4859ebb03cd72e5d3b93debbcd77c8fe2a1a440d111673707ca978524ec1  video-wall/includes/class-svw-seo.php
+6a719b615ed5019377e306dd0681e52c632e6c93ccf30d67e90ed7e7e9e83e00  video-wall/readme.txt
+3a116c80a4abc5c8910b642b9dbcb0a38392489c6174da091454da5cd05a8243  video-wall/uninstall.php
+17e1d184c66733cf0cfb8d94a4a323105a151d03c62c353e521f3952e4631ae8  video-wall/video-wall.php
