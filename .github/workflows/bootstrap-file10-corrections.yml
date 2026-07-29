@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - fix/file-10-security-integrity
+  pull_request:
+    branches:
+      - main
 
 permissions:
   contents: write
@@ -14,6 +17,8 @@ jobs:
     steps:
       - name: Check out corrective branch
         uses: actions/checkout@v4
+        with:
+          ref: fix/file-10-security-integrity
 
       - name: Install validation tools
         run: |
