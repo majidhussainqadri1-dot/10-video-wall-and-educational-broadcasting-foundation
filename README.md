@@ -1,38 +1,56 @@
 # File 10 — Video Wall and Educational Broadcasting Foundation
 
-Controlled repository for **File 10** of the **Sabri Social Homeopathy Platform**.
+Controlled source repository for **File 10** of the **Sabri Social Homeopathy Platform**.
 
-## Baseline package
+## Current corrected release
 
 - Plugin: `Video Wall and Educational Broadcasting Foundation`
-- Version: `0.1.0`
+- Corrected version: `0.2.0`
 - WordPress: `6.0+`
 - PHP: `7.4+`
 - Text domain: `video-wall`
-- Package: `packages/10-video-wall-and-educational-broadcasting-foundation-0.1.0.zip`
-- SHA-256: `4147bef0ed9a198a3c3844b899375fe48367e487a6f4ff2b433af2d8cd92af13`
+- Corrected package: `packages/10-video-wall-and-educational-broadcasting-foundation-0.2.0.zip`
+- Corrected SHA-256: `eebed41b671b9eefcae4933000e57e1a15076a1aed1883e1fe0b94b4ad8e6c68`
 
-The archive contains the original `video-wall/` WordPress plugin directory. It has been preserved byte-for-byte as the project-supplied baseline.
+The repository also preserves the project-supplied Version `0.1.0` archive byte-for-byte under `packages/`, together with its original checksum and baseline source tree.
 
-## Declared foundation scope
+## Corrective scope
 
-The package declares public educational video viewing, sixteen fixed categories, Founder immediate publishing, verified-doctor moderation, safe YouTube/Vimeo embeds, validated local video handling, search, filters, trending, views, Like/Dislike, saves, reports, comments, transcripts, references, patient-case safeguards, privacy callbacks, responsive presentation, and `VideoObject` structured data.
+Version `0.2.0` addresses the audit blockers found in Version `0.1.0`:
 
-The package explicitly excludes live streaming, payments, advertising, automatic captions, AI summaries, playlists, fingerprinting, and Reels.
+- WordPress admin publishing bypass;
+- unsafe activation-time page overwriting;
+- missing moderation and report audit history;
+- private Saved Videos caching exposure;
+- incomplete privacy export/erasure and stale reaction counts;
+- partial public posts after upload failure;
+- false blanket “Verified Doctor” labels;
+- false AJAX report-success confirmations;
+- claimed but absent viewing history and resume progress;
+- untracked source architecture;
+- orphaned data, missing schema upgrades, unbounded admin/public listings, N+1 state queries, weak URL/duration validation, inaccurate structured data, and accessibility gaps.
 
-## Declared companion dependencies
+## Repository structure
 
-The original plugin readme instructs that Files 02, 03, 04, 07, and 09 remain active.
+- `video-wall/` — corrected, reviewable plugin source;
+- `packages/` — preserved original ZIP and corrected deterministic ZIP;
+- `tests/` — helper and static contract tests;
+- `tools/build-package.sh` — deterministic package builder;
+- `docs/CORRECTION-AUDIT-0.2.0.md` — defect-to-correction traceability;
+- `docs/STAGING-ACCEPTANCE-0.2.0.md` — remaining real WordPress acceptance gates;
+- `CHECKSUMS.sha256` — original Version 0.1.0 provenance;
+- `CHECKSUMS-0.2.0.sha256` — corrected source/package integrity.
 
-## Installation boundary
+## Validation completed locally
 
-1. Test only on the approved Hostinger staging environment.
-2. Confirm a complete backup and rollback path.
-3. Install the ZIP through WordPress Plugins.
-4. Activate the declared companion modules first.
-5. Test YouTube, Vimeo, and validated local video sources.
-6. Do not promote to live until functional, permission, privacy, responsive, and rollback acceptance is complete.
+- PHP syntax: `10/10 PASS` on PHP `8.4.16`;
+- JavaScript syntax: `PASS` on Node.js `22.16.0`;
+- strict duration helper tests: `PASS`;
+- official/fake YouTube and Vimeo URL tests: `PASS`;
+- static corrective contracts: `PASS`;
+- corrected ZIP integrity: `PASS`;
+- deterministic ZIP SHA-256 recorded.
 
-## Repository status
+## Acceptance boundary
 
-This is an **original-package baseline import**, not a production-completion declaration. See `STATUS.md`, `SOURCE-PROVENANCE.md`, `MANIFEST.md`, and `CHECKSUMS.sha256`.
+Version `0.2.0` is a **code-corrected release candidate**, not yet a production acceptance declaration. It still requires a fresh and upgrade installation on the approved Hostinger staging site, companion-plugin integration, role matrix testing, media tests, privacy requests, cache verification, responsive/accessibility review, backup restoration, rollback, and founder acceptance before merge to production or live deployment.
