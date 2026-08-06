@@ -1,0 +1,88 @@
+name: Baseline Integrity
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-original-package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install PHP CLI and unzip
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y php-cli unzip
+
+      - name: Verify original ZIP checksum
+        run: grep 'packages/10-video-wall-and-educational-broadcasting-foundation-0.1.0.zip' CHECKSUMS.sha256 | sha256sum --check --strict
+
+      - name: Test original archive integrity
+        run: unzip -t packages/10-video-wall-and-educational-broadcasting-foundation-0.1.0.zip
+
+      - name: Extract original package
+        run: |
+          rm -rf .tmp-original
+          mkdir -p .tmp-original
+          unzip -q packages/10-video-wall-and-educational-broadcasting-foundation-0.1.0.zip -d .tmp-original
+
+      - name: Verify original extracted-file checksums
+        run: |
+          cd .tmp-original
+          grep '  video-wall/' ../CHECKSUMS.sha256 | sha256sum --check --strict
+
+      - name: Original PHP syntax lint
+        run: find .tmp-original/video-wall -type f -name '*.php' -print0 | sort -z | xargs -0 -n1 php -l
+
+      - name: Original JavaScript syntax check
+        run: node --check .tmp-original/video-wall/assets/js/video-wall.js
+
+      - name: Confirm original version
+        run: |
+          grep -F 'Version: 0.1.0' .tmp-original/video-wall/video-wall.php
+          grep -F "define('SVW_VERSION','0.1.0')" .tmp-original/video-wall/video-wall.php
+
+  verify-corrected-release:
+    if: ${{ hashFiles('video-wall/video-wall.php') != '' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install PHP, zip, and unzip
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y php-cli zip unzip
+
+      - name: Corrected PHP syntax lint
+        run: find video-wall -type f -name '*.php' -print0 | sort -z | xargs -0 -n1 php -l
+
+      - name: Corrected JavaScript syntax check
+        run: node --check video-wall/assets/js/video-wall.js
+
+      - name: Helper and static contract tests
+        run: ./tests/static-contracts.sh
+
+      - name: Build corrected package deterministically
+        run: ./tools/build-package.sh /tmp/file10-0.2.0.zip
+
+      - name: Verify corrected package and reproducibility
+        shell: bash
+        run: |
+          grep 'packages/10-video-wall-and-educational-broadcasting-foundation-0.2.0.zip' CHECKSUMS-0.2.0.sha256 | sha256sum --check --strict
+          test "$(sha256sum /tmp/file10-0.2.0.zip | cut -d' ' -f1)" = "$(sha256sum packages/10-video-wall-and-educational-broadcasting-foundation-0.2.0.zip | cut -d' ' -f1)"
+          unzip -t packages/10-video-wall-and-educational-broadcasting-foundation-0.2.0.zip
+
+      - name: Verify corrected tracked-source checksums
+        run: grep '  video-wall/' CHECKSUMS-0.2.0.sha256 | sha256sum --check --strict
+
+      - name: Confirm corrected release metadata
+        run: |
+          grep -F 'Version: 0.2.0' video-wall/video-wall.php
+          grep -F "define( 'SVW_VERSION', '0.2.0' );" video-wall/video-wall.php
+          grep -F 'Stable tag: 0.2.0' video-wall/readme.txt

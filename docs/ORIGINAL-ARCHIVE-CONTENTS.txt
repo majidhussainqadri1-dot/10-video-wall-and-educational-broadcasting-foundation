@@ -1,0 +1,25 @@
+Archive: 10-video-wall-and-educational-broadcasting-foundation-0.1.0.zip
+
+video-wall/
+video-wall/readme.txt
+video-wall/includes/
+video-wall/includes/class-svw-frontend.php
+video-wall/includes/class-svw-helpers.php
+video-wall/includes/class-svw-privacy.php
+video-wall/includes/class-svw-plugin.php
+video-wall/includes/class-svw-interactions.php
+video-wall/includes/class-svw-admin.php
+video-wall/includes/class-svw-seo.php
+video-wall/includes/class-svw-activator.php
+video-wall/video-wall.php
+video-wall/uninstall.php
+video-wall/assets/
+video-wall/assets/js/
+video-wall/assets/js/video-wall.js
+video-wall/assets/css/
+video-wall/assets/css/admin.css
+video-wall/assets/css/video-wall.css
+
+Regular files: 14
+Uncompressed regular-file bytes: 43,310
+Compressed archive bytes: 19,216

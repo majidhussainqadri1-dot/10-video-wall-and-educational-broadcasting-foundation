@@ -1,0 +1,51 @@
+name: Corrected Release QA
+
+on:
+  push:
+    branches:
+      - 'fix/**'
+      - 'baseline/**'
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  corrected-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install PHP, zip, and unzip
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y php-cli zip unzip
+
+      - name: PHP syntax lint
+        run: find video-wall -type f -name '*.php' -print0 | sort -z | xargs -0 -n1 php -l
+
+      - name: JavaScript syntax check
+        run: node --check video-wall/assets/js/video-wall.js
+
+      - name: Helper and static contract tests
+        run: ./tests/static-contracts.sh
+
+      - name: Build corrected package deterministically
+        run: ./tools/build-package.sh /tmp/file10-0.2.0.zip
+
+      - name: Verify committed corrected package
+        shell: bash
+        run: |
+          grep 'packages/10-video-wall-and-educational-broadcasting-foundation-0.2.0.zip' CHECKSUMS-0.2.0.sha256 | sha256sum --check --strict
+          test "$(sha256sum /tmp/file10-0.2.0.zip | cut -d' ' -f1)" = "$(sha256sum packages/10-video-wall-and-educational-broadcasting-foundation-0.2.0.zip | cut -d' ' -f1)"
+          unzip -t packages/10-video-wall-and-educational-broadcasting-foundation-0.2.0.zip
+
+      - name: Verify corrected source checksums
+        run: grep '  video-wall/' CHECKSUMS-0.2.0.sha256 | sha256sum --check --strict
+
+      - name: Confirm release metadata
+        run: |
+          grep -F 'Version: 0.2.0' video-wall/video-wall.php
+          grep -F "define( 'SVW_VERSION', '0.2.0' );" video-wall/video-wall.php
+          grep -F 'Stable tag: 0.2.0' video-wall/readme.txt
