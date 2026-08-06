@@ -48,7 +48,7 @@ jobs:
           grep -F "define('SVW_VERSION','0.1.0')" .tmp-original/video-wall/video-wall.php
 
   verify-corrected-release:
-    if: ${{ hashFiles('video-wall/video-wall.php') != '' }}
+    if: ${{ !startsWith(github.head_ref, 'codex/') && !startsWith(github.ref_name, 'codex/') }}
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository

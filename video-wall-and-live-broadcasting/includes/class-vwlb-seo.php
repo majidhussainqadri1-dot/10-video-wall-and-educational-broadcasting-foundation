@@ -1,0 +1,7 @@
+<?php
+/** VideoObject/Event structured data with visibility-safe fields. */
+defined( 'ABSPATH' ) || exit;
+final class VWLB_SEO {
+	public function output(){if(get_query_var('vwlb_video_id')){$video=VWLB_Repository::video_bundle(get_query_var('vwlb_video_id'));$dto=VWLB_Repository::public_video_dto($video);if(!$dto)return;$data=array('@context'=>'https://schema.org','@type'=>'VideoObject','name'=>$dto['title'],'description'=>wp_strip_all_tags($dto['description']),'uploadDate'=>$dto['published_at'],'duration'=>'PT'.(int)$dto['duration_seconds'].'S','url'=>$dto['url']);if(!empty($dto['thumbnail_url']))$data['thumbnailUrl']=array($dto['thumbnail_url']);if($video['provider']!=='local'&&!empty($video['embed_url']))$data['embedUrl']=$video['embed_url'];if($video['provider']==='local'&&!empty($video['source_url']))$data['contentUrl']=$video['source_url'];$this->script($data);}elseif(get_query_var('vwlb_live_id')){$event=VWLB_Live::state(get_query_var('vwlb_live_id'));if(is_wp_error($event))return;$data=array('@context'=>'https://schema.org','@type'=>'BroadcastEvent','name'=>$event['title'],'description'=>wp_strip_all_tags($event['description']),'startDate'=>$event['scheduled_start'],'endDate'=>$event['scheduled_end'],'eventStatus'=>'https://schema.org/EventScheduled','url'=>$event['url']);if('live'===$event['status'])$data['isLiveBroadcast']=true;$this->script($data);}}
+	private function script($data){echo '<script type="application/ld+json">'.wp_json_encode(array_filter($data),JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE).'</script>' . "\n";}
+}
