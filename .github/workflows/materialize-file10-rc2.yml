@@ -1,0 +1,36 @@
+name: Materialize File 10 RC2 source
+
+on:
+  push:
+    branches:
+      - codex/file-10-four-round-completion-v1.0.0-rc2
+
+permissions:
+  contents: write
+
+jobs:
+  materialize:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Materialize audited source bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          payload='.codex/file10-rc2-source.zip'
+          if [[ ! -f "$payload" ]]; then
+            echo 'No materialization payload present; nothing to do.'
+            exit 0
+          fi
+          unzip -o "$payload" -d .
+          chmod +x tests/*.sh tests/*.py tools/*.sh
+          rm -f "$payload"
+          rmdir .codex 2>/dev/null || true
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Complete four-round File 10 correction release 1.0.0-rc2'
+          git push origin HEAD:${GITHUB_REF_NAME}
