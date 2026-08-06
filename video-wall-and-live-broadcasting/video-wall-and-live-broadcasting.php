@@ -21,11 +21,19 @@ define( 'VWLB_DIR', plugin_dir_path( __FILE__ ) );
 define( 'VWLB_URL', plugin_dir_url( __FILE__ ) );
 define( 'VWLB_TEXT_DOMAIN', 'video-wall-live-broadcasting' );
 
-require_once VWLB_DIR . 'includes/class-vwlb-core.php';
-require_once VWLB_DIR . 'includes/class-vwlb-media-video.php';
-require_once VWLB_DIR . 'includes/class-vwlb-live-operations.php';
-require_once VWLB_DIR . 'includes/class-vwlb-governance.php';
-require_once VWLB_DIR . 'includes/class-vwlb-application.php';
+$autoload = array(
+	'class-vwlb-contracts.php', 'class-vwlb-helpers.php', 'class-vwlb-security.php',
+	'class-vwlb-state-machine.php', 'class-vwlb-db.php', 'class-vwlb-activator.php',
+	'class-vwlb-providers.php', 'class-vwlb-repository.php', 'class-vwlb-media.php',
+	'class-vwlb-videos.php', 'class-vwlb-live.php', 'class-vwlb-moderation.php',
+	'class-vwlb-jobs.php', 'class-vwlb-rest.php', 'class-vwlb-frontend.php',
+	'class-vwlb-admin.php', 'class-vwlb-privacy.php', 'class-vwlb-seo.php',
+	'class-vwlb-integrations.php', 'class-vwlb-compatibility.php', 'class-vwlb-diagnostics.php',
+	'class-vwlb-plugin.php',
+);
+foreach ( $autoload as $file ) {
+	require_once VWLB_DIR . 'includes/' . $file;
+}
 
 register_activation_hook( VWLB_FILE, array( 'VWLB_Activator', 'activate' ) );
 register_deactivation_hook( VWLB_FILE, array( 'VWLB_Activator', 'deactivate' ) );
