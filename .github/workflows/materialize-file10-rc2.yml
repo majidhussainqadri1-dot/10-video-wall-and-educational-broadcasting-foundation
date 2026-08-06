@@ -20,14 +20,14 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          [[ -f .payload2/READY ]] || { echo 'Payload incomplete; waiting for READY.'; exit 0; }
-          mapfile -t chunks < <(find .payload2 -maxdepth 1 -type f -name 'part-*.b64' | sort)
-          [[ ${#chunks[@]} -eq 15 ]] || { echo 'Expected 15 chunks.'; exit 1; }
-          : > /tmp/file10-rc2-source.tar.xz
-          for chunk in "${chunks[@]}"; do base64 -d "$chunk" >> /tmp/file10-rc2-source.tar.xz; done
-          echo '381b1fb405fab8edf43a3c3aeea3043c8b71e5aeabd61b5a357c6f3c81d4d0ce  /tmp/file10-rc2-source.tar.xz' | sha256sum --check -
-          xz -t /tmp/file10-rc2-source.tar.xz
-          tar -xJf /tmp/file10-rc2-source.tar.xz -C .
+          [[ -f .codex/READY ]] || { echo 'Payload incomplete; waiting for READY.'; exit 0; }
+          mapfile -t chunks < <(find .codex -maxdepth 1 -type f -name 'chunk-*.b64' | sort)
+          [[ ${#chunks[@]} -eq 8 ]] || { echo 'Expected 8 chunks.'; exit 1; }
+          : > /tmp/file10-rc2-source.zip
+          for chunk in "${chunks[@]}"; do base64 -d "$chunk" >> /tmp/file10-rc2-source.zip; done
+          echo 'f7cf58f27053e5792adebde337976dd5427ee84249209a39c1e67c79f3b93d7d  /tmp/file10-rc2-source.zip' | sha256sum --check -
+          unzip -t /tmp/file10-rc2-source.zip
+          unzip -o /tmp/file10-rc2-source.zip -d .
           chmod +x tests/*.sh tests/*.py tools/*.sh
           rm -rf .payload2 .payload .codex
           git config user.name 'github-actions[bot]'
