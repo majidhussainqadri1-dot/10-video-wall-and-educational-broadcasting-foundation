@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   corrected-release:
-    if: ${{ hashFiles('video-wall-and-live-broadcasting/video-wall-and-live-broadcasting.php') == '' }}
+    if: ${{ !startsWith(github.head_ref, 'codex/') && !startsWith(github.ref_name, 'codex/') }}
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
