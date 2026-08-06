@@ -21,14 +21,17 @@ jobs:
         run: |
           set -euo pipefail
           [[ -f .payload3/READY ]] || { echo 'Payload incomplete; waiting for READY.'; exit 0; }
-          mapfile -t chunks < <(find .payload3 -maxdepth 1 -type f -name 'part-*.b64' | sort)
-          [[ ${#chunks[@]} -eq 10 ]] || { echo "Expected 10 chunks; found ${#chunks[@]}."; exit 1; }
           : > /tmp/file10-rc2-source.tar.xz
-          for chunk in "${chunks[@]}"; do
+          for index in 00 01 02 03 04 05 06 07 08; do
+            chunk=".payload3/part-${index}.b64"
+            [[ -f "$chunk" ]] || { echo "Missing chunk: $chunk"; exit 1; }
             size="$(wc -c < "$chunk")"
-            [[ "$size" -le 8000 ]] || { echo "Oversized chunk: $chunk ($size bytes)"; exit 1; }
-            base64 -d "$chunk" >> /tmp/file10-rc2-source.tar.xz
+            [[ "$size" -ge 8000 ]] || { echo "Short chunk: $chunk ($size bytes)"; exit 1; }
+            head -c 8000 "$chunk" | base64 -d >> /tmp/file10-rc2-source.tar.xz
           done
+          final_chunk='.payload3/part-09.b64'
+          [[ "$(wc -c < "$final_chunk")" -eq 2784 ]] || { echo 'Invalid final chunk size.'; exit 1; }
+          base64 -d "$final_chunk" >> /tmp/file10-rc2-source.tar.xz
           echo '381b1fb405fab8edf43a3c3aeea3043c8b71e5aeabd61b5a357c6f3c81d4d0ce  /tmp/file10-rc2-source.tar.xz' | sha256sum --check -
           xz -t /tmp/file10-rc2-source.tar.xz
 
