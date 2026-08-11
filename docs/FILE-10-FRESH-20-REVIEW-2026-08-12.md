@@ -49,3 +49,6 @@ Retrying a premiere with the same idempotency key could replay the live event an
 
 ## R13 — DEFECT FIXED
 The schema stored a consent version, but finalization treated any historical `recording_consent=1` as current. Scheduling now normalizes a policy consent version, stale consent is rejected on submission, and finalization requires consent for the active version.
+
+## R14 — DEFECT FIXED
+Live-resource creation used the insert ID without checking whether the insert succeeded. It now fails closed on storage failure before audit/response.
