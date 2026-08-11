@@ -37,12 +37,24 @@ jobs:
           xz -t /tmp/file10-v110-overlay.tar.xz
           tar -xJf /tmp/file10-v110-overlay.tar.xz -C .
           chmod +x tests/*.sh tests/*.py tools/*.sh 2>/dev/null || true
-          bash ./tests/run-all.sh
+
+          set +e
+          bash ./tests/run-all.sh > /tmp/file10-materialize-qa.log 2>&1
+          qa_rc=$?
+          set -e
+          cat /tmp/file10-materialize-qa.log
+          if [[ "$qa_rc" -ne 0 ]]; then
+            cp /tmp/file10-materialize-qa.log docs/AUTOMATED-QA-MATERIALIZE-FAILURE.log
+          else
+            rm -f docs/AUTOMATED-QA-MATERIALIZE-FAILURE.log
+          fi
+
           rm -rf .payload4
           rm -f .github/workflows/materialize-file10-v1.1.0-rc1.yml
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -A
           git diff --cached --check
-          git commit -m 'Complete File 10 against new governing plans (1.1.0-rc1)'
+          git commit -m 'Materialize File 10 governing-plan completion source (1.1.0-rc1)'
           git push origin HEAD:${GITHUB_REF_NAME}
+          exit "$qa_rc"
