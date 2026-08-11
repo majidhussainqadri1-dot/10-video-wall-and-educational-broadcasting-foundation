@@ -81,4 +81,10 @@ need "Watermark policy changed. Refresh and submit its current version" "$P/incl
 need "watermark_grant" "$P/includes/class-vwlb-future-intelligence.php" r15-grant-audit
 need "token_hash" "$P/includes/class-vwlb-future-intelligence.php" r15-token-hash
 need "not an absolute copying-prevention guarantee" "$P/includes/class-vwlb-future-intelligence.php" r15-honesty
+# R16 — external processor/AI adapters receive minimized canonical context and only explicitly approved safe options.
+need "safe_processor_context" "$P/includes/class-vwlb-future-adapters.php" r16-safe-context
+need "vwlb_media_track_generation_safe_options" "$P/includes/class-vwlb-future-adapters.php" r16-option-allowlist
+need "vwlb_processor_secret_forbidden" "$P/includes/class-vwlb-future-adapters.php" r16-secret
+need "16384" "$P/includes/class-vwlb-future-adapters.php" r16-size-bound
+need "clinical_authority'=>false" "$P/includes/class-vwlb-future-adapters.php" r16-ai-authority
 printf '%s\n' 'fresh 40-review regression contracts PASS'
