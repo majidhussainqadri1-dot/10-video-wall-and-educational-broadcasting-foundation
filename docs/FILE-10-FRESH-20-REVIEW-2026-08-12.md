@@ -61,3 +61,6 @@ Fresh privacy review rechecked public DTO minimization, private playback/no-stor
 
 ## R17 — CLEAN
 Fresh adversarial provider review rechecked raw-secret rejection, stream credential secrecy, provider fail-closed behavior, outbound HTTPS/SSRF validation and minimized provider state. No new supported repository defect was established in this round.
+
+## R18 — CLEAN
+Fresh review rechecked schema verification/version persistence, upgrade reconciliation, deterministic build, JavaScript syntax, RTL/reduced-motion/accessibility contracts and degraded-provider/queue recovery paths. No new supported repository defect was established in this source/automated scope.
