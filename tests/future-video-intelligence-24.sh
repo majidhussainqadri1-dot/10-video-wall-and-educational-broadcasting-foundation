@@ -3,6 +3,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 P="$ROOT/video-wall-and-live-broadcasting"
 F="$P/includes/class-vwlb-future-intelligence.php"
+A="$P/includes/class-vwlb-future-adapters.php"
 R="$P/includes/class-vwlb-future-rest.php"
 fail(){ echo "FAIL future-24: $*" >&2; exit 1; }
 need(){ grep -R -F -- "$1" "$2" >/dev/null || fail "$3"; }
@@ -22,8 +23,12 @@ need "dvr_window_seconds" "$F" live-dvr
 need "ultra_low" "$F" ultra-low-latency
 need "array('rtmp','srt','webrtc')" "$F" professional-ingest
 need "vwlb_protocol_unavailable" "$F" ingest-fail-closed
+need "vwlb_provider_apply_future_live_policy" "$A" provider-policy-adapter
+need "vwlb_provider_future_policy_unavailable" "$A" provider-policy-fail-closed
 need "simulcast_targets" "$F" simulcast
 need "vwlb_simulcast_secret_forbidden" "$F" no-raw-simulcast-secret
+need "vwlb_simulcast_adapter_transition" "$A" simulcast-adapter
+need "vwlb_simulcast_adapter_unavailable" "$A" simulcast-fail-closed
 need "backup_provider" "$F" backup-stream
 need "redundant_recording" "$F" redundant-recording
 need "broadcast_health_samples" "$F" health-dashboard
@@ -38,11 +43,16 @@ need "2160" "$F" 4k-readiness
 need "'av1','h265','h264'" "$F" codec-readiness
 need "low_bandwidth_required" "$F" low-bandwidth-fallback
 for track in translation dub audio_description sign_language; do need "'$track'" "$F" "track-$track"; done
+need "vwlb_media_track_generation_request" "$A" track-generation-adapter
+need "require_human_review" "$A" generated-track-review-contract
 need "Human review is required before publishing generated tracks" "$F" generated-track-human-review
 need "ai_assisted" "$F" ai-assisted-candidate
 
 # 16–18, 20–21, 24: reviewed knowledge/citation/overlay/correction/search bridge.
 for kind in key_moment citation overlay correction knowledge_bridge; do need "'$kind'" "$F" "annotation-$kind"; done
+need "vwlb_video_intelligence_suggestions" "$A" intelligence-suggestion-adapter
+need "auto_publish'=>false" "$A" no-auto-publication
+need "clinical_authority'=>false" "$A" no-ai-clinical-authority
 need "source_owner" "$F" canonical-source-owner
 need "source_ref" "$F" canonical-source-ref
 need "vwlb_annotation_source_required" "$F" source-fail-closed
@@ -66,11 +76,15 @@ need "reconcile_consent_expiry" "$F" consent-expiry-job
 need "watermark_policies" "$F" watermark-policy
 need "forensic" "$F" forensic-watermark
 need "not an absolute copying-prevention guarantee" "$F" watermark-honesty
+need "/grant" "$R" watermark-grant
 
 # Progressive REST and UI are available without becoming alternate canonical owners.
 need "/future/capabilities" "$R" future-capabilities-endpoint
+need "/future-config/apply" "$R" provider-policy-endpoint
+need "/simulcast-targets/(?P<target>" "$R" simulcast-transition-endpoint
+need "/generate" "$R" track-generation-endpoint
+need "/intelligence/suggest" "$R" suggestion-endpoint
 need "/search-inside" "$R" search-endpoint
-need "/simulcast-targets" "$R" simulcast-endpoint
 need "/consent-links" "$R" consent-endpoint
 need "[vwlb_future_video_tools]" "$P/templates/route.php" future-video-route
 need "[vwlb_future_live_tools]" "$P/templates/route.php" future-live-route
