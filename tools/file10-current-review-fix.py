@@ -25,17 +25,21 @@ new=r'''	public function private_headers(){
 		if(get_query_var('vwlb_live_id')){$e=VWLB_Repository::find('live_events',get_query_var('vwlb_live_id'));if(!$e||'public'!==($e['visibility']??'')||!in_array($e['status']??'',array('scheduled','live','ended','replay_published'),true))VWLB_Helpers::no_cache_private();}
 	}
 '''
-if old not in pt:raise SystemExit('R34 private headers pattern missing')
-pt=pt.replace(old,new,1);privacy.write_text(pt)
+if old in pt: pt=pt.replace(old,new,1)
+elif new not in pt: raise SystemExit('R34 private headers pattern missing')
+privacy.write_text(pt)
 
 ft=frontend.read_text()
 ft=ft.replace("\t\tVWLB_Helpers::no_cache_private();$this->enqueue();$id=get_query_var('vwlb_video_id');", "\t\t$this->enqueue();$id=get_query_var('vwlb_video_id');",1)
 ft=ft.replace("\t\tVWLB_Helpers::no_cache_private();$this->enqueue();$id=get_query_var('vwlb_live_id');", "\t\t$this->enqueue();$id=get_query_var('vwlb_live_id');",1)
 old_state="\tprivate function state($class,$title,$message){return '<section class=\"vwlb-state vwlb-state-'.esc_attr($class).'\" role=\"status\"><h2>'.esc_html($title).'</h2><p>'.esc_html($message).'</p><p><a href=\"'.esc_url(home_url('/')).'\">'.esc_html__('Home',VWLB_TEXT_DOMAIN).'</a></p></section>';}"
 new_state="\tprivate function state($class,$title,$message,$status=0){if(!$status&&'restricted'===$class)$status=404;if($status)status_header((int)$status);return '<section class=\"vwlb-state vwlb-state-'.esc_attr($class).'\" role=\"status\"><h2>'.esc_html($title).'</h2><p>'.esc_html($message).'</p><p><a href=\"'.esc_url(home_url('/')).'\">'.esc_html__('Home',VWLB_TEXT_DOMAIN).'</a></p></section>';}"
-if old_state not in ft:raise SystemExit('R34 state pattern missing')
-ft=ft.replace(old_state,new_state,1);frontend.write_text(ft)
+if old_state in ft: ft=ft.replace(old_state,new_state,1)
+elif new_state not in ft: raise SystemExit('R34 state pattern missing')
+frontend.write_text(ft)
 
-r=reg.read_text();marker="""# R34 — public eligible media may be indexed; private/restricted media is noindex and never emitted into structured data.\nneed \"'published'!==\(\$video['status']\" \"$P/includes/class-vwlb-seo.php\" r34-public-video-only\nneed \"vwlb_public_seo_content_url\" \"$P/includes/class-vwlb-seo.php\" r34-no-raw-source-url\nneed \"'public'!==\(\$raw['visibility']\" \"$P/includes/class-vwlb-seo.php\" r34-public-live-only\nneed \"if\(!\$v||'published'!==\" \"$P/includes/class-vwlb-privacy.php\" r34-conditional-noindex\nneed \"status_header\(\(int\)\$status\)\" \"$P/includes/class-vwlb-frontend.php\" r34-http-state\n"""
+r=reg.read_text();marker="""# R34 — public eligible media may be indexed; private/restricted media is noindex and never emitted into structured data.\nneed \"'published'!==($video['status']??'')\" \"$P/includes/class-vwlb-seo.php\" r34-public-video-only\nneed \"vwlb_public_seo_content_url\" \"$P/includes/class-vwlb-seo.php\" r34-no-raw-source-url\nneed \"'public'!==($raw['visibility']??'')\" \"$P/includes/class-vwlb-seo.php\" r34-public-live-only\nneed \"if(!$v||'published'!==($v['status']??'')\" \"$P/includes/class-vwlb-privacy.php\" r34-conditional-noindex\nneed \"status_header((int)$status)\" \"$P/includes/class-vwlb-frontend.php\" r34-http-state\n"""
 if '# R34 —' not in r:r=r.replace("printf '%s\\n' 'fresh 40-review regression contracts PASS'\n",marker+"printf '%s\\n' 'fresh 40-review regression contracts PASS'\n")
+else:
+    start=r.index('# R34 —'); end=r.index("printf '%s\\n' 'fresh 40-review regression contracts PASS'",start); r=r[:start]+marker+r[end:]
 reg.write_text(r)
