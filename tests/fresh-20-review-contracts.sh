@@ -63,3 +63,9 @@ need '['"'"'consent_version'"'"']=VWLB_Helpers::text' "$P/includes/class-vwlb-re
 
 # R14 — live-resource creation verifies persistence before success.
 need 'Live resource could not be saved.' "$P/includes/class-vwlb-extensions.php" r14-resource-insert
+
+# R19 — runtime/build/release artifact identity advances to 1.2.2-rc1 with schema versions unchanged.
+need 'Version: 1.2.2-rc1' "$P/video-wall-and-live-broadcasting.php" r19-runtime-version
+need 'VWLB_VERSION'"'"', '"'"'1.2.2-rc1' "$P/video-wall-and-live-broadcasting.php" r19-runtime-constant
+need 'VWLB_FUTURE_SCHEMA_VERSION'"'"', '"'"'1.2.0' "$P/video-wall-and-live-broadcasting.php" r19-schema-not-inflated
+need video-wall-and-live-broadcasting-1.2.2-rc1.zip "$ROOT/tools/build-package.sh" r19-build-artifact

@@ -64,3 +64,6 @@ Fresh adversarial provider review rechecked raw-secret rejection, stream credent
 
 ## R18 — CLEAN
 Fresh review rechecked schema verification/version persistence, upgrade reconciliation, deterministic build, JavaScript syntax, RTL/reduced-motion/accessibility contracts and degraded-provider/queue recovery paths. No new supported repository defect was established in this source/automated scope.
+
+## R19 — DEFECT/RELEASE GAP FIXED
+Because R01–R14 changed runtime behavior, retaining software/package identity `1.2.1-rc1` would make release evidence ambiguous. Runtime/build/test metadata is advanced to `1.2.2-rc1`; the canonical release workflow is the remaining R19 substep and must be updated and re-tested before R20; base/extension/Future schema versions remain independently governed and are not inflated.

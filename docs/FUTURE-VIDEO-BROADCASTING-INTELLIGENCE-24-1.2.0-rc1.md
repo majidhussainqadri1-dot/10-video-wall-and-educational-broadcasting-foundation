@@ -1,7 +1,7 @@
 # File 10 — Future Video & Broadcasting Intelligence — 24 Enhancements
 
 **Amendment:** `SSH-F10-FUTURE-VIDEO-BROADCASTING-INTELLIGENCE-24-2026`
-**Software candidate:** `1.2.1-rc1`
+**Software candidate:** `1.2.2-rc1`
 **Canonical owner:** File 10 — Video Wall and Live Broadcasting
 **Status rule:** source/package/automated QA evidence is separate from staging, live deployment and operational acceptance.
 
