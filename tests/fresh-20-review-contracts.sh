@@ -55,3 +55,8 @@ need '$extras=VWLB_Extensions::schedule_live_extras' "$P/includes/class-vwlb-res
 # R12 — premiere mapping is idempotent across live-schedule replay and propagates extras failure.
 need vwlb_premiere_replay_conflict "$P/includes/class-vwlb-extensions.php" r12-premiere-conflict
 need 'WHERE live_event_id=%d LIMIT 1' "$P/includes/class-vwlb-extensions.php" r12-premiere-replay
+
+# R13 — recording consent is bound to the active policy version.
+need vwlb_recording_consent_version_stale "$P/includes/class-vwlb-extensions.php" r13-consent-version
+need 'recording_consent=0 OR consent_version<>%s' "$P/includes/class-vwlb-extensions.php" r13-finalize-version
+need '['"'"'consent_version'"'"']=VWLB_Helpers::text' "$P/includes/class-vwlb-rest.php" r13-policy-version

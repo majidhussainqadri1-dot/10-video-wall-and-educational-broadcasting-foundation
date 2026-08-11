@@ -512,20 +512,8 @@ final class VWLB_Extensions {
 	}
 
 	public static function set_recording_consent( $live_id, $consent, $version='' ) {
-		if(!is_user_logged_in())return VWLB_Helpers::error('vwlb_login_required',__('Sign in first.',VWLB_TEXT_DOMAIN),401);
-		$event=VWLB_Repository::find('live_events',$live_id);
-		if(!$event||!VWLB_Security::can_view($event,'recording_consent'))return VWLB_Helpers::error('vwlb_not_found',__('Live event not found.',VWLB_TEXT_DOMAIN),404);
-		return VWLB_DB::transaction(function()use($event,$consent,$version){
-			global $wpdb;$table=VWLB_Helpers::table('live_attendees');
-			$row=$wpdb->get_row($wpdb->prepare("SELECT * FROM $table WHERE live_event_id=%d AND user_id=%d FOR UPDATE",$event['id'],get_current_user_id()),ARRAY_A);
-			if(!$row)return VWLB_Helpers::error('vwlb_attendee_missing',__('Join the waiting room before setting recording consent.',VWLB_TEXT_DOMAIN),409);
-			$consent=(bool)$consent;$now=VWLB_Helpers::now();$consent_version=VWLB_Helpers::text($version?:'v1',64);
-			$changed=$wpdb->update($table,array('recording_consent'=>$consent?1:0,'consent_version'=>$consent_version,'consented_at'=>$now,'version'=>(int)$row['version']+1,'updated_at'=>$now),array('id'=>$row['id'],'version'=>$row['version']));
-			if(1!==$changed)return VWLB_Helpers::error('vwlb_recording_consent_conflict',__('Recording consent changed concurrently. Refresh and try again.',VWLB_TEXT_DOMAIN),409);
-			VWLB_Helpers::audit('live_attendee',$row['id'],'recording_consent_change',$row['recording_consent']?'yes':'no',$consent?'yes':'no','',array('live_event_id'=>$event['id'],'purpose'=>'recording_consent'));
-			VWLB_Helpers::outbox('LiveRecordingConsentChanged','live',$event['id'],array('attendee_public_id'=>$row['public_id'],'consented'=>$consent,'consent_version'=>$consent_version));
-			return array('recording_consent'=>$consent,'consent_version'=>$consent_version,'consented_at'=>VWLB_Helpers::iso_utc($now));
-		});
+		if(!is_user_logged_in())return VWLB_Helpers::error('vwlb_login_required',__('Sign in first.',VWLB_TEXT_DOMAIN),401);$event=VWLB_Repository::find('live_events',$live_id);if(!$event||!VWLB_Security::can_view($event,'recording_consent'))return VWLB_Helpers::error('vwlb_not_found',__('Live event not found.',VWLB_TEXT_DOMAIN),404);$policy=VWLB_Helpers::json($event['recording_policy_json']??'{}');$required=VWLB_Helpers::text($policy['consent_version']??'v1',64);$submitted=VWLB_Helpers::text($version?:$required,64);$consent=(bool)$consent;if($consent&&!hash_equals($required,$submitted))return VWLB_Helpers::error('vwlb_recording_consent_version_stale',__('The recording-consent text changed. Review the current policy before consenting.',VWLB_TEXT_DOMAIN),409,array('required_consent_version'=>$required));
+		return VWLB_DB::transaction(function()use($event,$consent,$required){global $wpdb;$table=VWLB_Helpers::table('live_attendees');$row=$wpdb->get_row($wpdb->prepare("SELECT * FROM $table WHERE live_event_id=%d AND user_id=%d FOR UPDATE",$event['id'],get_current_user_id()),ARRAY_A);if(!$row)return VWLB_Helpers::error('vwlb_attendee_missing',__('Join the waiting room before setting recording consent.',VWLB_TEXT_DOMAIN),409);$now=VWLB_Helpers::now();$changed=$wpdb->update($table,array('recording_consent'=>$consent?1:0,'consent_version'=>$required,'consented_at'=>$now,'version'=>(int)$row['version']+1,'updated_at'=>$now),array('id'=>$row['id'],'version'=>$row['version']));if(1!==$changed)return VWLB_Helpers::error('vwlb_recording_consent_conflict',__('Recording consent changed concurrently. Refresh and try again.',VWLB_TEXT_DOMAIN),409);VWLB_Helpers::audit('live_attendee',$row['id'],'recording_consent_change',$row['recording_consent']?'yes':'no',$consent?'yes':'no','',array('live_event_id'=>$event['id'],'purpose'=>'recording_consent','consent_version'=>$required));VWLB_Helpers::outbox('LiveRecordingConsentChanged','live',$event['id'],array('attendee_public_id'=>$row['public_id'],'consented'=>$consent,'consent_version'=>$required));return array('recording_consent'=>$consent,'consent_version'=>$required,'consented_at'=>VWLB_Helpers::iso_utc($now));});
 	}
 
 	public static function ask_question( $live_id, $question ) {
@@ -743,14 +731,8 @@ final class VWLB_Extensions {
 	}
 
 	public static function recording_consent_gate( $result, $input, $job ) {
-		$live_id=absint($input['live_event_id']??0);if(!$live_id)return $result;
-		$event=VWLB_Repository::find('live_events',$live_id);if(!$event)return VWLB_Helpers::error('vwlb_live_missing',__('Live event not found for recording finalization.',VWLB_TEXT_DOMAIN),404);
-		$policy=VWLB_Helpers::json($event['recording_policy_json']??'{}');
-		if(empty($policy['record']))return VWLB_Helpers::error('vwlb_recording_not_authorized',__('Recording was not authorized for this live event.',VWLB_TEXT_DOMAIN),409);
-		if(!empty($policy['consent_required'])){
-			global $wpdb;$missing=(int)$wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM ".VWLB_Helpers::table('live_attendees')." WHERE live_event_id=%d AND state IN ('approved','joined') AND recording_consent=0",$event['id']));
-			if($missing>0){VWLB_Helpers::audit('live',$event['id'],'recording_blocked_consent',$event['status'],$event['status'],'Recording finalization blocked because attendee consent is incomplete.',array('missing_consent_count'=>$missing,'purpose'=>'recording_consent'));return VWLB_Helpers::error('vwlb_recording_consent_incomplete',__('Recording cannot be finalized while required attendee consent is incomplete.',VWLB_TEXT_DOMAIN),409);}
-		}
+		$live_id=absint($input['live_event_id']??0);if(!$live_id)return $result;$event=VWLB_Repository::find('live_events',$live_id);if(!$event)return VWLB_Helpers::error('vwlb_live_missing',__('Live event not found for recording finalization.',VWLB_TEXT_DOMAIN),404);$policy=VWLB_Helpers::json($event['recording_policy_json']??'{}');if(empty($policy['record']))return VWLB_Helpers::error('vwlb_recording_not_authorized',__('Recording was not authorized for this live event.',VWLB_TEXT_DOMAIN),409);
+		if(!empty($policy['consent_required'])){global $wpdb;$required=VWLB_Helpers::text($policy['consent_version']??'v1',64);$missing=(int)$wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM ".VWLB_Helpers::table('live_attendees')." WHERE live_event_id=%d AND state IN ('approved','joined') AND (recording_consent=0 OR consent_version<>%s)",$event['id'],$required));if($missing>0){VWLB_Helpers::audit('live',$event['id'],'recording_blocked_consent',$event['status'],$event['status'],'Recording finalization blocked because attendee consent is incomplete or stale.',array('missing_consent_count'=>$missing,'consent_version'=>$required,'purpose'=>'recording_consent'));return VWLB_Helpers::error('vwlb_recording_consent_incomplete',__('Recording cannot be finalized while required attendee consent is incomplete or stale.',VWLB_TEXT_DOMAIN),409);}}
 		return $result;
 	}
 

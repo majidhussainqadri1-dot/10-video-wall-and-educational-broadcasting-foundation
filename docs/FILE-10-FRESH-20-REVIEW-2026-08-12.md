@@ -46,3 +46,6 @@ Capacity/reminder setup used unchecked writes, duplicated reminders on retry, an
 
 ## R12 — DEFECT FIXED
 Retrying a premiere with the same idempotency key could replay the live event and then fail on the unique premiere mapping; extras failures were also ignored. Existing same-video mappings are now replayed safely and conflicts/errors are explicit.
+
+## R13 — DEFECT FIXED
+The schema stored a consent version, but finalization treated any historical `recording_consent=1` as current. Scheduling now normalizes a policy consent version, stale consent is rejected on submission, and finalization requires consent for the active version.
