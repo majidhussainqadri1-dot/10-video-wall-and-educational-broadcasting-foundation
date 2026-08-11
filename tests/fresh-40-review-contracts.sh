@@ -96,4 +96,9 @@ need "if(!\$inserted||!(int)\$wpdb->insert_id)" "$P/includes/class-vwlb-videos.p
 need "'machine_draft'!==\$source&&\$can_review" "$P/includes/class-vwlb-videos.php" r18-human-review
 need "VWLB_Contracts::CAP_REVIEW" "$P/includes/class-vwlb-videos.php" r18-review-cap
 need "Caption could not be saved" "$P/includes/class-vwlb-videos.php" r18-db-check
+# R19 — channel/playlist creation and playlist replacement never report success after failed DB writes.
+need "Channel could not be created" "$P/includes/class-vwlb-videos.php" r19-channel
+need "Playlist could not be created" "$P/includes/class-vwlb-videos.php" r19-playlist
+need "Existing playlist items could not be replaced" "$P/includes/class-vwlb-videos.php" r19-delete
+need "A playlist item could not be saved" "$P/includes/class-vwlb-videos.php" r19-item
 printf '%s\n' 'fresh 40-review regression contracts PASS'
