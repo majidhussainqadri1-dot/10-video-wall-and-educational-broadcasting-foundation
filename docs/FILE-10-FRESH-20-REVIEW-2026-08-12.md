@@ -16,3 +16,6 @@ Waiting-room capacity enforcement was race-prone and attendee insert/update resu
 
 ## R02 — DEFECT FIXED
 Recording-consent changes could report success after a lost optimistic update. The attendee row is now locked and the versioned update must affect exactly one row before audit/event response.
+
+## R03 — DEFECT FIXED
+Question submission could return an ID after a failed insert, and moderation used a global capability without binding authority to the question’s live event. Both persistence and object-scoped moderation now fail closed under a row lock/CAS.

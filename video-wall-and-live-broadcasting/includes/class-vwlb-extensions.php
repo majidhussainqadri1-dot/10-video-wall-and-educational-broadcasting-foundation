@@ -533,7 +533,8 @@ final class VWLB_Extensions {
 		$rate=VWLB_Security::rate_limit('live_question',10,MINUTE_IN_SECONDS);if(is_wp_error($rate))return $rate;
 		$event=VWLB_Repository::find('live_events',$live_id);if(!$event||!VWLB_Security::can_view($event,'live_question'))return VWLB_Helpers::error('vwlb_not_found',__('Live event not found.',VWLB_TEXT_DOMAIN),404);
 		$q=VWLB_Helpers::textarea($question,4000);if(!$q)return VWLB_Helpers::error('vwlb_question_required',__('Question is required.',VWLB_TEXT_DOMAIN),422);
-		global $wpdb;$now=VWLB_Helpers::now();$wpdb->insert(VWLB_Helpers::table('live_questions'),array('public_id'=>VWLB_Helpers::public_id('q'),'live_event_id'=>$event['id'],'user_id'=>get_current_user_id(),'question'=>$q,'status'=>'queued','answer'=>'','moderator_id'=>0,'version'=>1,'created_at'=>$now,'updated_at'=>$now));
+		global $wpdb;$now=VWLB_Helpers::now();$saved=$wpdb->insert(VWLB_Helpers::table('live_questions'),array('public_id'=>VWLB_Helpers::public_id('q'),'live_event_id'=>$event['id'],'user_id'=>get_current_user_id(),'question'=>$q,'status'=>'queued','answer'=>'','moderator_id'=>0,'version'=>1,'created_at'=>$now,'updated_at'=>$now));
+		if(!$saved||!(int)$wpdb->insert_id)return VWLB_Helpers::error('vwlb_database_error',__('Question could not be saved.',VWLB_TEXT_DOMAIN),500);
 		$id=(int)$wpdb->insert_id;VWLB_Helpers::audit('live_question',$id,'submit','','queued','',array('live_event_id'=>$event['id']));
 		return array('id'=>$id,'status'=>'queued');
 	}
@@ -541,11 +542,16 @@ final class VWLB_Extensions {
 	public static function moderate_question( $question_id, $status, $answer='' ) {
 		$status=VWLB_Helpers::enum($status,array('approved','answered','dismissed'),'');
 		if(!$status)return VWLB_Helpers::error('vwlb_question_state_invalid',__('Question state is invalid.',VWLB_TEXT_DOMAIN),422);
-		if(!VWLB_Security::can(VWLB_Contracts::CAP_MODERATE,null,'moderate_live_question'))return VWLB_Helpers::error('vwlb_forbidden',__('You cannot moderate questions.',VWLB_TEXT_DOMAIN),403);
-		global $wpdb;$table=VWLB_Helpers::table('live_questions');$row=$wpdb->get_row($wpdb->prepare("SELECT * FROM $table WHERE id=%d",absint($question_id)),ARRAY_A);if(!$row)return VWLB_Helpers::error('vwlb_not_found',__('Question not found.',VWLB_TEXT_DOMAIN),404);
-		$wpdb->update($table,array('status'=>$status,'answer'=>VWLB_Helpers::textarea($answer,10000),'moderator_id'=>get_current_user_id(),'version'=>(int)$row['version']+1,'updated_at'=>VWLB_Helpers::now()),array('id'=>$row['id'],'version'=>$row['version']));
-		VWLB_Helpers::audit('live_question',$row['id'],'moderate',$row['status'],$status);
-		return array('id'=>(int)$row['id'],'status'=>$status);
+		global $wpdb;$table=VWLB_Helpers::table('live_questions');
+		return VWLB_DB::transaction(function()use($wpdb,$table,$question_id,$status,$answer){
+			$row=$wpdb->get_row($wpdb->prepare("SELECT * FROM $table WHERE id=%d FOR UPDATE",absint($question_id)),ARRAY_A);if(!$row)return VWLB_Helpers::error('vwlb_not_found',__('Question not found.',VWLB_TEXT_DOMAIN),404);
+			$event=VWLB_Repository::find('live_events',$row['live_event_id']);
+			if(!$event||!VWLB_Security::can(VWLB_Contracts::CAP_MODERATE,$event,'moderate_live_question'))return VWLB_Helpers::error('vwlb_forbidden',__('You cannot moderate this live event question.',VWLB_TEXT_DOMAIN),403);
+			$changed=$wpdb->update($table,array('status'=>$status,'answer'=>VWLB_Helpers::textarea($answer,10000),'moderator_id'=>get_current_user_id(),'version'=>(int)$row['version']+1,'updated_at'=>VWLB_Helpers::now()),array('id'=>$row['id'],'version'=>$row['version']));
+			if(1!==$changed)return VWLB_Helpers::error('vwlb_question_conflict',__('Question changed concurrently. Refresh and try again.',VWLB_TEXT_DOMAIN),409);
+			VWLB_Helpers::audit('live_question',$row['id'],'moderate',$row['status'],$status,'',array('live_event_id'=>$event['id']));
+			return array('id'=>(int)$row['id'],'status'=>$status);
+		});
 	}
 
 	public static function add_live_resource( $live_id, $data ) {

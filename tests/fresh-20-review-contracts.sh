@@ -11,3 +11,8 @@ need "Waiting-room attendance could not be saved." "$P/includes/class-vwlb-exten
 # R02 — recording consent is locked and CAS persistence is verified.
 need vwlb_recording_consent_conflict "$P/includes/class-vwlb-extensions.php" r02-consent-cas
 need 'live_event_id=%d AND user_id=%d FOR UPDATE' "$P/includes/class-vwlb-extensions.php" r02-consent-lock
+
+# R03 — live Q&A fails closed and moderation is event-scoped.
+need 'Question could not be saved.' "$P/includes/class-vwlb-extensions.php" r03-question-insert
+need 'CAP_MODERATE,$event,'"'"'moderate_live_question'"'"'' "$P/includes/class-vwlb-extensions.php" r03-event-scope
+need vwlb_question_conflict "$P/includes/class-vwlb-extensions.php" r03-question-cas
