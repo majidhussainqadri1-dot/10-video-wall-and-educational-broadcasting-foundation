@@ -2,8 +2,8 @@
 /**
  * Plugin Name: Video Wall and Live Broadcasting
  * Plugin URI: https://www.sabrihomeopathy.com/
- * Description: File 10 canonical owner for recorded video, channels, podcasts, media ingest/processing, captions/transcripts, playback, live events, stream authorization, moderation, recording/replay, rights, provider adapters and File 11 media contracts.
- * Version: 1.1.0-rc1
+ * Description: File 10 canonical owner for recorded video, channels, podcasts, media ingest/processing, captions/transcripts, playback, live events, stream authorization, moderation, recording/replay, rights, provider adapters, File 11 media contracts, and Future Video & Broadcasting Intelligence 24 enhancements.
+ * Version: 1.2.0-rc1
  * Requires at least: 7.0
  * Requires PHP: 8.3
  * Author: Dr. Allamah Majid Hussain Sabri Muhaddith Mursheed
@@ -13,9 +13,10 @@
  */
 defined( 'ABSPATH' ) || exit;
 
-define( 'VWLB_VERSION', '1.1.0-rc1' );
+define( 'VWLB_VERSION', '1.2.0-rc1' );
 define( 'VWLB_SCHEMA_VERSION', '1.1.0' );
 define( 'VWLB_EXT_SCHEMA_VERSION', '1.1.0' );
+define( 'VWLB_FUTURE_SCHEMA_VERSION', '1.2.0' );
 define( 'VWLB_FILE', __FILE__ );
 define( 'VWLB_DIR', plugin_dir_path( __FILE__ ) );
 define( 'VWLB_URL', plugin_dir_url( __FILE__ ) );
@@ -28,6 +29,7 @@ $autoload = array(
 	'class-vwlb-videos.php', 'class-vwlb-live.php', 'class-vwlb-moderation.php',
 	'class-vwlb-jobs.php', 'class-vwlb-extensions.php', 'class-vwlb-podcasts.php',
 	'class-vwlb-observability.php', 'class-vwlb-rest.php', 'class-vwlb-extended-rest.php',
+	'class-vwlb-future-intelligence.php', 'class-vwlb-future-rest.php', 'class-vwlb-future-frontend.php',
 	'class-vwlb-frontend.php', 'class-vwlb-admin.php', 'class-vwlb-privacy.php',
 	'class-vwlb-seo.php', 'class-vwlb-integrations.php', 'class-vwlb-compatibility.php',
 	'class-vwlb-diagnostics.php', 'class-vwlb-plugin.php',
