@@ -483,26 +483,32 @@ final class VWLB_Extensions {
 		if(!$event||!VWLB_Security::can_view($event,'waiting_room'))return VWLB_Helpers::error('vwlb_not_found',__('Live event not found.',VWLB_TEXT_DOMAIN),404);
 		if(!is_user_logged_in())return VWLB_Helpers::error('vwlb_login_required',__('Sign in to join the waiting room.',VWLB_TEXT_DOMAIN),401);
 		if(!in_array($event['status'],array('scheduled','rehearsal','ready','live'),true))return VWLB_Helpers::error('vwlb_waiting_room_closed',__('The waiting room is closed.',VWLB_TEXT_DOMAIN),409);
-		$capacity=self::event_capacity($event);
-		global $wpdb;
-		$table=VWLB_Helpers::table('live_attendees');
-		$existing=$wpdb->get_row($wpdb->prepare("SELECT * FROM $table WHERE live_event_id=%d AND user_id=%d",$event['id'],get_current_user_id()),ARRAY_A);
-		if(!$existing&&$capacity>0){
-			$count=(int)$wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM $table WHERE live_event_id=%d AND state IN ('waiting','approved','joined')",$event['id']));
-			if($count>=$capacity)return VWLB_Helpers::error('vwlb_live_capacity_reached',__('This live event has reached capacity.',VWLB_TEXT_DOMAIN),409);
-		}
-		$state='live'===$event['status']?'joined':'waiting';
-		$reminder=max(0,min(1440,(int)($data['reminder_minutes']??15)));
-		$now=VWLB_Helpers::now();
-		if($existing){
-			$wpdb->update($table,array('state'=>$state,'reminder_minutes'=>$reminder,'joined_at'=>'joined'===$state?$now:($existing['joined_at']??null),'version'=>(int)$existing['version']+1,'updated_at'=>$now),array('id'=>$existing['id'],'version'=>$existing['version']));
-			$id=(int)$existing['id'];
-		}else{
-			$wpdb->insert($table,array('public_id'=>VWLB_Helpers::public_id('att'),'live_event_id'=>$event['id'],'user_id'=>get_current_user_id(),'state'=>$state,'reminder_minutes'=>$reminder,'recording_consent'=>0,'consent_version'=>'','joined_at'=>'joined'===$state?$now:null,'version'=>1,'created_at'=>$now,'updated_at'=>$now));
-			$id=(int)$wpdb->insert_id;
-		}
-		VWLB_Helpers::audit('live_attendee',$id,'waiting_room_join','','waiting','',array('live_event_id'=>$event['id']));
-		return array('attendee_id'=>$id,'state'=>$state,'reminder_minutes'=>$reminder,'recording_consent'=>false);
+		return VWLB_DB::transaction(function()use($event,$data){
+			global $wpdb;
+			$events=VWLB_Helpers::table('live_events');
+			$fresh=$wpdb->get_row($wpdb->prepare("SELECT * FROM $events WHERE id=%d FOR UPDATE",$event['id']),ARRAY_A);
+			if(!$fresh||!VWLB_Security::can_view($fresh,'waiting_room'))return VWLB_Helpers::error('vwlb_not_found',__('Live event not found.',VWLB_TEXT_DOMAIN),404);
+			if(!in_array($fresh['status'],array('scheduled','rehearsal','ready','live'),true))return VWLB_Helpers::error('vwlb_waiting_room_closed',__('The waiting room is closed.',VWLB_TEXT_DOMAIN),409);
+			$table=VWLB_Helpers::table('live_attendees');$uid=get_current_user_id();
+			$existing=$wpdb->get_row($wpdb->prepare("SELECT * FROM $table WHERE live_event_id=%d AND user_id=%d FOR UPDATE",$fresh['id'],$uid),ARRAY_A);
+			$capacity=self::event_capacity($fresh);
+			if(!$existing&&$capacity>0){
+				$count=(int)$wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM $table WHERE live_event_id=%d AND state IN ('waiting','approved','joined')",$fresh['id']));
+				if($count>=$capacity)return VWLB_Helpers::error('vwlb_live_capacity_reached',__('This live event has reached capacity.',VWLB_TEXT_DOMAIN),409);
+			}
+			$state='live'===$fresh['status']?'joined':'waiting';$reminder=max(0,min(1440,(int)($data['reminder_minutes']??15)));$now=VWLB_Helpers::now();
+			if($existing){
+				$changed=$wpdb->update($table,array('state'=>$state,'reminder_minutes'=>$reminder,'joined_at'=>'joined'===$state?$now:($existing['joined_at']??null),'version'=>(int)$existing['version']+1,'updated_at'=>$now),array('id'=>$existing['id'],'version'=>$existing['version']));
+				if(1!==$changed)return VWLB_Helpers::error('vwlb_waiting_room_conflict',__('Waiting-room state changed concurrently. Retry safely.',VWLB_TEXT_DOMAIN),409);
+				$id=(int)$existing['id'];
+			}else{
+				$saved=$wpdb->insert($table,array('public_id'=>VWLB_Helpers::public_id('att'),'live_event_id'=>$fresh['id'],'user_id'=>$uid,'state'=>$state,'reminder_minutes'=>$reminder,'recording_consent'=>0,'consent_version'=>'','joined_at'=>'joined'===$state?$now:null,'version'=>1,'created_at'=>$now,'updated_at'=>$now));
+				if(!$saved||!(int)$wpdb->insert_id)return VWLB_Helpers::error('vwlb_database_error',__('Waiting-room attendance could not be saved.',VWLB_TEXT_DOMAIN),500);
+				$id=(int)$wpdb->insert_id;
+			}
+			VWLB_Helpers::audit('live_attendee',$id,'waiting_room_join','',$state,'',array('live_event_id'=>$fresh['id']));
+			return array('attendee_id'=>$id,'state'=>$state,'reminder_minutes'=>$reminder,'recording_consent'=>$existing?!empty($existing['recording_consent']):false);
+		});
 	}
 
 	public static function set_recording_consent( $live_id, $consent, $version='' ) {
