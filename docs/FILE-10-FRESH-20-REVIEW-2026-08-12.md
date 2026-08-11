@@ -22,3 +22,6 @@ Question submission could return an ID after a failed insert, and moderation use
 
 ## R04 — DEFECT FIXED
 Token creation did not verify its insert, and concurrent download resolutions could both receive the URL even though only one quota increment succeeded. Creation now verifies persistence and the URL is returned only after a successful atomic quota consume.
+
+## R05 — DEFECT FIXED
+A worker crash after claiming a job left status `running`, but the selector only considered pending/retry jobs; the job could never recover. Stale running leases are now reclaimable through a status+attempt CAS claim.

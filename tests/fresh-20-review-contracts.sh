@@ -20,3 +20,7 @@ need vwlb_question_conflict "$P/includes/class-vwlb-extensions.php" r03-question
 # R04 — download tokens persist and consume quota atomically.
 need 'Download token could not be stored.' "$P/includes/class-vwlb-extensions.php" r04-token-insert
 need '1!==$consumed' "$P/includes/class-vwlb-extensions.php" r04-atomic-consume
+
+# R05 — processing jobs reclaim stale running leases with an attempt CAS.
+need 'status='"'"'running'"'"' AND locked_at<' "$P/includes/class-vwlb-jobs.php" r05-stale-running
+need 'AND status=%s AND attempts=%d' "$P/includes/class-vwlb-jobs.php" r05-claim-cas

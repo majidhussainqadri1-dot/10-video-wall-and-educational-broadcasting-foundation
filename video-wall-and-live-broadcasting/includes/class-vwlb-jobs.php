@@ -3,13 +3,15 @@
 defined( 'ABSPATH' ) || exit;
 final class VWLB_Jobs {
 	public static function process($limit=5){
-		global $wpdb;$table=VWLB_Helpers::table('processing_jobs');$worker=VWLB_Helpers::public_id('worker');
-		$jobs=$wpdb->get_results($wpdb->prepare("SELECT * FROM $table WHERE status IN ('pending','retry') AND available_at<=%s AND (locked_at IS NULL OR locked_at<%s) ORDER BY priority ASC,id ASC LIMIT %d",VWLB_Helpers::now(),gmdate('Y-m-d H:i:s',time()-15*MINUTE_IN_SECONDS),max(1,min(20,(int)$limit))),ARRAY_A);
+		global $wpdb;$table=VWLB_Helpers::table('processing_jobs');$worker=VWLB_Helpers::public_id('worker');$now=VWLB_Helpers::now();$stale=gmdate('Y-m-d H:i:s',time()-15*MINUTE_IN_SECONDS);
+		$jobs=$wpdb->get_results($wpdb->prepare("SELECT * FROM $table WHERE ((status IN ('pending','retry') AND available_at<=%s) OR (status='running' AND locked_at<%s)) ORDER BY priority ASC,id ASC LIMIT %d",$now,$stale,max(1,min(20,(int)$limit))),ARRAY_A);
 		foreach($jobs as $job){
-			$locked=$wpdb->update($table,array('status'=>'running','locked_at'=>VWLB_Helpers::now(),'locked_by'=>$worker,'attempts'=>(int)$job['attempts']+1,'updated_at'=>VWLB_Helpers::now()),array('id'=>$job['id'],'status'=>$job['status']),array('%s','%s','%s','%d','%s'),array('%d','%s'));
-			if(!$locked)continue;self::run_job($job);
+			$attempt=(int)$job['attempts']+1;$locked_at=VWLB_Helpers::now();
+			$locked=$wpdb->query($wpdb->prepare("UPDATE $table SET status='running',locked_at=%s,locked_by=%s,attempts=%d,updated_at=%s WHERE id=%d AND status=%s AND attempts=%d",$locked_at,$worker,$attempt,$locked_at,$job['id'],$job['status'],$job['attempts']));
+			if(1!==$locked)continue;$job['status']='running';$job['locked_at']=$locked_at;$job['locked_by']=$worker;$job['attempts']=$attempt;self::run_job($job);
 		}
 	}
+
 	private static function run_job($job){
 		global $wpdb;$table=VWLB_Helpers::table('processing_jobs');$asset=$job['asset_id']?VWLB_Repository::find('media_assets',$job['asset_id']):array();$result=null;
 		if('verify_and_process'===$job['job_type']){
