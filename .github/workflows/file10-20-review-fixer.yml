@@ -1,0 +1,44 @@
+name: File 10 Fresh 20 Review Sequential Fixer
+on:
+  push:
+    branches:
+      - fix/file-10-fresh-20-review-v1.2.2-rc1
+permissions:
+  contents: write
+jobs:
+  apply-reviewed-fix:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Configure PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: none
+      - name: Apply current reviewed correction
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/file10-current-20-review-fix.py
+      - name: Validate corrected state before next review
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash ./tests/run-all.sh
+          git diff --check
+      - name: Commit reviewed correction
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --quiet; then
+            echo 'No source correction required by this review.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add video-wall-and-live-broadcasting tests docs tools 2>/dev/null || true
+          git commit -m "Apply current File 10 fresh 20-review correction"
+          git push origin HEAD:${GITHUB_REF_NAME}
