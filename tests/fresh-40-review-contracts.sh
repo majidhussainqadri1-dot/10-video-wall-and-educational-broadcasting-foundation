@@ -69,4 +69,10 @@ need "Poll option could not be saved" "$P/includes/class-vwlb-future-intelligenc
 need "outside its active response window" "$P/includes/class-vwlb-future-intelligence.php" r13-window-enforce
 need "Previous poll response could not be replaced" "$P/includes/class-vwlb-future-intelligence.php" r13-response-atomic
 need "'not_diagnostic'=>true" "$P/includes/class-vwlb-future-intelligence.php" r13-public-dto
+# R14 — consent withdrawal/expiry and video restriction are one fail-closed transaction; races cannot leave public media after consent loss.
+need "FOR UPDATE" "$P/includes/class-vwlb-future-intelligence.php" r14-consent-lock
+need "Consent record changed concurrently" "$P/includes/class-vwlb-future-intelligence.php" r14-consent-cas
+need "restrict_video_for_consent(\$locked" "$P/includes/class-vwlb-future-intelligence.php" r14-atomic-restrict
+need "if(is_wp_error(\$restricted))return \$restricted" "$P/includes/class-vwlb-future-intelligence.php" r14-fail-closed
+need "vwlb_purge_media_derivative_caches" "$P/includes/class-vwlb-future-intelligence.php" r14-cache-purge
 printf '%s\n' 'fresh 40-review regression contracts PASS'
