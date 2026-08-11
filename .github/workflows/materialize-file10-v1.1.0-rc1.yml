@@ -19,9 +19,13 @@ jobs:
       - name: Verify payload, materialize completion source, test, and commit
         shell: bash
         run: |
-          set -euo pipefail
+          set -Eeuo pipefail
+          : > /tmp/file10-materialize-diagnostic.log
+          trap 'rc=$?; echo "FAILED rc=${rc} line=${LINENO}" >> /tmp/file10-materialize-diagnostic.log; exit $rc' ERR
+          echo '01 ready-check' >> /tmp/file10-materialize-diagnostic.log
           [[ -f .payload4/READY ]] || { echo 'Completion payload not ready yet.'; exit 0; }
           : > /tmp/file10-v110-overlay.b64
+          echo '02 chunk-check' >> /tmp/file10-materialize-diagnostic.log
           for index in 00 01 02 03 04 05 06; do
             chunk=".payload4/part-${index}.b64"
             [[ -f "$chunk" ]] || { echo "Missing chunk: $chunk"; exit 1; }
@@ -32,29 +36,45 @@ jobs:
           [[ -f "$final_chunk" ]] || { echo 'Missing final payload chunk.'; exit 1; }
           [[ "$(wc -c < "$final_chunk")" -eq 7832 ]] || { echo 'Invalid final chunk size.'; exit 1; }
           cat "$final_chunk" >> /tmp/file10-v110-overlay.b64
+          echo '03 decode-checksum' >> /tmp/file10-materialize-diagnostic.log
           base64 -d /tmp/file10-v110-overlay.b64 > /tmp/file10-v110-overlay.tar.xz
           echo '359ea2f9dbed310c298327bafefc586cb7171dd795773534e878cb3d6053dfa4  /tmp/file10-v110-overlay.tar.xz' | sha256sum --check -
           xz -t /tmp/file10-v110-overlay.tar.xz
+          echo '04 extract' >> /tmp/file10-materialize-diagnostic.log
           tar -xJf /tmp/file10-v110-overlay.tar.xz -C .
           chmod +x tests/*.sh tests/*.py tools/*.sh 2>/dev/null || true
-
+          echo '05 tests' >> /tmp/file10-materialize-diagnostic.log
           set +e
           bash ./tests/run-all.sh > /tmp/file10-materialize-qa.log 2>&1
           qa_rc=$?
           set -e
           cat /tmp/file10-materialize-qa.log
+          echo "06 tests-finished rc=${qa_rc}" >> /tmp/file10-materialize-diagnostic.log
           if [[ "$qa_rc" -ne 0 ]]; then
             cp /tmp/file10-materialize-qa.log docs/AUTOMATED-QA-MATERIALIZE-FAILURE.log
           else
             rm -f docs/AUTOMATED-QA-MATERIALIZE-FAILURE.log
           fi
-
+          echo '07 cleanup-payload' >> /tmp/file10-materialize-diagnostic.log
           rm -rf .payload4
           rm -f .github/workflows/materialize-file10-v1.1.0-rc1.yml
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -A
+          echo '08 diff-check' >> /tmp/file10-materialize-diagnostic.log
           git diff --cached --check
+          echo '09 commit' >> /tmp/file10-materialize-diagnostic.log
           git commit -m 'Materialize File 10 governing-plan completion source (1.1.0-rc1)'
+          echo '10 push' >> /tmp/file10-materialize-diagnostic.log
           git push origin HEAD:${GITHUB_REF_NAME}
+          echo '11 pushed' >> /tmp/file10-materialize-diagnostic.log
           exit "$qa_rc"
+      - name: Upload materializer diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: file10-materializer-diagnostics
+          path: |
+            /tmp/file10-materialize-diagnostic.log
+            /tmp/file10-materialize-qa.log
+          if-no-files-found: warn
