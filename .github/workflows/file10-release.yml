@@ -24,22 +24,22 @@ jobs:
       - name: Run complete automated suite
         run: bash ./tests/run-all.sh
       - name: Build canonical package
-        run: bash ./tools/build-package.sh packages/video-wall-and-live-broadcasting-1.1.0-rc1.zip
+        run: bash ./tools/build-package.sh packages/video-wall-and-live-broadcasting-1.2.0-rc1.zip
       - name: Verify checksum and archive
         run: |
           cd packages
-          sha256sum --check video-wall-and-live-broadcasting-1.1.0-rc1.zip.sha256
-          unzip -t video-wall-and-live-broadcasting-1.1.0-rc1.zip
+          sha256sum --check video-wall-and-live-broadcasting-1.2.0-rc1.zip.sha256
+          unzip -t video-wall-and-live-broadcasting-1.2.0-rc1.zip
       - name: Verify package/source parity
         run: |
           rm -rf /tmp/vwlb-extract && mkdir -p /tmp/vwlb-extract
-          unzip -q packages/video-wall-and-live-broadcasting-1.1.0-rc1.zip -d /tmp/vwlb-extract
+          unzip -q packages/video-wall-and-live-broadcasting-1.2.0-rc1.zip -d /tmp/vwlb-extract
           diff -ru video-wall-and-live-broadcasting /tmp/vwlb-extract/video-wall-and-live-broadcasting
       - name: Publish release-candidate artifact
         if: matrix.php == '8.3'
         uses: actions/upload-artifact@v4
         with:
-          name: file10-video-wall-live-1.1.0-rc1
+          name: file10-video-wall-live-1.2.0-rc1
           path: |
-            packages/video-wall-and-live-broadcasting-1.1.0-rc1.zip
-            packages/video-wall-and-live-broadcasting-1.1.0-rc1.zip.sha256
+            packages/video-wall-and-live-broadcasting-1.2.0-rc1.zip
+            packages/video-wall-and-live-broadcasting-1.2.0-rc1.zip.sha256
