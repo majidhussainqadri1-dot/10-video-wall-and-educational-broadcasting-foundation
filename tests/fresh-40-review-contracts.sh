@@ -122,4 +122,8 @@ need "Takedown report could not be saved" "$P/includes/class-vwlb-moderation.php
 need "FOR UPDATE" "$P/includes/class-vwlb-moderation.php" r23-lock
 need "vwlb_takedown_decision_forbidden" "$P/includes/class-vwlb-moderation.php" r23-claimant-authority
 need "VWLB_DB::transaction" "$P/includes/class-vwlb-moderation.php" r23-atomicity
+# R24 — verified webhook DB failures are never acknowledged as harmless duplicates.
+need "vwlb_webhook_persist_failed" "$P/includes/class-vwlb-rest.php" r24-db-failure
+need "WHERE provider=%s AND event_id=%s" "$P/includes/class-vwlb-rest.php" r24-duplicate-check
+need "vwlb_webhook_replay_window" "$P/includes/class-vwlb-rest.php" r24-replay-window
 printf '%s\n' 'fresh 40-review regression contracts PASS'

@@ -77,7 +77,7 @@ final class VWLB_REST {
 		}
 		$event_id=VWLB_Helpers::text($data['id']??hash('sha256',$body),191);global $wpdb;
 		$inserted=$wpdb->insert(VWLB_Helpers::table('webhooks'),array('public_id'=>VWLB_Helpers::public_id('wh'),'provider'=>$provider->id(),'event_id'=>$event_id,'event_type'=>VWLB_Helpers::text($data['type']??'unknown',100),'signature_hash'=>hash('sha256',VWLB_Helpers::json_encode($headers)),'payload_hash'=>hash('sha256',$body),'payload_json'=>VWLB_Helpers::json_encode(apply_filters('vwlb_webhook_audit_payload',array('id'=>$event_id,'type'=>VWLB_Helpers::text($data['type']??'unknown',100)),$data,$provider->id())),'status'=>'received','received_at'=>VWLB_Helpers::now()));
-		if(false===$inserted){return $this->response(array('accepted'=>true,'duplicate'=>true));}
+		if(false===$inserted){$existing=(int)$wpdb->get_var($wpdb->prepare('SELECT id FROM '.VWLB_Helpers::table('webhooks').' WHERE provider=%s AND event_id=%s LIMIT 1',$provider->id(),$event_id));if($existing)return $this->response(array('accepted'=>true,'duplicate'=>true));return VWLB_Helpers::error('vwlb_webhook_persist_failed',__('Verified webhook could not be persisted for durable processing.',VWLB_TEXT_DOMAIN),503);}
 		do_action('vwlb_verified_webhook',$provider->id(),$data,(int)$wpdb->insert_id);return $this->response(array('accepted'=>true),202);
 	}
 	public function diagnostics(){return $this->response(array_merge(VWLB_Diagnostics::full(),array('observability'=>VWLB_Observability::snapshot())));}
