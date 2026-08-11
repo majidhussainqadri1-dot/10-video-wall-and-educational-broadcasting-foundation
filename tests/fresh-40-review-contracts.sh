@@ -28,4 +28,10 @@ need "File 00 identity and eligibility assertions" "$P/includes/class-vwlb-futur
 need "Guest invitation changed concurrently" "$P/includes/class-vwlb-future-intelligence.php" r06-accept-cas
 need "BroadcastGuestRevoked" "$P/includes/class-vwlb-future-intelligence.php" r06-revoke-event
 need "/revoke','POST','guest_revoke'" "$P/includes/class-vwlb-future-rest.php" r06-revoke-route
+# R07 — provider-dependent DVR/latency/backup policy is capability-declared, version-safe and truthfully normalized.
+need "vwlb_latency_mode_unavailable" "$P/includes/class-vwlb-future-intelligence.php" r07-latency-capability
+need "vwlb_dvr_unavailable" "$P/includes/class-vwlb-future-intelligence.php" r07-dvr-capability
+need "vwlb_backup_provider_required" "$P/includes/class-vwlb-future-intelligence.php" r07-backup-required
+need "submit its current version" "$P/includes/class-vwlb-future-intelligence.php" r07-config-cas
+need "min(6*HOUR_IN_SECONDS" "$P/includes/class-vwlb-future-adapters.php" r07-provider-result-bound
 printf '%s\n' 'fresh 40-review regression contracts PASS'
