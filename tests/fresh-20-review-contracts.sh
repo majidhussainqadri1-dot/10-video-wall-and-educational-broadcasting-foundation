@@ -16,3 +16,7 @@ need 'live_event_id=%d AND user_id=%d FOR UPDATE' "$P/includes/class-vwlb-extens
 need 'Question could not be saved.' "$P/includes/class-vwlb-extensions.php" r03-question-insert
 need 'CAP_MODERATE,$event,'"'"'moderate_live_question'"'"'' "$P/includes/class-vwlb-extensions.php" r03-event-scope
 need vwlb_question_conflict "$P/includes/class-vwlb-extensions.php" r03-question-cas
+
+# R04 — download tokens persist and consume quota atomically.
+need 'Download token could not be stored.' "$P/includes/class-vwlb-extensions.php" r04-token-insert
+need '1!==$consumed' "$P/includes/class-vwlb-extensions.php" r04-atomic-consume

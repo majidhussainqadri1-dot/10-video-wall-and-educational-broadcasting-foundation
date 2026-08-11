@@ -19,3 +19,6 @@ Recording-consent changes could report success after a lost optimistic update. T
 
 ## R03 — DEFECT FIXED
 Question submission could return an ID after a failed insert, and moderation used a global capability without binding authority to the question’s live event. Both persistence and object-scoped moderation now fail closed under a row lock/CAS.
+
+## R04 — DEFECT FIXED
+Token creation did not verify its insert, and concurrent download resolutions could both receive the URL even though only one quota increment succeeded. Creation now verifies persistence and the URL is returned only after a successful atomic quota consume.

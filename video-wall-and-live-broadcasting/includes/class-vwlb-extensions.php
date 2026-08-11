@@ -624,17 +624,11 @@ final class VWLB_Extensions {
 		$object_type=VWLB_Helpers::enum($object_type,array('video','podcast'),'');if(!$object_type)return VWLB_Helpers::error('vwlb_download_type_invalid',__('Download object type is invalid.',VWLB_TEXT_DOMAIN),422);
 		$object='video'===$object_type?VWLB_Repository::find('videos',$object_id):VWLB_Podcasts::episode($object_id,true);
 		if(!$object)return VWLB_Helpers::error('vwlb_not_found',__('Media not found.',VWLB_TEXT_DOMAIN),404);
-		if('podcast'===$object_type&&'published'!==($object['status']??'')){
-			$owns=(int)($object['owner_id']??0)===get_current_user_id();
-			if(!$owns||!VWLB_Security::can(VWLB_Contracts::CAP_PUBLISH,$object,'download_unpublished_podcast'))return VWLB_Helpers::error('vwlb_not_found',__('Media not found.',VWLB_TEXT_DOMAIN),404);
-		}elseif(!VWLB_Security::can_view($object,'download')){
-			return VWLB_Helpers::error('vwlb_not_found',__('Media not found.',VWLB_TEXT_DOMAIN),404);
-		}
+		if('podcast'===$object_type&&'published'!==($object['status']??'')){$owns=(int)($object['owner_id']??0)===get_current_user_id();if(!$owns||!VWLB_Security::can(VWLB_Contracts::CAP_PUBLISH,$object,'download_unpublished_podcast'))return VWLB_Helpers::error('vwlb_not_found',__('Media not found.',VWLB_TEXT_DOMAIN),404);}elseif(!VWLB_Security::can_view($object,'download'))return VWLB_Helpers::error('vwlb_not_found',__('Media not found.',VWLB_TEXT_DOMAIN),404);
 		if(!self::download_allowed($object_type,$object))return VWLB_Helpers::error('vwlb_download_not_allowed',__('Download is not allowed by the current rights policy.',VWLB_TEXT_DOMAIN),403);
-		$token=rtrim(strtr(base64_encode(random_bytes(32)),'+/','-_'),'=');
-		$ttl=max(60,min(HOUR_IN_SECONDS,(int)$ttl));$max_downloads=max(1,min(20,(int)$max_downloads));
-		global $wpdb;$now=VWLB_Helpers::now();$public=VWLB_Helpers::public_id('dl');
-		$wpdb->insert(VWLB_Helpers::table('download_tokens'),array('public_id'=>$public,'token_hash'=>password_hash($token,PASSWORD_DEFAULT),'user_id'=>get_current_user_id(),'object_type'=>$object_type,'object_id'=>(int)$object['id'],'rights_snapshot'=>hash('sha256',VWLB_Helpers::json_encode(array($object['rights_status']??'',$object['visibility']??''))),'max_downloads'=>$max_downloads,'download_count'=>0,'status'=>'active','expires_at'=>gmdate('Y-m-d H:i:s',time()+$ttl),'created_at'=>$now,'updated_at'=>$now));
+		$token=rtrim(strtr(base64_encode(random_bytes(32)),'+/','-_'),'=');$ttl=max(60,min(HOUR_IN_SECONDS,(int)$ttl));$max_downloads=max(1,min(20,(int)$max_downloads));
+		global $wpdb;$now=VWLB_Helpers::now();$public=VWLB_Helpers::public_id('dl');$saved=$wpdb->insert(VWLB_Helpers::table('download_tokens'),array('public_id'=>$public,'token_hash'=>password_hash($token,PASSWORD_DEFAULT),'user_id'=>get_current_user_id(),'object_type'=>$object_type,'object_id'=>(int)$object['id'],'rights_snapshot'=>hash('sha256',VWLB_Helpers::json_encode(array($object['rights_status']??'',$object['visibility']??''))),'max_downloads'=>$max_downloads,'download_count'=>0,'status'=>'active','expires_at'=>gmdate('Y-m-d H:i:s',time()+$ttl),'created_at'=>$now,'updated_at'=>$now));
+		if(!$saved||!(int)$wpdb->insert_id)return VWLB_Helpers::error('vwlb_database_error',__('Download token could not be stored.',VWLB_TEXT_DOMAIN),500);
 		VWLB_Helpers::audit('download_token',(int)$wpdb->insert_id,'create','','active','',array('object_type'=>$object_type,'object_id'=>$object['id']));
 		return array('token_id'=>$public,'download_token'=>$token,'display_once'=>true,'expires_at'=>gmdate('c',time()+$ttl),'max_downloads'=>$max_downloads);
 	}
@@ -649,22 +643,15 @@ final class VWLB_Extensions {
 
 	public static function resolve_download( $public_id, $token ) {
 		if(!is_user_logged_in())return VWLB_Helpers::error('vwlb_login_required',__('Sign in first.',VWLB_TEXT_DOMAIN),401);
-		global $wpdb;$table=VWLB_Helpers::table('download_tokens');
-		$row=$wpdb->get_row($wpdb->prepare("SELECT * FROM $table WHERE public_id=%s",VWLB_Helpers::text($public_id,64)),ARRAY_A);
+		global $wpdb;$table=VWLB_Helpers::table('download_tokens');$row=$wpdb->get_row($wpdb->prepare("SELECT * FROM $table WHERE public_id=%s",VWLB_Helpers::text($public_id,64)),ARRAY_A);
 		if(!$row||(int)$row['user_id']!==get_current_user_id()||'active'!==$row['status']||strtotime($row['expires_at'].' UTC')<=time()||!password_verify((string)$token,$row['token_hash']))return VWLB_Helpers::error('vwlb_download_token_invalid',__('Download token is invalid or expired.',VWLB_TEXT_DOMAIN),410);
 		if((int)$row['download_count']>=(int)$row['max_downloads'])return VWLB_Helpers::error('vwlb_download_limit_reached',__('Download limit has been reached.',VWLB_TEXT_DOMAIN),410);
 		$object='video'===$row['object_type']?VWLB_Repository::video_bundle($row['object_id']):VWLB_Podcasts::episode($row['object_id'],true);
 		if(!$object||('podcast'===$row['object_type']&&'published'!==($object['status']??''))||!VWLB_Security::can_view($object,'download')||!self::download_allowed($row['object_type'],$object))return VWLB_Helpers::error('vwlb_download_revoked',__('Download access has been revoked.',VWLB_TEXT_DOMAIN),403);
-		$asset='video'===$row['object_type']?($object['asset']??array()):VWLB_Repository::find('media_assets',$object['asset_id']??0);
-		$derivatives=VWLB_Helpers::json($asset['derivatives_json']??'{}');
-		$url=$derivatives['download']??$derivatives['mp4_high']??$derivatives['mp4']??$derivatives['audio_only']??'';
-		if(!$url){
-			$storage=VWLB_Helpers::json($asset['storage_json']??'{}');
-			$url=apply_filters('vwlb_private_download_grant','',$asset,$object,$row);
-		}
-		$url=esc_url_raw($url);
-		if(!$url)return VWLB_Helpers::error('vwlb_download_unavailable',__('Download derivative is not ready.',VWLB_TEXT_DOMAIN),503);
-		$wpdb->query($wpdb->prepare("UPDATE $table SET download_count=download_count+1,updated_at=%s WHERE id=%d AND download_count<max_downloads",VWLB_Helpers::now(),$row['id']));
+		$asset='video'===$row['object_type']?($object['asset']??array()):VWLB_Repository::find('media_assets',$object['asset_id']??0);$derivatives=VWLB_Helpers::json($asset['derivatives_json']??'{}');$url=$derivatives['download']??$derivatives['mp4_high']??$derivatives['mp4']??$derivatives['audio_only']??'';
+		if(!$url)$url=apply_filters('vwlb_private_download_grant','',$asset,$object,$row);$url=esc_url_raw($url);if(!$url)return VWLB_Helpers::error('vwlb_download_unavailable',__('Download derivative is not ready.',VWLB_TEXT_DOMAIN),503);
+		$consumed=$wpdb->query($wpdb->prepare("UPDATE $table SET download_count=download_count+1,updated_at=%s WHERE id=%d AND status='active' AND expires_at>%s AND download_count<max_downloads",VWLB_Helpers::now(),$row['id'],VWLB_Helpers::now()));
+		if(1!==$consumed)return VWLB_Helpers::error('vwlb_download_limit_reached',__('Download token was already consumed or changed concurrently.',VWLB_TEXT_DOMAIN),410);
 		return array('url'=>$url,'expires_in'=>120,'checksum'=>$asset['checksum']??'','rights_status'=>$object['rights_status']??'');
 	}
 
