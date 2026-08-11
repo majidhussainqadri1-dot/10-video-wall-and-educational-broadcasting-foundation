@@ -55,3 +55,6 @@ Live-resource creation used the insert ID without checking whether the insert su
 
 ## R15 — CLEAN
 Fresh review of File 10 canonical ownership against the central plan and File 10 amendment found no new supported repository defect: media/video/live/provider ownership remains in File 10 while Reels discovery, general messaging/calls, notification transport and shell/visual ownership remain external contract boundaries.
+
+## R16 — CLEAN
+Fresh privacy review rechecked public DTO minimization, private playback/no-store behavior, restricted/deleted visibility, privacy export/erase paths and structured-data boundaries. No new supported repository defect was established in this round.
