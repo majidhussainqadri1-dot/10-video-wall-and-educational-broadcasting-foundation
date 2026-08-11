@@ -13,7 +13,7 @@ Each round reviews the corrected state produced by the previous round. When a su
 
 This record is repository/source evidence only. It is not staging, deployment, live-database or operational evidence.
 
-## Round record through R39
+## Round record — 40/40 complete
 
 | Round | Result | Review focus / correction |
 |---|---|---|
@@ -55,15 +55,20 @@ This record is repository/source evidence only. It is not staging, deployment, l
 | R36 | DEFECT FIXED | Required-table verification and version-option persistence before migration version advancement. |
 | R37 | DEFECT FIXED | Runtime/build/release artifact identity advanced to `1.2.1-rc1` without schema inflation. |
 | R38 | DEFECT/QA GAP FIXED | Permanent adversarial forbidden-pattern suite and sequential defect-ledger gate added to `run-all.sh`. |
-| R39 | DEFECT/RELEASE HYGIENE FIXED | Fresh cumulative diff review found temporary sequential mutation workflow/tool must not remain in the release candidate; they are removed before R40. |
-| R40 | PENDING | Exact-head final File 10 Release QA, deterministic package/source parity and final evidence capture. |
+| R39 | DEFECT/RELEASE HYGIENE FIXED | Fresh cumulative diff review found temporary sequential mutation workflow/tool must not remain in the release candidate; both were removed. |
+| R40 | CLEAN / FINAL QA GATE | Final fresh source review after R39 cleanup found no new supported repository defect. The canonical File 10 Release QA must run successfully on the exact commit containing this record before the 40-round repository candidate is closed. |
 
 ## Permanent regression evidence
 
 - `tests/fresh-40-review-contracts.sh` preserves positive regression gates for the supported defects found during the cycle.
-- `tests/fresh-40-review-adversarial.sh` prevents recurrence of selected previously unsafe implementation patterns and checks the sequential ledger.
+- `tests/fresh-40-review-adversarial.sh` prevents recurrence of selected previously unsafe implementation patterns and checks the sequential defect ledger.
 - `tests/run-all.sh` executes both permanent suites together with the pre-existing File 10 automated source checks and deterministic double build.
+- The temporary sequential mutation workflow/tool used to enforce review → fix → full-QA ordering were deliberately removed in R39 and are not part of the release candidate.
+
+## Closing evidence rule
+
+The canonical `File 10 Release QA` workflow run attached to the exact commit containing this completed 40-round record is the repository/package closing evidence. It must pass PHP 8.3 and PHP 8.4 source/package QA, the permanent 40-review regression/adversarial gates, deterministic build, archive verification and source/package parity. The final exact HEAD, workflow run ID and artifact digest are captured from GitHub after that run; they are deliberately not self-referential fields inside this Git-tracked record.
 
 ## Status boundary
 
-R40 will establish only the final repository/package/automated-QA candidate status. Hostinger staging, exact deployed plugin files, live database/schema/migration state and production behavior remain separate evidence gates and are not inferred from GitHub CI.
+R40 establishes only the final repository/package/automated-QA candidate status. Hostinger staging, exact deployed plugin files, live database/schema/migration state and production behavior remain separate evidence gates and are not inferred from GitHub CI.
