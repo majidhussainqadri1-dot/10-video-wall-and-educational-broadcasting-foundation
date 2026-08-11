@@ -101,4 +101,8 @@ need "Channel could not be created" "$P/includes/class-vwlb-videos.php" r19-chan
 need "Playlist could not be created" "$P/includes/class-vwlb-videos.php" r19-playlist
 need "Existing playlist items could not be replaced" "$P/includes/class-vwlb-videos.php" r19-delete
 need "A playlist item could not be saved" "$P/includes/class-vwlb-videos.php" r19-item
+# R20 — media completion validates checksums and cannot report a complete upload when processing enqueue fails.
+need "vwlb_processing_queue_failed" "$P/includes/class-vwlb-media.php" r20-queue-fail
+need "Checksum must be SHA-256" "$P/includes/class-vwlb-media.php" r20-checksum
+need "return \$saved?(int)\$wpdb->insert_id:0" "$P/includes/class-vwlb-media.php" r20-enqueue-check
 printf '%s\n' 'fresh 40-review regression contracts PASS'
