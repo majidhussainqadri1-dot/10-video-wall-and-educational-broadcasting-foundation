@@ -126,4 +126,9 @@ need "VWLB_DB::transaction" "$P/includes/class-vwlb-moderation.php" r23-atomicit
 need "vwlb_webhook_persist_failed" "$P/includes/class-vwlb-rest.php" r24-db-failure
 need "WHERE provider=%s AND event_id=%s" "$P/includes/class-vwlb-rest.php" r24-duplicate-check
 need "vwlb_webhook_replay_window" "$P/includes/class-vwlb-rest.php" r24-replay-window
+# R25 — outbox/job workers honor CAS locks and reconciliation never emits publication events after a failed state transition.
+need "if(1!==\$locked)continue" "$P/includes/class-vwlb-jobs.php" r25-outbox-lock
+need "if(!is_wp_error(\$published))" "$P/includes/class-vwlb-jobs.php" r25-scheduled-cas
+need "array_intersect_key(\$state" "$P/includes/class-vwlb-jobs.php" r25-provider-redaction
+need "'status'=>'running'" "$P/includes/class-vwlb-jobs.php" r25-job-finalize-cas
 printf '%s\n' 'fresh 40-review regression contracts PASS'
