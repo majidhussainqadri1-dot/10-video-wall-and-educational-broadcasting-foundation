@@ -2,20 +2,20 @@
 /**
  * Plugin Name: Video Wall and Live Broadcasting
  * Plugin URI: https://www.sabrihomeopathy.com/
- * Description: File 10 canonical owner for recorded videos, channels, playlists, captions, playback, live events, stream authorization, moderation, recording/replay, rights and provider adapters.
- * Version: 1.0.0-rc1
- * Requires at least: 6.0
- * Requires PHP: 8.1
+ * Description: File 10 canonical owner for recorded video, channels, podcasts, media ingest/processing, captions/transcripts, playback, live events, stream authorization, moderation, recording/replay, rights, provider adapters and File 11 media contracts.
+ * Version: 1.1.0-rc1
+ * Requires at least: 7.0
+ * Requires PHP: 8.3
  * Author: Dr. Allamah Majid Hussain Sabri Muhaddith Mursheed
  * License: GPL-2.0-or-later
  * Text Domain: video-wall-live-broadcasting
  * Domain Path: /languages
  */
-
 defined( 'ABSPATH' ) || exit;
 
-define( 'VWLB_VERSION', '1.0.0-rc1' );
-define( 'VWLB_SCHEMA_VERSION', '1.0.0' );
+define( 'VWLB_VERSION', '1.1.0-rc1' );
+define( 'VWLB_SCHEMA_VERSION', '1.1.0' );
+define( 'VWLB_EXT_SCHEMA_VERSION', '1.1.0' );
 define( 'VWLB_FILE', __FILE__ );
 define( 'VWLB_DIR', plugin_dir_path( __FILE__ ) );
 define( 'VWLB_URL', plugin_dir_url( __FILE__ ) );
@@ -26,10 +26,11 @@ $autoload = array(
 	'class-vwlb-state-machine.php', 'class-vwlb-db.php', 'class-vwlb-activator.php',
 	'class-vwlb-providers.php', 'class-vwlb-repository.php', 'class-vwlb-media.php',
 	'class-vwlb-videos.php', 'class-vwlb-live.php', 'class-vwlb-moderation.php',
-	'class-vwlb-jobs.php', 'class-vwlb-rest.php', 'class-vwlb-frontend.php',
-	'class-vwlb-admin.php', 'class-vwlb-privacy.php', 'class-vwlb-seo.php',
-	'class-vwlb-integrations.php', 'class-vwlb-compatibility.php', 'class-vwlb-diagnostics.php',
-	'class-vwlb-plugin.php',
+	'class-vwlb-jobs.php', 'class-vwlb-extensions.php', 'class-vwlb-podcasts.php',
+	'class-vwlb-observability.php', 'class-vwlb-rest.php', 'class-vwlb-extended-rest.php',
+	'class-vwlb-frontend.php', 'class-vwlb-admin.php', 'class-vwlb-privacy.php',
+	'class-vwlb-seo.php', 'class-vwlb-integrations.php', 'class-vwlb-compatibility.php',
+	'class-vwlb-diagnostics.php', 'class-vwlb-plugin.php',
 );
 foreach ( $autoload as $file ) {
 	require_once VWLB_DIR . 'includes/' . $file;
