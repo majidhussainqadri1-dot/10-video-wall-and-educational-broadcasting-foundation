@@ -75,4 +75,10 @@ need "Consent record changed concurrently" "$P/includes/class-vwlb-future-intell
 need "restrict_video_for_consent(\$locked" "$P/includes/class-vwlb-future-intelligence.php" r14-atomic-restrict
 need "if(is_wp_error(\$restricted))return \$restricted" "$P/includes/class-vwlb-future-intelligence.php" r14-fail-closed
 need "vwlb_purge_media_derivative_caches" "$P/includes/class-vwlb-future-intelligence.php" r14-cache-purge
+# R15 — watermark policies reject credentials, use optimistic concurrency and forensic grants retain privacy-safe trace evidence.
+need "vwlb_watermark_secret_forbidden" "$P/includes/class-vwlb-future-intelligence.php" r15-secret
+need "Watermark policy changed. Refresh and submit its current version" "$P/includes/class-vwlb-future-intelligence.php" r15-version
+need "watermark_grant" "$P/includes/class-vwlb-future-intelligence.php" r15-grant-audit
+need "token_hash" "$P/includes/class-vwlb-future-intelligence.php" r15-token-hash
+need "not an absolute copying-prevention guarantee" "$P/includes/class-vwlb-future-intelligence.php" r15-honesty
 printf '%s\n' 'fresh 40-review regression contracts PASS'
