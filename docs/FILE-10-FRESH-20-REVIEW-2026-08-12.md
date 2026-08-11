@@ -52,3 +52,6 @@ The schema stored a consent version, but finalization treated any historical `re
 
 ## R14 — DEFECT FIXED
 Live-resource creation used the insert ID without checking whether the insert succeeded. It now fails closed on storage failure before audit/response.
+
+## R15 — CLEAN
+Fresh review of File 10 canonical ownership against the central plan and File 10 amendment found no new supported repository defect: media/video/live/provider ownership remains in File 10 while Reels discovery, general messaging/calls, notification transport and shell/visual ownership remain external contract boundaries.
