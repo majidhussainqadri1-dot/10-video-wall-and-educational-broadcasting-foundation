@@ -4,13 +4,14 @@ defined( 'ABSPATH' ) || exit;
 final class VWLB_Diagnostics {
 	public static function public_health(){
 		$providers=array();foreach(VWLB_Providers::all() as $p){$providers[]=array('id'=>$p->id(),'capabilities'=>$p->capabilities(),'available'=>VWLB_Observability::provider_available($p->id(),'general'));}
-		return array('module'=>'File 10','status'=>get_option('vwlb_safe_mode')?'degraded':'ok','version'=>VWLB_VERSION,'schema'=>get_option('vwlb_schema_version','missing'),'extension_schema'=>get_option(VWLB_Extensions::OPTION,'missing'),'canonical_api'=>VWLB_Contracts::CANONICAL_API_NAMESPACE,'providers'=>$providers);
+		return array('module'=>'File 10','status'=>get_option('vwlb_safe_mode')?'degraded':'ok','version'=>VWLB_VERSION,'schema'=>get_option('vwlb_schema_version','missing'),'extension_schema'=>get_option(VWLB_Extensions::OPTION,'missing'),'future_schema'=>get_option(VWLB_Future_Intelligence::OPTION,'missing'),'canonical_api'=>VWLB_Contracts::CANONICAL_API_NAMESPACE,'providers'=>$providers);
 	}
 	public static function full(){
 		global $wpdb;$tables=array();$names=array(
 			'channels','channel_members','playlists','playlist_items','media_assets','processing_jobs','videos','captions','live_events','stream_credentials',
 			'playback_sessions','interactions','moderation','takedowns','audit','outbox','inbox','webhooks','idempotency','rate_limits','rollback_snapshots',
-			'upload_sessions','chapters','podcast_series','podcast_episodes','live_attendees','live_questions','live_resources','download_tokens','creator_metrics_daily','provider_health','premieres'
+			'upload_sessions','chapters','podcast_series','podcast_episodes','live_attendees','live_questions','live_resources','download_tokens','creator_metrics_daily','provider_health','premieres',
+			'production_sources','production_scenes','broadcast_guests','future_live_config','simulcast_targets','broadcast_health_samples','media_tracks','transcript_segments','video_annotations','live_polls','live_poll_options','live_poll_responses','consent_links','watermark_policies'
 		);
 		foreach($names as $name){$table=VWLB_Helpers::table($name);$exists=$wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s',$table));$tables[$name]=array('exists'=>(bool)$exists,'rows'=>$exists?(int)$wpdb->get_var("SELECT COUNT(*) FROM $table"):null);}
 		$dead=!empty($tables['processing_jobs']['exists'])?(int)$wpdb->get_var("SELECT COUNT(*) FROM ".VWLB_Helpers::table('processing_jobs')." WHERE status='dead'"):0;
@@ -34,16 +35,16 @@ final class VWLB_Diagnostics {
 		$step=VWLB_Security::require_step_up('repair_'.$action);if(is_wp_error($step))return $step;
 		VWLB_DB::snapshot('repair_before',self::full());global $wpdb;
 		switch($action){
-			case'install_schema':VWLB_DB::install_schema();VWLB_Extensions::install_schema();break;
-			case'install_extension_schema':VWLB_Extensions::install_schema();break;
+			case'install_schema':$m=VWLB_Activator::reconcile_schema();if(is_wp_error($m))return $m;break;
+			case'install_extension_schema':$m=VWLB_Activator::reconcile_schema();if(is_wp_error($m))return $m;break;
 			case'reschedule_cron':VWLB_Activator::schedules();break;
-			case'retry_dead_jobs':$wpdb->query("UPDATE ".VWLB_Helpers::table('processing_jobs')." SET status='retry',available_at=UTC_TIMESTAMP(),locked_at=NULL,locked_by=NULL WHERE status='dead'");break;
-			case'retry_dead_outbox':$wpdb->query("UPDATE ".VWLB_Helpers::table('outbox')." SET status='retry',available_at=UTC_TIMESTAMP(),locked_at=NULL WHERE status='dead'");break;
+			case'retry_dead_jobs':$changed=$wpdb->query("UPDATE ".VWLB_Helpers::table('processing_jobs')." SET status='retry',available_at=UTC_TIMESTAMP(),locked_at=NULL,locked_by=NULL WHERE status='dead'");if(false===$changed)return VWLB_Helpers::error('vwlb_repair_database_failed',__('Dead processing jobs could not be reset.',VWLB_TEXT_DOMAIN),500);break;
+			case'retry_dead_outbox':$changed=$wpdb->query("UPDATE ".VWLB_Helpers::table('outbox')." SET status='retry',available_at=UTC_TIMESTAMP(),locked_at=NULL WHERE status='dead'");if(false===$changed)return VWLB_Helpers::error('vwlb_repair_database_failed',__('Dead outbox events could not be reset.',VWLB_TEXT_DOMAIN),500);break;
 			case'enable_safe_mode':update_option('vwlb_safe_mode',1,false);break;
 			case'disable_safe_mode':update_option('vwlb_safe_mode',0,false);break;
 			case'expire_ephemeral':VWLB_Jobs::cleanup();VWLB_Extensions::cleanup();break;
-			case'reset_provider_circuit':$provider=sanitize_key($data['provider']??'');if(!$provider)return VWLB_Helpers::error('vwlb_provider_required',__('Provider is required.',VWLB_TEXT_DOMAIN),422);$wpdb->update(VWLB_Helpers::table('provider_health'),array('state'=>'unknown','failures'=>0,'circuit_open_until'=>null,'last_error_code'=>'','updated_at'=>VWLB_Helpers::now()),array('provider'=>$provider));break;
-			case'recount_interactions':$videos=$wpdb->get_col('SELECT id FROM '.VWLB_Helpers::table('videos'));foreach($videos as $id){foreach(array('like','dislike') as $type){$count=(int)$wpdb->get_var($wpdb->prepare('SELECT COUNT(*) FROM '.VWLB_Helpers::table('interactions').' WHERE video_id=%d AND interaction=%s',$id,$type));$wpdb->update(VWLB_Helpers::table('videos'),array($type.'_count'=>$count),array('id'=>$id));}}break;
+			case'reset_provider_circuit':$provider=sanitize_key($data['provider']??'');if(!$provider||!VWLB_Providers::get($provider))return VWLB_Helpers::error('vwlb_provider_required',__('A configured provider is required.',VWLB_TEXT_DOMAIN),422);$changed=$wpdb->update(VWLB_Helpers::table('provider_health'),array('state'=>'unknown','failures'=>0,'circuit_open_until'=>null,'last_error_code'=>'','updated_at'=>VWLB_Helpers::now()),array('provider'=>$provider));if(false===$changed)return VWLB_Helpers::error('vwlb_repair_database_failed',__('Provider circuit state could not be reset.',VWLB_TEXT_DOMAIN),500);break;
+			case'recount_interactions':$videos=$wpdb->get_col('SELECT id FROM '.VWLB_Helpers::table('videos'));foreach($videos as $id){foreach(array('like','dislike') as $type){$count=(int)$wpdb->get_var($wpdb->prepare('SELECT COUNT(*) FROM '.VWLB_Helpers::table('interactions').' WHERE video_id=%d AND interaction=%s',$id,$type));$changed=$wpdb->update(VWLB_Helpers::table('videos'),array($type.'_count'=>$count),array('id'=>$id));if(false===$changed)return VWLB_Helpers::error('vwlb_repair_database_failed',__('Interaction counters could not be reconciled.',VWLB_TEXT_DOMAIN),500);}}break;
 		}
 		VWLB_Helpers::audit('system',0,'repair','','',$action,array('purpose'=>'operational_repair'));return array('action'=>$action,'completed'=>true,'health'=>self::full());
 	}

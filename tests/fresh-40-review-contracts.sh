@@ -138,4 +138,10 @@ need "live_poll_responses" "$P/includes/class-vwlb-privacy.php" r26-erase-polls
 need "media_tracks','reviewed_by" "$P/includes/class-vwlb-privacy.php" r26-review-attribution
 need "vwlb_privacy_delete_failed" "$P/includes/class-vwlb-privacy.php" r26-db-fail-closed
 need "done'=>false" "$P/includes/class-vwlb-privacy.php" r26-retryable
+# R27 — diagnostics inventory includes Future schema/tables and repair actions never report completion after failed DB/schema work.
+need "'future_schema'=>get_option(VWLB_Future_Intelligence::OPTION" "$P/includes/class-vwlb-diagnostics.php" r27-future-schema
+need "'watermark_policies'" "$P/includes/class-vwlb-diagnostics.php" r27-future-tables
+need "VWLB_Activator::reconcile_schema" "$P/includes/class-vwlb-diagnostics.php" r27-serialized-schema
+need "vwlb_repair_database_failed" "$P/includes/class-vwlb-diagnostics.php" r27-db-fail
+need "A configured provider is required" "$P/includes/class-vwlb-diagnostics.php" r27-provider-scope
 printf '%s\n' 'fresh 40-review regression contracts PASS'
