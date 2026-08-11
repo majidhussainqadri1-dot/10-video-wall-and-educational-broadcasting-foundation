@@ -9,12 +9,13 @@ final class VWLB_Plugin {
 		VWLB_Providers::register_defaults();
 		VWLB_Extensions::register();
 		VWLB_Observability::register();
+		VWLB_Future_Intelligence::register();
 
-		$frontend=new VWLB_Frontend();$admin=new VWLB_Admin();$privacy=new VWLB_Privacy();$integrations=new VWLB_Integrations();
-		$rest=new VWLB_REST();$extended=new VWLB_Extended_REST();$seo=new VWLB_SEO();
-		$frontend->register();$integrations->register();
+		$frontend=new VWLB_Frontend();$future_frontend=new VWLB_Future_Frontend();$admin=new VWLB_Admin();$privacy=new VWLB_Privacy();$integrations=new VWLB_Integrations();
+		$rest=new VWLB_REST();$extended=new VWLB_Extended_REST();$future_rest=new VWLB_Future_REST();$seo=new VWLB_SEO();
+		$frontend->register();$future_frontend->register();$integrations->register();
 		add_action('wp_enqueue_scripts',array($frontend,'assets'));add_action('admin_enqueue_scripts',array($admin,'enqueue'));
-		add_action('admin_menu',array($admin,'register'));add_action('rest_api_init',array($rest,'register'));add_action('rest_api_init',array($extended,'register'));
+		add_action('admin_menu',array($admin,'register'));add_action('rest_api_init',array($rest,'register'));add_action('rest_api_init',array($extended,'register'));add_action('rest_api_init',array($future_rest,'register'));
 		add_filter('rest_pre_serve_request',array($this,'serve_raw_caption'),10,4);add_action('wp_head',array($seo,'output'));
 		add_filter('wp_privacy_personal_data_exporters',array($privacy,'exporters'));add_filter('wp_privacy_personal_data_erasers',array($privacy,'erasers'));add_filter('wp_get_default_privacy_policy_content',array($privacy,'policy'));
 		add_action('template_redirect',array($privacy,'private_headers'));add_action('admin_notices',array('VWLB_Compatibility','legacy_notice'));
@@ -22,6 +23,7 @@ final class VWLB_Plugin {
 		add_action('vwlb_reconcile_states',array('VWLB_Jobs','reconcile'));add_action('vwlb_cleanup',array('VWLB_Jobs','cleanup'));
 		add_action('init',array($this,'rewrite'));add_filter('query_vars',array($this,'query_vars'));add_filter('template_include',array($this,'route_template'));add_action('wp_enqueue_scripts',array($this,'enqueue_route_assets'),20);
 		if(get_option('vwlb_schema_version')!==VWLB_SCHEMA_VERSION){VWLB_DB::install_schema();VWLB_Extensions::install_schema();}
+		if(get_option(VWLB_Future_Intelligence::OPTION)!==VWLB_FUTURE_SCHEMA_VERSION){VWLB_Future_Intelligence::install_schema();}
 	}
 	public function cron_schedules($s){$s['vwlb_five_minutes']=array('interval'=>300,'display'=>__('Every five minutes',VWLB_TEXT_DOMAIN));return $s;}
 	public function rewrite(){
