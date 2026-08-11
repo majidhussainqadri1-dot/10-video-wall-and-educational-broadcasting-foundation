@@ -144,4 +144,10 @@ need "'watermark_policies'" "$P/includes/class-vwlb-diagnostics.php" r27-future-
 need "VWLB_Activator::reconcile_schema" "$P/includes/class-vwlb-diagnostics.php" r27-serialized-schema
 need "vwlb_repair_database_failed" "$P/includes/class-vwlb-diagnostics.php" r27-db-fail
 need "A configured provider is required" "$P/includes/class-vwlb-diagnostics.php" r27-provider-scope
+# R29 — provider live/create/ingest paths fail closed without a real adapter and custom/local remote endpoints use SSRF-aware HTTPS validation.
+need "vwlb_provider_live_unavailable" "$P/includes/class-vwlb-providers.php" r29-live-fail-closed
+need "Configured ingest endpoint is not a safe HTTPS remote URL" "$P/includes/class-vwlb-providers.php" r29-local-ingest
+need "return parent::create_live(\$event)" "$P/includes/class-vwlb-providers.php" r29-custom-live
+need "VWLB_Helpers::remote_url(\$base)" "$P/includes/class-vwlb-providers.php" r29-custom-ingest
+need "VWLB_Helpers::remote_url(\$state['playback_url']" "$P/includes/class-vwlb-providers.php" r29-custom-playback
 printf '%s\n' 'fresh 40-review regression contracts PASS'

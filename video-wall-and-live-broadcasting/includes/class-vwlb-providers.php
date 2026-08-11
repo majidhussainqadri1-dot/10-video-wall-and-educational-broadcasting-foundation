@@ -7,7 +7,7 @@ interface VWLB_Provider_Interface {
 	public function process_asset($asset,$job); public function verify_webhook($headers,$body); public function reconcile($object_type,$object);
 }
 abstract class VWLB_Provider_Base implements VWLB_Provider_Interface {
-	public function create_live($event){return array('provider_event_ref'=>'','state'=>'configured');}
+	public function create_live($event){return VWLB_Helpers::error('vwlb_provider_live_unavailable',__('The selected provider has no configured live-event adapter.',VWLB_TEXT_DOMAIN),503);}
 	public function issue_ingest($event){return VWLB_Helpers::error('vwlb_provider_ingest_unavailable',__('The selected provider has no configured ingest endpoint.',VWLB_TEXT_DOMAIN),503);}
 	public function process_asset($asset,$job){return apply_filters('vwlb_provider_process_asset',VWLB_Helpers::error('vwlb_processor_unavailable',__('No media processor is configured.',VWLB_TEXT_DOMAIN),503),$this->id(),$asset,$job);}
 	public function verify_webhook($headers,$body){return false;}
@@ -32,7 +32,7 @@ final class VWLB_Provider_Local extends VWLB_Provider_Base {
 		return $source?array('type'=>$type,'url'=>esc_url_raw($source),'captions'=>$object['captions']??array(),'low_bandwidth'=>$this->low_bandwidth()):VWLB_Helpers::error('vwlb_playback_unavailable',__('Playback is not ready.',VWLB_TEXT_DOMAIN),503);
 	}
 	public function process_asset($asset,$job){$result=apply_filters('vwlb_local_processor_result',null,$asset,$job);if(is_array($result)||is_wp_error($result))return $result;$source=$asset['source_url']??'';if($source){return array('status'=>'ready','derivatives'=>array('mp4'=>$source,'mp4_high'=>$source),'technical_note'=>'Pass-through external local source. No adaptive derivative is claimed unless a processor supplied it.');}return parent::process_asset($asset,$job);}
-	public function issue_ingest($event){$endpoint=apply_filters('vwlb_local_live_ingest_endpoint','',$event);if(!$endpoint)return parent::issue_ingest($event);return array('ingest_url'=>esc_url_raw($endpoint),'provider_ref'=>'local_'.$event['public_id']);}
+	public function issue_ingest($event){$endpoint=apply_filters('vwlb_local_live_ingest_endpoint','',$event);if(!$endpoint)return parent::issue_ingest($event);$endpoint=VWLB_Helpers::remote_url($endpoint);return $endpoint?array('ingest_url'=>$endpoint,'provider_ref'=>'local_'.$event['public_id']):VWLB_Helpers::error('vwlb_provider_ingest_invalid',__('Configured ingest endpoint is not a safe HTTPS remote URL.',VWLB_TEXT_DOMAIN),503);}
 }
 final class VWLB_Provider_YouTube extends VWLB_Provider_Base {
 	public function id(){return 'youtube';}
@@ -56,9 +56,9 @@ final class VWLB_Provider_Custom extends VWLB_Provider_Base {
 	public function id(){return 'custom';}
 	public function capabilities(){return array('upload'=>true,'playback'=>true,'processing'=>true,'live'=>true,'recording'=>true,'failover'=>true,'portable_metadata'=>true);}
 	public function normalize_source($source){$url=VWLB_Helpers::remote_url($source);return $url?array('provider'=>'custom','source_url'=>$url,'embed_url'=>'','provider_ref'=>hash('sha256',$url)):VWLB_Helpers::error('vwlb_invalid_custom_url',__('A valid HTTPS source is required.',VWLB_TEXT_DOMAIN));}
-	public function create_live($event){$result=apply_filters('vwlb_custom_create_live',null,$event);return is_array($result)?$result:array('provider_event_ref'=>'custom_'.$event['public_id'],'state'=>'configured');}
-	public function issue_ingest($event){$base=defined('VWLB_CUSTOM_INGEST_BASE')?VWLB_CUSTOM_INGEST_BASE:'';$base=VWLB_Helpers::safe_url($base);if(!$base)return parent::issue_ingest($event);return array('ingest_url'=>trailingslashit($base).rawurlencode($event['public_id']),'stream_key'=>VWLB_Providers::stream_secret(),'provider_ref'=>'custom_'.$event['public_id']);}
-	public function playback($object,$viewer){$state=VWLB_Helpers::json($object['provider_state_json']??'{}');$url=VWLB_Helpers::safe_url($state['playback_url']??($object['source_url']??''));return $url?array('type'=>!empty($state['iframe'])?'iframe':'hls','url'=>$url,'captions'=>$object['captions']??array(),'autoplay'=>false):VWLB_Helpers::error('vwlb_playback_unavailable',__('Playback is not ready.',VWLB_TEXT_DOMAIN),503);}
+	public function create_live($event){$result=apply_filters('vwlb_custom_create_live',null,$event);if(is_wp_error($result)||is_array($result))return $result;return parent::create_live($event);}
+	public function issue_ingest($event){$base=defined('VWLB_CUSTOM_INGEST_BASE')?VWLB_CUSTOM_INGEST_BASE:'';$base=VWLB_Helpers::remote_url($base);if(!$base)return parent::issue_ingest($event);return array('ingest_url'=>trailingslashit($base).rawurlencode($event['public_id']),'stream_key'=>VWLB_Providers::stream_secret(),'provider_ref'=>'custom_'.$event['public_id']);}
+	public function playback($object,$viewer){$state=VWLB_Helpers::json($object['provider_state_json']??'{}');$url=VWLB_Helpers::remote_url($state['playback_url']??($object['source_url']??''));return $url?array('type'=>!empty($state['iframe'])?'iframe':'hls','url'=>$url,'captions'=>$object['captions']??array(),'autoplay'=>false):VWLB_Helpers::error('vwlb_playback_unavailable',__('Playback is not ready.',VWLB_TEXT_DOMAIN),503);}
 	public function process_asset($asset,$job){$result=apply_filters('vwlb_custom_process_asset',null,$asset,$job);return is_array($result)||is_wp_error($result)?$result:parent::process_asset($asset,$job);}
 	public function verify_webhook($headers,$body){
 		if(!defined('VWLB_CUSTOM_WEBHOOK_SECRET')||!VWLB_CUSTOM_WEBHOOK_SECRET)return false;
