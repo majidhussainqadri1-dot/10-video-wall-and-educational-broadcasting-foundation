@@ -50,12 +50,14 @@ final class VWLB_Jobs {
 	}
 
 	public static function reconcile(){
-		global $wpdb;$now=VWLB_Helpers::now();
-		$videos=$wpdb->get_results($wpdb->prepare('SELECT * FROM '.VWLB_Helpers::table('videos').' WHERE status=%s AND scheduled_at<=%s LIMIT 100','scheduled',$now),ARRAY_A);
+		global $wpdb;$now=VWLB_Helpers::now();$videos=$wpdb->get_results($wpdb->prepare('SELECT * FROM '.VWLB_Helpers::table('videos').' WHERE status=%s AND scheduled_at<=%s LIMIT 100','scheduled',$now),ARRAY_A);
 		foreach($videos as $v){$ok=VWLB_Videos::publication_gate($v);if(true===$ok){$published=VWLB_Repository::update_versioned('videos',$v['id'],$v['version'],array('status'=>'published','published_at'=>$now));if(!is_wp_error($published))VWLB_Helpers::outbox('VideoPublished','video',$v['id'],array('scheduled'=>true));}}
 		$events=$wpdb->get_results("SELECT * FROM ".VWLB_Helpers::table('live_events')." WHERE status IN ('scheduled','live','interrupted') LIMIT 100",ARRAY_A);
-		foreach($events as $event){$provider=VWLB_Providers::get($event['provider']);if($provider){$start=microtime(true);$state=$provider->reconcile('live',$event);$ms=(int)round((microtime(true)-$start)*1000);VWLB_Observability::record_provider($event['provider'],'live',is_array($state)?'healthy':'degraded',is_wp_error($state)?$state->get_error_code():'',$ms);if(is_array($state)){$safe=array_intersect_key($state,array_flip(array('provider_event_ref','status','degraded','region','health_code')));$wpdb->update(VWLB_Helpers::table('live_events'),array('provider_state_json'=>VWLB_Helpers::json_encode(array_merge(VWLB_Helpers::json($event['provider_state_json']),$safe)),'updated_at'=>$now),array('id'=>$event['id']));}}}
+		foreach($events as $event){$provider=VWLB_Providers::get($event['provider']);if(!$provider)continue;$start=microtime(true);$state=$provider->reconcile('live',$event);$ms=(int)round((microtime(true)-$start)*1000);VWLB_Observability::record_provider($event['provider'],'live',is_array($state)?'healthy':'degraded',is_wp_error($state)?$state->get_error_code():'',$ms);if(!is_array($state))continue;
+			$fresh=VWLB_Repository::find('live_events',$event['id']);if(!$fresh||$fresh['provider']!==$event['provider']||!in_array($fresh['status'],array('scheduled','live','interrupted'),true))continue;$safe=array_intersect_key($state,array_flip(array('provider_event_ref','status','degraded','region','health_code')));$merged=array_merge(VWLB_Helpers::json($fresh['provider_state_json']),$safe);VWLB_Repository::update_versioned('live_events',$fresh['id'],$fresh['version'],array('provider_state_json'=>VWLB_Helpers::json_encode($merged)));
+		}
 	}
+
 	public static function cleanup(){
 		global $wpdb;$now=VWLB_Helpers::now();
 		foreach(array('idempotency'=>'expires_at','rate_limits'=>'window_ends_at','playback_sessions'=>'expires_at','rollback_snapshots'=>'expires_at') as $table=>$column){$wpdb->query($wpdb->prepare('DELETE FROM '.VWLB_Helpers::table($table)." WHERE $column IS NOT NULL AND $column<%s LIMIT 1000",$now));}

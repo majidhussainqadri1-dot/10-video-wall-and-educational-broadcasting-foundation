@@ -33,3 +33,7 @@ need 'AND attempts=%d AND locked_by=%s' "$P/includes/class-vwlb-jobs.php" r06-ow
 # R07 — outbox stale publishing leases are reclaimable and finalize by attempt token.
 need 'status='"'"'publishing'"'"' AND locked_at<' "$P/includes/class-vwlb-jobs.php" r07-stale-outbox
 need 'status='"'"'publishing'"'"' AND attempts=%d' "$P/includes/class-vwlb-jobs.php" r07-outbox-token
+
+# R08 — provider reconciliation refreshes canonical live state and writes through versioned CAS.
+need '$fresh=VWLB_Repository::find('"'"'live_events'"'"'' "$P/includes/class-vwlb-jobs.php" r08-fresh-live
+need 'update_versioned('"'"'live_events'"'"'' "$P/includes/class-vwlb-jobs.php" r08-live-cas

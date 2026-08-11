@@ -31,3 +31,6 @@ A processing result could complete the job and emit `MediaAssetReady` even when 
 
 ## R07 — DEFECT FIXED
 An outbox worker crash after status `publishing` stranded the event forever because only pending/retry rows were selected. Stale publishing leases can now be reclaimed, and publish/failure writes are tied to the claimed attempt token.
+
+## R08 — DEFECT FIXED
+Provider reconciliation merged remote state into an old live-event snapshot and performed an unchecked unversioned update, risking overwrite of concurrent control changes. It now refreshes canonical state, revalidates provider/status, minimizes provider fields and uses versioned CAS.
