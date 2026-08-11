@@ -23,6 +23,7 @@ final class VWLB_Future_REST {
 			$this->route($n,'/media-tracks/(?P<object_type>video|live)/(?P<id>[A-Za-z0-9_-]+)/generate','POST','track_generate','publish_or_broadcast');
 			$this->route($n,'/videos/(?P<id>[A-Za-z0-9_-]+)/annotations','GET','annotations','public');
 			$this->route($n,'/videos/(?P<id>[A-Za-z0-9_-]+)/annotations','POST','annotation_create','publish');
+			$this->route($n,'/video-annotations/(?P<id>[A-Za-z0-9_-]+)/transition','POST','annotation_transition','review');
 			$this->route($n,'/videos/(?P<id>[A-Za-z0-9_-]+)/intelligence/suggest','POST','annotation_suggest','publish');
 			$this->route($n,'/videos/(?P<id>[A-Za-z0-9_-]+)/transcript-index','POST','transcript_index','review');
 			$this->route($n,'/videos/(?P<id>[A-Za-z0-9_-]+)/search-inside','GET','transcript_search','public');
@@ -69,6 +70,7 @@ final class VWLB_Future_REST {
 	public function track_generate(WP_REST_Request $r){$d=$this->body($r);return $this->response(VWLB_Future_Adapters::request_track_generation($r['object_type'],$r['id'],$d['track_type']??'',$d['language']??'',$d['options']??array()),202);}
 	public function annotations(WP_REST_Request $r){return $this->response(VWLB_Future_Intelligence::annotations($r['id'],!empty($r['include_candidates'])));}
 	public function annotation_create(WP_REST_Request $r){return $this->response(VWLB_Future_Intelligence::create_annotation($r['id'],$this->body($r)),201);}
+	public function annotation_transition(WP_REST_Request $r){$d=$this->body($r);return $this->response(VWLB_Future_Intelligence::transition_annotation($r['id'],$d['action']??'',$this->version($d)));}
 	public function annotation_suggest(WP_REST_Request $r){$d=$this->body($r);return $this->response(VWLB_Future_Adapters::suggest_annotations($r['id'],$d['kinds']??array('key_moment')),202);}
 	public function transcript_index(WP_REST_Request $r){return $this->response(VWLB_Future_Intelligence::index_transcript_segment($r['id'],$this->body($r)),201);}
 	public function transcript_search(WP_REST_Request $r){return $this->response(VWLB_Future_Intelligence::search_transcript($r['id'],$r['q']??'',$r['language']??''));}

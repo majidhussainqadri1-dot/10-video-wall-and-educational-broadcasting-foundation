@@ -51,4 +51,11 @@ need "candidate','reviewed" "$P/includes/class-vwlb-future-intelligence.php" r10
 need "Human review is required before publishing generated tracks" "$P/includes/class-vwlb-future-intelligence.php" r10-human-review-contract
 need "MediaTrackPublished" "$P/includes/class-vwlb-future-intelligence.php" r10-publish-event
 need "/media-tracks/(?P<id>[A-Za-z0-9_-]+)/transition" "$P/includes/class-vwlb-future-rest.php" r10-transition-rest
+# R11 — annotation candidates require explicit human review; timestamps/metadata/public DTOs are bounded.
+need "transition_annotation" "$P/includes/class-vwlb-future-intelligence.php" r11-transition
+need "Annotation end time cannot precede" "$P/includes/class-vwlb-future-intelligence.php" r11-time-order
+need "verified video duration" "$P/includes/class-vwlb-future-intelligence.php" r11-duration
+need "vwlb_annotation_secret_forbidden" "$P/includes/class-vwlb-future-intelligence.php" r11-secret
+need "unset(\$i['metadata_json'])" "$P/includes/class-vwlb-future-intelligence.php" r11-dto
+need "/video-annotations/(?P<id>[A-Za-z0-9_-]+)/transition" "$P/includes/class-vwlb-future-rest.php" r11-rest
 printf '%s\n' 'fresh 40-review regression contracts PASS'
