@@ -7,6 +7,7 @@ node --check "$ROOT/video-wall-and-live-broadcasting/assets/js/vwlb-future.js"
 php "$ROOT/tests/unit-state-machine.php"
 bash "$ROOT/tests/static-contracts.sh"
 bash "$ROOT/tests/fresh-40-review-contracts.sh"
+bash "$ROOT/tests/fresh-40-review-adversarial.sh"
 bash "$ROOT/tools/build-package.sh" /tmp/vwlb-build-a.zip >/dev/null
 bash "$ROOT/tools/build-package.sh" /tmp/vwlb-build-b.zip >/dev/null
 cmp /tmp/vwlb-build-a.zip /tmp/vwlb-build-b.zip
