@@ -105,4 +105,9 @@ need "A playlist item could not be saved" "$P/includes/class-vwlb-videos.php" r1
 need "vwlb_processing_queue_failed" "$P/includes/class-vwlb-media.php" r20-queue-fail
 need "Checksum must be SHA-256" "$P/includes/class-vwlb-media.php" r20-checksum
 need "return \$saved?(int)\$wpdb->insert_id:0" "$P/includes/class-vwlb-media.php" r20-enqueue-check
+# R21 — live schedule/credential operations fail closed, redact provider state and cleanly release idempotency on provider/DB failure.
+need "vwlb_provider_live_orphaned" "$P/includes/class-vwlb-live.php" r21-provider-orphan
+need "array_intersect_key((array)\$provider_result" "$P/includes/class-vwlb-live.php" r21-provider-redaction
+need "idempotency_abort(\$idempotency_key,'schedule_live')" "$P/includes/class-vwlb-live.php" r21-idem-abort
+need "Stream credential could not be recorded" "$P/includes/class-vwlb-live.php" r21-credential-write
 printf '%s\n' 'fresh 40-review regression contracts PASS'
