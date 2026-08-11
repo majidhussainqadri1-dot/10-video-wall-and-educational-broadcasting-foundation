@@ -1,0 +1,48 @@
+name: Materialize File 10 1.1.0 RC1
+
+on:
+  push:
+    branches:
+      - codex/file-10-full-plan-completion-v1.1.0-rc1
+
+permissions:
+  contents: write
+
+jobs:
+  materialize:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Verify payload, materialize completion source, test, and commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ -f .payload4/READY ]] || { echo 'Completion payload not ready yet.'; exit 0; }
+          : > /tmp/file10-v110-overlay.b64
+          for index in 00 01 02 03 04 05 06; do
+            chunk=".payload4/part-${index}.b64"
+            [[ -f "$chunk" ]] || { echo "Missing chunk: $chunk"; exit 1; }
+            [[ "$(wc -c < "$chunk")" -eq 8000 ]] || { echo "Invalid chunk size: $chunk"; exit 1; }
+            cat "$chunk" >> /tmp/file10-v110-overlay.b64
+          done
+          final_chunk='.payload4/part-07.b64'
+          [[ -f "$final_chunk" ]] || { echo 'Missing final payload chunk.'; exit 1; }
+          [[ "$(wc -c < "$final_chunk")" -eq 7832 ]] || { echo 'Invalid final chunk size.'; exit 1; }
+          cat "$final_chunk" >> /tmp/file10-v110-overlay.b64
+          base64 -d /tmp/file10-v110-overlay.b64 > /tmp/file10-v110-overlay.tar.xz
+          echo '359ea2f9dbed310c298327bafefc586cb7171dd795773534e878cb3d6053dfa4  /tmp/file10-v110-overlay.tar.xz' | sha256sum --check -
+          xz -t /tmp/file10-v110-overlay.tar.xz
+          tar -xJf /tmp/file10-v110-overlay.tar.xz -C .
+          chmod +x tests/*.sh tests/*.py tools/*.sh 2>/dev/null || true
+          bash ./tests/run-all.sh
+          rm -rf .payload4
+          rm -f .github/workflows/materialize-file10-v1.1.0-rc1.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git diff --cached --check
+          git commit -m 'Complete File 10 against new governing plans (1.1.0-rc1)'
+          git push origin HEAD:${GITHUB_REF_NAME}
