@@ -110,4 +110,10 @@ need "vwlb_provider_live_orphaned" "$P/includes/class-vwlb-live.php" r21-provide
 need "array_intersect_key((array)\$provider_result" "$P/includes/class-vwlb-live.php" r21-provider-redaction
 need "idempotency_abort(\$idempotency_key,'schedule_live')" "$P/includes/class-vwlb-live.php" r21-idem-abort
 need "Stream credential could not be recorded" "$P/includes/class-vwlb-live.php" r21-credential-write
+# R22 — live transitions store bounded provider proof, emergency end checks credential revocation, and replay linking authorizes both event and video.
+need "safe_proof=array_intersect_key" "$P/includes/class-vwlb-live.php" r22-proof-redaction
+need "Active stream credentials could not be revoked" "$P/includes/class-vwlb-live.php" r22-kill-revoke
+need "scheduled_window_elapsed" "$P/includes/class-vwlb-live.php" r22-reconcile-event
+need "CAP_BROADCAST,\$event,'publish_replay'" "$P/includes/class-vwlb-live.php" r22-event-auth
+need "CAP_PUBLISH,\$video,'publish_replay'" "$P/includes/class-vwlb-live.php" r22-video-auth
 printf '%s\n' 'fresh 40-review regression contracts PASS'
