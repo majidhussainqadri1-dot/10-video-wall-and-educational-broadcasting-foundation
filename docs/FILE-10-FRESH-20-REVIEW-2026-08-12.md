@@ -58,3 +58,6 @@ Fresh review of File 10 canonical ownership against the central plan and File 10
 
 ## R16 — CLEAN
 Fresh privacy review rechecked public DTO minimization, private playback/no-store behavior, restricted/deleted visibility, privacy export/erase paths and structured-data boundaries. No new supported repository defect was established in this round.
+
+## R17 — CLEAN
+Fresh adversarial provider review rechecked raw-secret rejection, stream credential secrecy, provider fail-closed behavior, outbound HTTPS/SSRF validation and minimized provider state. No new supported repository defect was established in this round.
