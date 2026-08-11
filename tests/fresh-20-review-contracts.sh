@@ -69,3 +69,4 @@ need 'Version: 1.2.2-rc1' "$P/video-wall-and-live-broadcasting.php" r19-runtime-
 need 'VWLB_VERSION'"'"', '"'"'1.2.2-rc1' "$P/video-wall-and-live-broadcasting.php" r19-runtime-constant
 need 'VWLB_FUTURE_SCHEMA_VERSION'"'"', '"'"'1.2.0' "$P/video-wall-and-live-broadcasting.php" r19-schema-not-inflated
 need video-wall-and-live-broadcasting-1.2.2-rc1.zip "$ROOT/tools/build-package.sh" r19-build-artifact
+need file10-video-wall-live-1.2.2-rc1 "$ROOT/.github/workflows/file10-release.yml" r19-release-artifact

@@ -196,7 +196,7 @@ need "Version: 1.2.2-rc1" "$P/video-wall-and-live-broadcasting.php" r37-plugin-v
 need "VWLB_VERSION', '1.2.2-rc1" "$P/video-wall-and-live-broadcasting.php" r37-runtime-version
 need "VWLB_FUTURE_SCHEMA_VERSION', '1.2.0" "$P/video-wall-and-live-broadcasting.php" r37-schema-stable
 need "video-wall-and-live-broadcasting-1.2.2-rc1.zip" "$ROOT/tools/build-package.sh" r37-build-name
-need "file10-video-wall-live-1.2.1-rc1" "$ROOT/.github/workflows/file10-release.yml" r37-artifact-name
+need "file10-video-wall-live-1.2.2-rc1" "$ROOT/.github/workflows/file10-release.yml" r37-artifact-name
 # R38 — permanent adversarial QA forbids recurrence of corrected unsafe patterns and verifies the sequential defect ledger.
 need "fresh 40-review adversarial contracts PASS" "$ROOT/tests/fresh-40-review-adversarial.sh" r38-adversarial-suite
 need "fresh-40-review-adversarial.sh" "$ROOT/tests/run-all.sh" r38-run-all
