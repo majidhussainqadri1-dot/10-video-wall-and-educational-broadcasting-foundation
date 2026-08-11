@@ -7,7 +7,7 @@ permissions:
   contents: write
 jobs:
   apply-reviewed-fix:
-    if: github.actor != 'github-actions[bot]'
+    if: github.actor != 'github-actions[bot]' && github.event.head_commit.message == 'Run File 10 fresh 20 sequential orchestrator'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
