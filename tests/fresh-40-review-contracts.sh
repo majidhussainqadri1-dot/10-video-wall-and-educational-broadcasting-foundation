@@ -173,4 +173,10 @@ need "data-low-bandwidth-src" "$P/includes/class-vwlb-frontend.php" r33-low-src
 need "switchBandwidth" "$P/assets/js/vwlb.js" r33-switch
 need "lowBandwidthUnavailable" "$P/includes/class-vwlb-frontend.php" r33-unavailable
 need "prefers-reduced-motion" "$P/assets/css/vwlb.css" r33-reduced-motion
+# R34 — public eligible media may be indexed; private/restricted media is noindex and never emitted into structured data.
+need "'published'!==(\$video['status']??'')" "$P/includes/class-vwlb-seo.php" r34-public-video-only
+need "vwlb_public_seo_content_url" "$P/includes/class-vwlb-seo.php" r34-no-raw-source-url
+need "'public'!==(\$raw['visibility']??'')" "$P/includes/class-vwlb-seo.php" r34-public-live-only
+need "if(!\$v||'published'!==(\$v['status']??'')" "$P/includes/class-vwlb-privacy.php" r34-conditional-noindex
+need "status_header((int)\$status)" "$P/includes/class-vwlb-frontend.php" r34-http-state
 printf '%s\n' 'fresh 40-review regression contracts PASS'

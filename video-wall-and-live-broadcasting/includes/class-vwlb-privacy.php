@@ -48,5 +48,9 @@ final class VWLB_Privacy {
 		if(is_wp_error($result)){return array('items_removed'=>$removed,'items_retained'=>true,'messages'=>array($result->get_error_message()),'done'=>false);}
 		$messages[]=__('Safety, copyright, recording-consent, moderation and audit records were anonymized where retention was required.',VWLB_TEXT_DOMAIN);return array('items_removed'=>$removed,'items_retained'=>true,'messages'=>$messages,'done'=>true);
 	}
-	public function private_headers(){$private_slugs=array('video-history','studio-video','studio-live');if(is_page(array_values((array)get_option('vwlb_page_map',array())))&&(is_user_logged_in()||is_page($private_slugs)))VWLB_Helpers::no_cache_private();if(get_query_var('vwlb_video_id')||get_query_var('vwlb_live_id')||get_query_var('vwlb_podcast_id'))VWLB_Helpers::no_cache_private();}
+	public function private_headers(){
+		$private_slugs=array('video-history','studio-video','studio-live');if(is_page(array_values((array)get_option('vwlb_page_map',array())))&&(is_user_logged_in()||is_page($private_slugs)))VWLB_Helpers::no_cache_private();
+		if(get_query_var('vwlb_video_id')){$v=VWLB_Repository::find('videos',get_query_var('vwlb_video_id'));if(!$v||'published'!==($v['status']??'')||'public'!==($v['visibility']??''))VWLB_Helpers::no_cache_private();}
+		if(get_query_var('vwlb_live_id')){$e=VWLB_Repository::find('live_events',get_query_var('vwlb_live_id'));if(!$e||'public'!==($e['visibility']??'')||!in_array($e['status']??'',array('scheduled','live','ended','replay_published'),true))VWLB_Helpers::no_cache_private();}
+	}
 }
