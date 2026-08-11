@@ -22,16 +22,12 @@ jobs:
           set -Eeuo pipefail
           [[ -f .payload5/READY ]] || { echo 'Round 1 payload not ready.'; exit 0; }
           : > /tmp/file10-round1.b64
-          for index in 00 01 02; do
+          for index in 00 01 02 03; do
             chunk=".payload5/part-${index}.b64"
             [[ -f "$chunk" ]] || { echo "Missing $chunk"; exit 1; }
-            [[ "$(wc -c < "$chunk")" -eq 8000 ]] || { echo "Invalid $chunk size"; exit 1; }
             cat "$chunk" >> /tmp/file10-round1.b64
           done
-          final='.payload5/part-03.b64'
-          [[ -f "$final" ]] || { echo 'Missing final chunk'; exit 1; }
-          [[ "$(wc -c < "$final")" -eq 4960 ]] || { echo 'Invalid final chunk size'; exit 1; }
-          cat "$final" >> /tmp/file10-round1.b64
+          [[ "$(wc -c < /tmp/file10-round1.b64)" -eq 28960 ]] || { echo 'Invalid total payload length'; exit 1; }
           base64 -d /tmp/file10-round1.b64 > /tmp/file10-round1.tar.xz
           echo '47e5df4817f1ad89fdb65ebfb1ec95fb2f2b8f0a2b157bbec82e9f6d8cad4df3  /tmp/file10-round1.tar.xz' | sha256sum --check -
           xz -t /tmp/file10-round1.tar.xz
