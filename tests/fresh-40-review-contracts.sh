@@ -87,4 +87,9 @@ need "vwlb_media_track_generation_safe_options" "$P/includes/class-vwlb-future-a
 need "vwlb_processor_secret_forbidden" "$P/includes/class-vwlb-future-adapters.php" r16-secret
 need "16384" "$P/includes/class-vwlb-future-adapters.php" r16-size-bound
 need "clinical_authority'=>false" "$P/includes/class-vwlb-future-adapters.php" r16-ai-authority
+# R17 — recorded video create is atomic, checks DB writes and releases internal idempotency after failure.
+need "VWLB_DB::transaction(function()use" "$P/includes/class-vwlb-videos.php" r17-transaction
+need "vwlb_asset_link_failed" "$P/includes/class-vwlb-videos.php" r17-asset-atomic
+need "idempotency_abort(\$idempotency_key,'create_video')" "$P/includes/class-vwlb-videos.php" r17-idem-abort
+need "if(!\$inserted||!(int)\$wpdb->insert_id)" "$P/includes/class-vwlb-videos.php" r17-insert-check
 printf '%s\n' 'fresh 40-review regression contracts PASS'
