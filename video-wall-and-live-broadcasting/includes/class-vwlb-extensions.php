@@ -767,19 +767,11 @@ final class VWLB_Extensions {
 	}
 
 	public static function schedule_live_extras( $live_id, $data ) {
-		$event=VWLB_Repository::find('live_events',$live_id);if(!$event)return false;
-		$capacity=max(0,min(100000,(int)($data['capacity']??0)));
-		$access=VWLB_Helpers::json($event['access_policy_json']);$access['capacity']=$capacity;$access['waiting_room']=array_key_exists('waiting_room',$data)?(bool)$data['waiting_room']:true;
-		global $wpdb;$wpdb->update(VWLB_Helpers::table('live_events'),array('access_policy_json'=>VWLB_Helpers::json_encode($access),'updated_at'=>VWLB_Helpers::now()),array('id'=>$event['id']));
-		$reminders=array_values(array_unique(array_filter(array_map('absint',(array)($data['reminders']??array(1440,60,15))))));
-		foreach($reminders as $minutes){
-			if($minutes>10080)continue;
-			$available=strtotime($event['scheduled_start'].' UTC')-$minutes*MINUTE_IN_SECONDS;
-			if($available<=time())continue;
-			$wpdb->insert(VWLB_Helpers::table('processing_jobs'),array('public_id'=>VWLB_Helpers::public_id('job'),'asset_id'=>0,'job_type'=>'send_live_reminder','provider'=>'local','status'=>'pending','priority'=>50,'attempts'=>0,'max_attempts'=>5,'available_at'=>gmdate('Y-m-d H:i:s',$available),'input_json'=>VWLB_Helpers::json_encode(array('live_event_id'=>$event['id'],'minutes'=>$minutes)),'output_json'=>'{}','created_at'=>VWLB_Helpers::now(),'updated_at'=>VWLB_Helpers::now()));
-		}
-		VWLB_Helpers::outbox('LiveWaitingRoomOpened','live',$event['id'],array('capacity'=>$capacity,'waiting_room'=>$access['waiting_room']));
-		return true;
+		$event=VWLB_Repository::find('live_events',$live_id);if(!$event)return VWLB_Helpers::error('vwlb_live_missing',__('Live event not found.',VWLB_TEXT_DOMAIN),404);$capacity=max(0,min(100000,(int)($data['capacity']??0)));$reminders=array_values(array_unique(array_filter(array_map('absint',(array)($data['reminders']??array(1440,60,15))))));
+		return VWLB_DB::transaction(function()use($event,$data,$capacity,$reminders){global $wpdb;$events=VWLB_Helpers::table('live_events');$fresh=$wpdb->get_row($wpdb->prepare("SELECT * FROM $events WHERE id=%d FOR UPDATE",$event['id']),ARRAY_A);if(!$fresh)return VWLB_Helpers::error('vwlb_live_missing',__('Live event not found.',VWLB_TEXT_DOMAIN),404);$access=VWLB_Helpers::json($fresh['access_policy_json']);$access['capacity']=$capacity;$access['waiting_room']=array_key_exists('waiting_room',$data)?(bool)$data['waiting_room']:true;$changed=$wpdb->update($events,array('access_policy_json'=>VWLB_Helpers::json_encode($access),'version'=>(int)$fresh['version']+1,'updated_at'=>VWLB_Helpers::now()),array('id'=>$fresh['id'],'version'=>$fresh['version']));if(1!==$changed)return VWLB_Helpers::error('vwlb_live_extras_conflict',__('Live waiting-room settings changed concurrently.',VWLB_TEXT_DOMAIN),409);
+			$jobs_table=VWLB_Helpers::table('processing_jobs');$old=$wpdb->get_results("SELECT id,input_json FROM $jobs_table WHERE job_type='send_live_reminder' AND status IN ('pending','retry') AND asset_id=0 LIMIT 500",ARRAY_A);foreach($old as $job){$input=VWLB_Helpers::json($job['input_json']);if((int)($input['live_event_id']??0)===(int)$fresh['id']){if(false===$wpdb->delete($jobs_table,array('id'=>$job['id']),array('%d')))return VWLB_Helpers::error('vwlb_database_error',__('Existing live reminders could not be reconciled.',VWLB_TEXT_DOMAIN),500);}}
+			foreach($reminders as $minutes){if($minutes>10080)continue;$available=strtotime($fresh['scheduled_start'].' UTC')-$minutes*MINUTE_IN_SECONDS;if($available<=time())continue;$saved=$wpdb->insert($jobs_table,array('public_id'=>VWLB_Helpers::public_id('job'),'asset_id'=>0,'job_type'=>'send_live_reminder','provider'=>'local','status'=>'pending','priority'=>50,'attempts'=>0,'max_attempts'=>5,'available_at'=>gmdate('Y-m-d H:i:s',$available),'input_json'=>VWLB_Helpers::json_encode(array('live_event_id'=>$fresh['id'],'minutes'=>$minutes)),'output_json'=>'{}','created_at'=>VWLB_Helpers::now(),'updated_at'=>VWLB_Helpers::now()));if(!$saved)return VWLB_Helpers::error('vwlb_database_error',__('Live reminder could not be scheduled.',VWLB_TEXT_DOMAIN),500);}
+			VWLB_Helpers::outbox('LiveWaitingRoomOpened','live',$fresh['id'],array('capacity'=>$capacity,'waiting_room'=>$access['waiting_room']));return true;});
 	}
 
 	public static function cleanup() {

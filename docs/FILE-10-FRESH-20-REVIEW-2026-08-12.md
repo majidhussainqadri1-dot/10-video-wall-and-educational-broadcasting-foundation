@@ -40,3 +40,6 @@ The limiter returned success when its reset write failed and recursively retried
 
 ## R10 — DEFECT FIXED
 REST mutations and live scheduling ignored failures while marking idempotency keys complete/aborted. Completion is now verified (including replay-content verification), abort storage errors are surfaced, and success is not returned when durable replay state cannot be established.
+
+## R11 — DEFECT FIXED
+Capacity/reminder setup used unchecked writes, duplicated reminders on retry, and the canonical REST schedule ignored extras failure. Event settings and reminder reconciliation are now transactional/versioned and errors propagate to the caller.

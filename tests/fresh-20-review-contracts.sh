@@ -46,3 +46,8 @@ need 'ON DUPLICATE KEY UPDATE counter=IF' "$P/includes/class-vwlb-security.php" 
 need vwlb_idempotency_persist_failed "$P/includes/class-vwlb-security.php" r10-finish-check
 need vwlb_idempotency_abort_failed "$P/includes/class-vwlb-security.php" r10-abort-check
 need '$idem_done=VWLB_Security::idempotency_finish' "$P/includes/class-vwlb-live.php" r10-live-finish
+
+# R11 — waiting-room/reminder extras are transactional, versioned and propagated by REST.
+need vwlb_live_extras_conflict "$P/includes/class-vwlb-extensions.php" r11-live-extras-cas
+need 'Live reminder could not be scheduled.' "$P/includes/class-vwlb-extensions.php" r11-reminder-write
+need '$extras=VWLB_Extensions::schedule_live_extras' "$P/includes/class-vwlb-rest.php" r11-rest-propagation
