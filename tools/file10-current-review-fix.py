@@ -1,93 +1,102 @@
 from pathlib import Path
+import re
 
-root = Path('.')
-sec_path = root / 'video-wall-and-live-broadcasting/includes/class-vwlb-security.php'
-plugin_path = root / 'video-wall-and-live-broadcasting/includes/class-vwlb-plugin.php'
-js_path = root / 'video-wall-and-live-broadcasting/assets/js/vwlb.js'
-run_path = root / 'tests/run-all.sh'
-reg_path = root / 'tests/fresh-40-review-contracts.sh'
+p = Path('video-wall-and-live-broadcasting/includes/class-vwlb-future-intelligence.php')
+t = p.read_text()
 
-sec = sec_path.read_text()
-if "private static $rest_idempotency = array();" not in sec:
-    sec = sec.replace("final class VWLB_Security {\n", "final class VWLB_Security {\n\tprivate static $rest_idempotency = array();\n", 1)
-
-old_scope = "\tprivate static function idem_scope($scope){return substr(sanitize_key($scope).':'.get_current_user_id(),0,100);}\n"
-new_scope = "\tprivate static function idem_scope($scope){$uid=get_current_user_id();$actor=$uid?'u'.$uid:'a'.substr(VWLB_Helpers::ip_hash(),0,32);return substr(sanitize_key($scope).':'.$actor,0,100);}\n"
-if old_scope in sec:
-    sec = sec.replace(old_scope, new_scope, 1)
-elif new_scope not in sec:
-    raise SystemExit('R04 idem scope pattern missing')
-
-old_finish = "\tpublic static function idempotency_finish($key,$scope,$response){global $wpdb;$scope=self::idem_scope($scope);$wpdb->update(VWLB_Helpers::table('idempotency'),array('status'=>'complete','response_json'=>VWLB_Helpers::json_encode($response)),array('idempotency_key'=>$key,'scope'=>$scope),array('%s','%s'),array('%s','%s'));}\n}"
-new_finish = r'''	public static function idempotency_finish($key,$scope,$response){global $wpdb;$scope=self::idem_scope($scope);$wpdb->update(VWLB_Helpers::table('idempotency'),array('status'=>'complete','response_json'=>VWLB_Helpers::json_encode($response)),array('idempotency_key'=>$key,'scope'=>$scope),array('%s','%s'),array('%s','%s'));}
-	public static function idempotency_abort($key,$scope){global $wpdb;$scope=self::idem_scope($scope);$wpdb->delete(VWLB_Helpers::table('idempotency'),array('idempotency_key'=>VWLB_Helpers::text($key,128),'scope'=>$scope,'status'=>'processing'),array('%s','%s','%s'));}
-	private static function rest_file10($request){$route=(string)$request->get_route();foreach(VWLB_Contracts::namespaces() as $n){if(str_starts_with($route,'/'.$n.'/'))return true;}return false;}
-	private static function rest_callback_name($handler){$cb=$handler['callback']??null;if(is_array($cb)&&isset($cb[1]))return sanitize_key((string)$cb[1]);return 'mutation';}
-	private static function rest_request_hash($request){$params=$request->get_params();$normal=function(&$v)use(&$normal){if(is_array($v)){ksort($v);foreach($v as &$x)$normal($x);}};$normal($params);$headers=array('content-range'=>(string)$request->get_header('Content-Range'),'content-type'=>(string)$request->get_header('Content-Type'));return hash('sha256',strtoupper((string)$request->get_method()).'|'.$request->get_route().'|'.VWLB_Helpers::json_encode($params).'|'.hash('sha256',(string)$request->get_body()).'|'.VWLB_Helpers::json_encode($headers));}
-	/** Cross-surface mutation contract: rate-limit every mutation and require durable idempotency except signed provider webhooks, which have provider event dedupe/replay controls. */
-	public static function rest_mutation_before($response,$handler,$request){
-		if(null!==$response||!self::rest_file10($request))return $response;$method=strtoupper((string)$request->get_method());if(in_array($method,array('GET','HEAD','OPTIONS'),true))return $response;$name=self::rest_callback_name($handler);
-		$limit=max(1,(int)apply_filters('vwlb_rest_mutation_rate_limit',600,$name,$request));$window=max(1,(int)apply_filters('vwlb_rest_mutation_rate_window',60,$name,$request));$rate=self::rate_limit('rest_mutation_'.$name,$limit,$window);if(is_wp_error($rate))return $rate;
-		if('webhook'===$name)return $response;
-		$key=VWLB_Helpers::text($request->get_header('Idempotency-Key'),128);$scope='rest_'.$method.'_'.$name;$idem=self::idempotency_begin($key,$scope,self::rest_request_hash($request));if(is_wp_error($idem))return $idem;
-		if(!empty($idem['replay'])){$stored=(array)$idem['response'];$replay=new WP_REST_Response($stored['data']??null,absint($stored['status']??200)?:200);$replay->header('X-VWLB-Idempotent-Replay','true');return $replay;}
-		self::$rest_idempotency[spl_object_hash($request)]=array('key'=>$key,'scope'=>$scope);return $response;
+helper_anchor = "\tprivate static function require_live_control( $event, $purpose ) {\n\t\treturn $event && VWLB_Security::can( VWLB_Contracts::CAP_BROADCAST, $event, $purpose );\n\t}\n"
+helper = helper_anchor + r'''
+	private static function contains_raw_secret( $value ) {
+		if ( ! is_array( $value ) ) return false;
+		foreach ( $value as $key => $child ) {
+			$key = sanitize_key( (string) $key );
+			if ( str_ends_with( $key, '_ref' ) || str_ends_with( $key, '_id' ) ) { if ( is_array($child) && self::contains_raw_secret($child) ) return true; continue; }
+			if ( in_array( $key, array('secret','stream_key','password','api_key','access_token','refresh_token','private_key','token'), true ) ) return true;
+			if ( is_array( $child ) && self::contains_raw_secret( $child ) ) return true;
+		}
+		return false;
 	}
-	public static function rest_mutation_after($response,$handler,$request){
-		$hash=spl_object_hash($request);if(empty(self::$rest_idempotency[$hash]))return $response;$ctx=self::$rest_idempotency[$hash];unset(self::$rest_idempotency[$hash]);
-		if(is_wp_error($response)){self::idempotency_abort($ctx['key'],$ctx['scope']);return $response;}$wrapped=rest_ensure_response($response);$status=(int)$wrapped->get_status();if($status>=500){self::idempotency_abort($ctx['key'],$ctx['scope']);return $response;}self::idempotency_finish($ctx['key'],$ctx['scope'],array('status'=>$status,'data'=>$wrapped->get_data()));return $response;
-	}
-}'''
-if old_finish in sec:
-    sec = sec.replace(old_finish, new_finish, 1)
-elif "public static function rest_mutation_before" not in sec:
-    raise SystemExit('R04 security tail pattern missing')
-sec_path.write_text(sec)
-
-plugin = plugin_path.read_text()
-needle = "\t\tVWLB_Future_Intelligence::register();\n\n"
-insert = "\t\tVWLB_Future_Intelligence::register();\n\t\tadd_filter('rest_request_before_callbacks',array('VWLB_Security','rest_mutation_before'),10,3);\n\t\tadd_filter('rest_request_after_callbacks',array('VWLB_Security','rest_mutation_after'),10,3);\n\n"
-if needle in plugin:
-    plugin = plugin.replace(needle, insert, 1)
-elif "rest_mutation_before" not in plugin:
-    raise SystemExit('R04 plugin guard registration pattern missing')
-plugin_path.write_text(plugin)
-
-js = js_path.read_text()
-old = "  const request = async (path, options = {}) => {\n    const headers = Object.assign({'Content-Type': 'application/json'}, options.headers || {});\n    if (cfg.nonce) headers['X-WP-Nonce'] = cfg.nonce;\n"
-new = "  const idempotencyKey = () => {\n    if (window.crypto && typeof window.crypto.randomUUID === 'function') return window.crypto.randomUUID();\n    if (window.crypto && typeof window.crypto.getRandomValues === 'function') { const b = new Uint8Array(16); window.crypto.getRandomValues(b); return Array.from(b, (v) => v.toString(16).padStart(2, '0')).join(''); }\n    return `${Date.now()}-${Math.random().toString(36).slice(2)}`;\n  };\n  const request = async (path, options = {}) => {\n    const headers = Object.assign({'Content-Type': 'application/json'}, options.headers || {});\n    const method = String(options.method || 'GET').toUpperCase();\n    if (!['GET', 'HEAD', 'OPTIONS'].includes(method) && !headers['Idempotency-Key']) headers['Idempotency-Key'] = options.idempotencyKey || idempotencyKey();\n    if (cfg.nonce) headers['X-WP-Nonce'] = cfg.nonce;\n"
-if old in js:
-    js = js.replace(old, new, 1)
-elif "const idempotencyKey = () =>" not in js:
-    raise SystemExit('R04 browser request pattern missing')
-js_path.write_text(js)
-
-reg = r'''#!/usr/bin/env bash
-set -euo pipefail
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-P="$ROOT/video-wall-and-live-broadcasting"
-fail(){ echo "FAIL fresh-40-review: $*" >&2; exit 1; }
-need(){ grep -R -F -- "$1" "$2" >/dev/null || fail "$3"; }
-# R02 — serialized base/extension/Future migration and activation parity.
-need "MIGRATION_LOCK" "$P/includes/class-vwlb-activator.php" r02-migration-lock
-need "VWLB_Future_Intelligence::install_schema" "$P/includes/class-vwlb-activator.php" r02-future-activation-schema
-need "VWLB_Activator::reconcile_schema" "$P/includes/class-vwlb-plugin.php" r02-runtime-reconcile
-# R03 — publisher/broadcaster cannot self-assert human-reviewed Future states.
-need "Human review permission is required to change a generated track review state" "$P/includes/class-vwlb-future-intelligence.php" r03-track-review-guard
-need "Timestamp corrections require independent review permission" "$P/includes/class-vwlb-future-intelligence.php" r03-correction-review-guard
-# R04 — all File 10 REST mutations are rate-limited and idempotency guarded; signed webhooks retain provider replay dedupe.
-need "rest_request_before_callbacks" "$P/includes/class-vwlb-plugin.php" r04-before-hook
-need "rest_request_after_callbacks" "$P/includes/class-vwlb-plugin.php" r04-after-hook
-need "rest_mutation_before" "$P/includes/class-vwlb-security.php" r04-mutation-guard
-need "idempotency_abort" "$P/includes/class-vwlb-security.php" r04-idempotency-abort
-need "'webhook'===\$name" "$P/includes/class-vwlb-security.php" r04-webhook-exception
-need "Idempotency-Key" "$P/assets/js/vwlb.js" r04-browser-idempotency
-printf '%s\n' 'fresh 40-review regression contracts PASS'
 '''
-reg_path.write_text(reg)
+if "private static function contains_raw_secret" not in t:
+    if helper_anchor not in t: raise SystemExit('R05 helper anchor missing')
+    t = t.replace(helper_anchor, helper, 1)
 
-run = run_path.read_text()
-line = 'bash "$ROOT/tests/fresh-40-review-contracts.sh"\n'
-if line not in run:
-    run = run.replace('bash "$ROOT/tests/static-contracts.sh"\n', 'bash "$ROOT/tests/static-contracts.sh"\n' + line, 1)
-run_path.write_text(run)
+source_method = r'''	public static function upsert_source( $live_id, $data ) {
+		$event = self::live( $live_id );
+		if ( ! self::require_live_control( $event, 'future_production_source' ) ) return VWLB_Helpers::error( 'vwlb_forbidden', __( 'You cannot manage production sources.', VWLB_TEXT_DOMAIN ), 403 );
+		$type = VWLB_Helpers::enum( $data['source_type'] ?? 'camera', array( 'camera','microphone','screen','slides','browser','remote_guest','media','whiteboard' ), '' );
+		if ( ! $type ) return VWLB_Helpers::error( 'vwlb_source_type_invalid', __( 'Production source type is invalid.', VWLB_TEXT_DOMAIN ), 422 );
+		$label = VWLB_Helpers::text( $data['label'] ?? '', 191 );
+		if ( ! $label ) return VWLB_Helpers::error( 'vwlb_source_label_required', __( 'Source label is required.', VWLB_TEXT_DOMAIN ), 422 );
+		$config=(array)($data['config']??array());if(self::contains_raw_secret($config))return VWLB_Helpers::error('vwlb_source_secret_forbidden',__('Raw credentials cannot be stored in production-source configuration.',VWLB_TEXT_DOMAIN),422);
+		global $wpdb; $table = VWLB_Helpers::table( 'production_sources' ); $now = VWLB_Helpers::now();
+		$id = absint( $data['id'] ?? 0 );
+		$row = array( 'live_event_id'=>(int)$event['id'], 'source_type'=>$type, 'label'=>$label,
+			'provider_ref'=>VWLB_Helpers::text( $data['provider_ref'] ?? '', 191 ), 'state'=>VWLB_Helpers::enum( $data['state'] ?? 'ready', array('ready','muted','offline','failed','removed'), 'ready' ),
+			'config_json'=>VWLB_Helpers::json_encode( $config ), 'updated_at'=>$now );
+		if ( $id ) {
+			$current = self::public_row( 'production_sources', $id );
+			if ( ! $current || (int)$current['live_event_id'] !== (int)$event['id'] ) return VWLB_Helpers::error( 'vwlb_source_missing', __( 'Production source not found.', VWLB_TEXT_DOMAIN ), 404 );
+			$row['version'] = (int)$current['version'] + 1;
+			$ok = $wpdb->update( $table, $row, array( 'id'=>$id, 'version'=>(int)$current['version'] ) );
+			if ( 1 !== $ok ) return VWLB_Helpers::error( 'vwlb_version_conflict', __( 'Production source changed. Refresh and try again.', VWLB_TEXT_DOMAIN ), 409 );
+		} else {
+			$public = VWLB_Helpers::public_id( 'src' ); $row['public_id']=$public; $row['owner_id']=get_current_user_id(); $row['created_at']=$now; $row['version']=1;
+			if ( ! $wpdb->insert( $table, $row ) ) return VWLB_Helpers::error( 'vwlb_database_error', __( 'Production source could not be saved.', VWLB_TEXT_DOMAIN ), 500 );
+			$id = (int)$wpdb->insert_id;
+		}
+		VWLB_Helpers::audit( 'live', $event['id'], 'production_source_saved', $event['status'], $event['status'], $type, array( 'source_id'=>$id ) );
+		do_action( 'vwlb_production_source_changed', $event, self::public_row( 'production_sources', $id ) );
+		return self::public_row( 'production_sources', $id );
+	}
+'''
+scene_method = r'''	public static function upsert_scene( $live_id, $data ) {
+		$event = self::live( $live_id );
+		if ( ! self::require_live_control( $event, 'future_production_scene' ) ) return VWLB_Helpers::error( 'vwlb_forbidden', __( 'You cannot manage production scenes.', VWLB_TEXT_DOMAIN ), 403 );
+		$title = VWLB_Helpers::text( $data['title'] ?? '', 191 ); if ( ! $title ) return VWLB_Helpers::error( 'vwlb_scene_title_required', __( 'Scene title is required.', VWLB_TEXT_DOMAIN ), 422 );
+		$sources = array_values( array_unique( array_filter( array_map( 'absint', (array)( $data['source_ids'] ?? array() ) ) ) ) );
+		foreach($sources as $source_id){$source=self::public_row('production_sources',$source_id);if(!$source||(int)$source['live_event_id']!==(int)$event['id']||'removed'===$source['state'])return VWLB_Helpers::error('vwlb_scene_source_invalid',__('Every scene source must be an active source of the same live event.',VWLB_TEXT_DOMAIN),422,array('source_id'=>$source_id));}
+		global $wpdb; $table=VWLB_Helpers::table('production_scenes'); $now=VWLB_Helpers::now();
+		$id=absint($data['id']??0); $row=array('live_event_id'=>(int)$event['id'],'title'=>$title,
+			'layout_json'=>VWLB_Helpers::json_encode((array)($data['layout']??array())),'source_ids_json'=>VWLB_Helpers::json_encode($sources),'updated_at'=>$now);
+		if($id){$current=self::public_row('production_scenes',$id);if(!$current||(int)$current['live_event_id']!==(int)$event['id'])return VWLB_Helpers::error('vwlb_scene_missing',__('Scene not found.',VWLB_TEXT_DOMAIN),404);$row['version']=(int)$current['version']+1;$ok=$wpdb->update($table,$row,array('id'=>$id,'version'=>(int)$current['version']));if(1!==$ok)return VWLB_Helpers::error('vwlb_version_conflict',__('Scene changed. Refresh and try again.',VWLB_TEXT_DOMAIN),409);}
+		else{$row['public_id']=VWLB_Helpers::public_id('scene');$row['owner_id']=get_current_user_id();$row['state']='saved';$row['is_program']=0;$row['version']=1;$row['created_at']=$now;if(!$wpdb->insert($table,$row))return VWLB_Helpers::error('vwlb_database_error',__('Scene could not be saved.',VWLB_TEXT_DOMAIN),500);$id=(int)$wpdb->insert_id;}
+		return self::public_row('production_scenes',$id);
+	}
+'''
+switch_method = r'''	public static function switch_program_scene( $live_id, $scene_id, $expected_version ) {
+		$event=self::live($live_id); if(!self::require_live_control($event,'future_switch_scene'))return VWLB_Helpers::error('vwlb_forbidden',__('You cannot switch scenes.',VWLB_TEXT_DOMAIN),403);
+		$scene=self::public_row('production_scenes',$scene_id); if(!$scene||(int)$scene['live_event_id']!==(int)$event['id'])return VWLB_Helpers::error('vwlb_scene_missing',__('Scene not found.',VWLB_TEXT_DOMAIN),404);
+		if((int)$scene['version']!==(int)$expected_version)return VWLB_Helpers::error('vwlb_version_conflict',__('Scene changed. Refresh and try again.',VWLB_TEXT_DOMAIN),409);
+		global $wpdb; $table=VWLB_Helpers::table('production_scenes');
+		return VWLB_DB::transaction(function()use($wpdb,$table,$event,$scene,$expected_version){
+			$locked_event=VWLB_Repository::find('live_events',$event['id'],true);if(!$locked_event)return VWLB_Helpers::error('vwlb_live_missing',__('Live event not found.',VWLB_TEXT_DOMAIN),404);
+			$fresh=self::public_row('production_scenes',$scene['id']);if(!$fresh||(int)$fresh['live_event_id']!==(int)$event['id']||(int)$fresh['version']!==(int)$expected_version)return VWLB_Helpers::error('vwlb_version_conflict',__('Scene changed. Refresh and try again.',VWLB_TEXT_DOMAIN),409);
+			$cleared=$wpdb->query($wpdb->prepare("UPDATE $table SET is_program=0,updated_at=%s WHERE live_event_id=%d AND is_program=1 AND id<>%d",VWLB_Helpers::now(),$event['id'],$fresh['id']));if(false===$cleared)return VWLB_Helpers::error('vwlb_database_error',__('The previous program scene could not be cleared.',VWLB_TEXT_DOMAIN),500);
+			$ok=$wpdb->update($table,array('is_program'=>1,'version'=>(int)$fresh['version']+1,'updated_at'=>VWLB_Helpers::now()),array('id'=>$fresh['id'],'version'=>$fresh['version']));
+			if(1!==$ok)return VWLB_Helpers::error('vwlb_version_conflict',__('Scene switch conflicted with another operator.',VWLB_TEXT_DOMAIN),409);
+			VWLB_Helpers::audit('live',$event['id'],'program_scene_switched',$event['status'],$event['status'],'',array('scene_id'=>$fresh['id']));
+			do_action('vwlb_program_scene_switched',$event,self::public_row('production_scenes',$fresh['id']));
+			return self::public_row('production_scenes',$fresh['id']);
+		});
+	}
+'''
+
+def replace_method(name, replacement):
+    global t
+    pattern = re.compile(r"\tpublic static function " + re.escape(name) + r"\(.*?\n\t}\n", re.S)
+    m = pattern.search(t)
+    if not m: raise SystemExit(f'R05 method {name} not found')
+    t = t[:m.start()] + replacement + t[m.end():]
+
+replace_method('upsert_source', source_method)
+replace_method('upsert_scene', scene_method)
+replace_method('switch_program_scene', switch_method)
+p.write_text(t)
+
+reg = Path('tests/fresh-40-review-contracts.sh')
+r = reg.read_text()
+marker = "# R05 — production sources/scenes preserve ownership, reject raw secrets/cross-event sources, and serialize program switching.\nneed \"contains_raw_secret\" \"$P/includes/class-vwlb-future-intelligence.php\" r05-secret-rejection\nneed \"Every scene source must be an active source of the same live event\" \"$P/includes/class-vwlb-future-intelligence.php\" r05-scene-source-scope\nneed \"find('live_events',\$event['id'],true)\" \"$P/includes/class-vwlb-future-intelligence.php\" r05-program-lock\nneed \"id<>%d\" \"$P/includes/class-vwlb-future-intelligence.php\" r05-single-program\n"
+if '# R05 —' not in r:
+    r = r.replace("printf '%s\\n' 'fresh 40-review regression contracts PASS'\n", marker + "printf '%s\\n' 'fresh 40-review regression contracts PASS'\n")
+reg.write_text(r)
