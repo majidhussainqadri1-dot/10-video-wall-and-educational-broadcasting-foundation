@@ -3,6 +3,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 find "$ROOT/video-wall-and-live-broadcasting" -type f -name '*.php' -print0 | sort -z | xargs -0 -n1 php -l >/dev/null
 node --check "$ROOT/video-wall-and-live-broadcasting/assets/js/vwlb.js"
+node --check "$ROOT/video-wall-and-live-broadcasting/assets/js/vwlb-future.js"
 php "$ROOT/tests/unit-state-machine.php"
 bash "$ROOT/tests/static-contracts.sh"
 bash "$ROOT/tools/build-package.sh" /tmp/vwlb-build-a.zip >/dev/null
