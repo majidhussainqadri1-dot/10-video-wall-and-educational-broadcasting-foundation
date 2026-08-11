@@ -37,3 +37,7 @@ need 'status='"'"'publishing'"'"' AND attempts=%d' "$P/includes/class-vwlb-jobs.
 # R08 — provider reconciliation refreshes canonical live state and writes through versioned CAS.
 need '$fresh=VWLB_Repository::find('"'"'live_events'"'"'' "$P/includes/class-vwlb-jobs.php" r08-fresh-live
 need 'update_versioned('"'"'live_events'"'"'' "$P/includes/class-vwlb-jobs.php" r08-live-cas
+
+# R09 — rate limiting is a single atomic upsert and fails closed on storage failure.
+need vwlb_rate_limit_store_unavailable "$P/includes/class-vwlb-security.php" r09-rate-store
+need 'ON DUPLICATE KEY UPDATE counter=IF' "$P/includes/class-vwlb-security.php" r09-atomic-rate

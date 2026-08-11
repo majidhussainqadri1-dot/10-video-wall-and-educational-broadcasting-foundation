@@ -34,3 +34,6 @@ An outbox worker crash after status `publishing` stranded the event forever beca
 
 ## R08 — DEFECT FIXED
 Provider reconciliation merged remote state into an old live-event snapshot and performed an unchecked unversioned update, risking overwrite of concurrent control changes. It now refreshes canonical state, revalidates provider/status, minimizes provider fields and uses versioned CAS.
+
+## R09 — DEFECT FIXED
+The limiter returned success when its reset write failed and recursively retried CAS conflicts without a bound. It now uses one atomic upsert/read contract and returns 503 if throttle state cannot be durably verified.

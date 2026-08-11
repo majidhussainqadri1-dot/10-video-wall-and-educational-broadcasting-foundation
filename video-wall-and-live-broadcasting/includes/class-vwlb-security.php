@@ -47,13 +47,13 @@ final class VWLB_Security {
 		return $ok?true:VWLB_Helpers::error('vwlb_step_up_required',__('Additional identity verification is required.',VWLB_TEXT_DOMAIN),403);
 	}
 	public static function rate_limit($bucket,$limit,$window){
-		global $wpdb;$key=hash_hmac('sha256',sanitize_key($bucket).'|'.get_current_user_id().'|'.VWLB_Helpers::ip_hash(),wp_salt('nonce'));$table=VWLB_Helpers::table('rate_limits');$now=time();
-		$row=$wpdb->get_row($wpdb->prepare("SELECT * FROM $table WHERE limit_key=%s",$key),ARRAY_A);
-		if(!$row||strtotime($row['window_ends_at'].' UTC')<=$now){$wpdb->replace($table,array('limit_key'=>$key,'counter'=>1,'window_ends_at'=>gmdate('Y-m-d H:i:s',$now+$window),'updated_at'=>VWLB_Helpers::now()),array('%s','%d','%s','%s'));return true;}
-		if((int)$row['counter']>=$limit)return VWLB_Helpers::error('vwlb_rate_limited',__('Too many requests. Please try again later.',VWLB_TEXT_DOMAIN),429,array('retry_after'=>max(1,strtotime($row['window_ends_at'].' UTC')-$now)));
-		$changed=$wpdb->query($wpdb->prepare("UPDATE $table SET counter=counter+1,updated_at=%s WHERE limit_key=%s AND counter=%d",VWLB_Helpers::now(),$key,(int)$row['counter']));
-		if(1!==$changed)return self::rate_limit($bucket,$limit,$window);return true;
+		global $wpdb;$limit=max(1,(int)$limit);$window=max(1,(int)$window);$key=hash_hmac('sha256',sanitize_key($bucket).'|'.get_current_user_id().'|'.VWLB_Helpers::ip_hash(),wp_salt('nonce'));$table=VWLB_Helpers::table('rate_limits');$now=VWLB_Helpers::now();$ends=gmdate('Y-m-d H:i:s',time()+$window);
+		$changed=$wpdb->query($wpdb->prepare("INSERT INTO $table (limit_key,counter,window_ends_at,updated_at) VALUES (%s,1,%s,%s) ON DUPLICATE KEY UPDATE counter=IF(window_ends_at<=%s,1,counter+1),window_ends_at=IF(window_ends_at<=%s,%s,window_ends_at),updated_at=%s",$key,$ends,$now,$now,$now,$ends,$now));
+		if(false===$changed)return VWLB_Helpers::error('vwlb_rate_limit_store_unavailable',__('Request throttling is temporarily unavailable. Please retry safely.',VWLB_TEXT_DOMAIN),503);
+		$row=$wpdb->get_row($wpdb->prepare("SELECT counter,window_ends_at FROM $table WHERE limit_key=%s",$key),ARRAY_A);if(!$row)return VWLB_Helpers::error('vwlb_rate_limit_store_unavailable',__('Request throttling state could not be verified.',VWLB_TEXT_DOMAIN),503);
+		if((int)$row['counter']>$limit)return VWLB_Helpers::error('vwlb_rate_limited',__('Too many requests. Please try again later.',VWLB_TEXT_DOMAIN),429,array('retry_after'=>max(1,strtotime($row['window_ends_at'].' UTC')-time())));return true;
 	}
+
 	private static function idem_scope($scope){$uid=get_current_user_id();$actor=$uid?'u'.$uid:'a'.substr(VWLB_Helpers::ip_hash(),0,32);return substr(sanitize_key($scope).':'.$actor,0,100);}
 	public static function idempotency_begin($key,$scope,$request_hash){
 		global $wpdb;$key=VWLB_Helpers::text($key,128);if(!$key)return VWLB_Helpers::error('vwlb_idempotency_required',__('Idempotency-Key is required.',VWLB_TEXT_DOMAIN),400);$scope=self::idem_scope($scope);$table=VWLB_Helpers::table('idempotency');
