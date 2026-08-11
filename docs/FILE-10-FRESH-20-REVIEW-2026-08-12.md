@@ -37,3 +37,6 @@ Provider reconciliation merged remote state into an old live-event snapshot and 
 
 ## R09 — DEFECT FIXED
 The limiter returned success when its reset write failed and recursively retried CAS conflicts without a bound. It now uses one atomic upsert/read contract and returns 503 if throttle state cannot be durably verified.
+
+## R10 — DEFECT FIXED
+REST mutations and live scheduling ignored failures while marking idempotency keys complete/aborted. Completion is now verified (including replay-content verification), abort storage errors are surfaced, and success is not returned when durable replay state cannot be established.

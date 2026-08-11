@@ -63,8 +63,13 @@ final class VWLB_Security {
 		$inserted=$wpdb->insert($table,array('idempotency_key'=>$key,'scope'=>$scope,'request_hash'=>$request_hash,'status'=>'processing','response_json'=>'{}','created_at'=>VWLB_Helpers::now(),'expires_at'=>gmdate('Y-m-d H:i:s',time()+DAY_IN_SECONDS)),array('%s','%s','%s','%s','%s','%s','%s'));
 		if(false===$inserted){$race=$wpdb->get_row($wpdb->prepare("SELECT * FROM $table WHERE idempotency_key=%s AND scope=%s",$key,$scope),ARRAY_A);if($race&&hash_equals($race['request_hash'],$request_hash)&&'complete'===$race['status'])return array('replay'=>true,'response'=>VWLB_Helpers::json($race['response_json']));return VWLB_Helpers::error('vwlb_idempotency_in_progress',__('An operation with this key is already running.',VWLB_TEXT_DOMAIN),409);}return array('replay'=>false);
 	}
-	public static function idempotency_finish($key,$scope,$response){global $wpdb;$scope=self::idem_scope($scope);$wpdb->update(VWLB_Helpers::table('idempotency'),array('status'=>'complete','response_json'=>VWLB_Helpers::json_encode($response)),array('idempotency_key'=>$key,'scope'=>$scope),array('%s','%s'),array('%s','%s'));}
-	public static function idempotency_abort($key,$scope){global $wpdb;$scope=self::idem_scope($scope);$wpdb->delete(VWLB_Helpers::table('idempotency'),array('idempotency_key'=>VWLB_Helpers::text($key,128),'scope'=>$scope,'status'=>'processing'),array('%s','%s','%s'));}
+	public static function idempotency_finish($key,$scope,$response){
+		global $wpdb;$key=VWLB_Helpers::text($key,128);$scope=self::idem_scope($scope);$table=VWLB_Helpers::table('idempotency');$encoded=VWLB_Helpers::json_encode($response);$changed=$wpdb->update($table,array('status'=>'complete','response_json'=>$encoded),array('idempotency_key'=>$key,'scope'=>$scope,'status'=>'processing'),array('%s','%s'),array('%s','%s','%s'));
+		if(1===$changed)return true;if(false===$changed)return VWLB_Helpers::error('vwlb_idempotency_persist_failed',__('The operation completed but its replay record could not be stored safely.',VWLB_TEXT_DOMAIN),503);
+		$row=$wpdb->get_row($wpdb->prepare("SELECT status,response_json FROM $table WHERE idempotency_key=%s AND scope=%s",$key,$scope),ARRAY_A);if($row&&'complete'===$row['status']&&hash_equals((string)$row['response_json'],$encoded))return true;return VWLB_Helpers::error('vwlb_idempotency_persist_failed',__('The operation replay state could not be verified.',VWLB_TEXT_DOMAIN),503);
+	}
+
+	public static function idempotency_abort($key,$scope){global $wpdb;$scope=self::idem_scope($scope);$deleted=$wpdb->delete(VWLB_Helpers::table('idempotency'),array('idempotency_key'=>VWLB_Helpers::text($key,128),'scope'=>$scope,'status'=>'processing'),array('%s','%s','%s'));return false===$deleted?VWLB_Helpers::error('vwlb_idempotency_abort_failed',__('The failed operation replay lock could not be released safely.',VWLB_TEXT_DOMAIN),503):true;}
 	private static function rest_file10($request){$route=(string)$request->get_route();foreach(VWLB_Contracts::namespaces() as $n){if(str_starts_with($route,'/'.$n.'/'))return true;}return false;}
 	private static function rest_callback_name($handler){$cb=$handler['callback']??null;if(is_array($cb)&&isset($cb[1]))return sanitize_key((string)$cb[1]);return 'mutation';}
 	private static function rest_request_hash($request){$params=$request->get_params();$normal=function(&$v)use(&$normal){if(is_array($v)){ksort($v);foreach($v as &$x)$normal($x);}};$normal($params);$headers=array('content-range'=>(string)$request->get_header('Content-Range'),'content-type'=>(string)$request->get_header('Content-Type'));return hash('sha256',strtoupper((string)$request->get_method()).'|'.$request->get_route().'|'.VWLB_Helpers::json_encode($params).'|'.hash('sha256',(string)$request->get_body()).'|'.VWLB_Helpers::json_encode($headers));}
@@ -72,13 +77,12 @@ final class VWLB_Security {
 	public static function rest_mutation_before($response,$handler,$request){
 		if(null!==$response||!self::rest_file10($request))return $response;$method=strtoupper((string)$request->get_method());if(in_array($method,array('GET','HEAD','OPTIONS'),true))return $response;$name=self::rest_callback_name($handler);
 		$limit=max(1,(int)apply_filters('vwlb_rest_mutation_rate_limit',600,$name,$request));$window=max(1,(int)apply_filters('vwlb_rest_mutation_rate_window',60,$name,$request));$rate=self::rate_limit('rest_mutation_'.$name,$limit,$window);if(is_wp_error($rate))return $rate;
-		if('webhook'===$name)return $response;
-		$key=VWLB_Helpers::text($request->get_header('Idempotency-Key'),128);$scope='rest_'.$method.'_'.$name;$idem=self::idempotency_begin($key,$scope,self::rest_request_hash($request));if(is_wp_error($idem))return $idem;
-		if(!empty($idem['replay'])){$stored=(array)$idem['response'];$replay=new WP_REST_Response($stored['data']??null,absint($stored['status']??200)?:200);$replay->header('X-VWLB-Idempotent-Replay','true');return $replay;}
-		self::$rest_idempotency[spl_object_hash($request)]=array('key'=>$key,'scope'=>$scope);return $response;
+		if('webhook'===$name)return $response;$key=VWLB_Helpers::text($request->get_header('Idempotency-Key'),128);$scope='rest_'.$method.'_'.$name;$idem=self::idempotency_begin($key,$scope,self::rest_request_hash($request));if(is_wp_error($idem))return $idem;
+		if(!empty($idem['replay'])){$stored=(array)$idem['response'];$replay=new WP_REST_Response($stored['data']??null,absint($stored['status']??200)?:200);$replay->header('X-VWLB-Idempotent-Replay','true');return $replay;}self::$rest_idempotency[spl_object_hash($request)]=array('key'=>$key,'scope'=>$scope);return $response;
 	}
+
 	public static function rest_mutation_after($response,$handler,$request){
 		$hash=spl_object_hash($request);if(empty(self::$rest_idempotency[$hash]))return $response;$ctx=self::$rest_idempotency[$hash];unset(self::$rest_idempotency[$hash]);
-		if(is_wp_error($response)){self::idempotency_abort($ctx['key'],$ctx['scope']);return $response;}$wrapped=rest_ensure_response($response);$status=(int)$wrapped->get_status();if($status>=500){self::idempotency_abort($ctx['key'],$ctx['scope']);return $response;}self::idempotency_finish($ctx['key'],$ctx['scope'],array('status'=>$status,'data'=>$wrapped->get_data()));return $response;
+		if(is_wp_error($response)){$aborted=self::idempotency_abort($ctx['key'],$ctx['scope']);return is_wp_error($aborted)?$aborted:$response;}$wrapped=rest_ensure_response($response);$status=(int)$wrapped->get_status();if($status>=500){$aborted=self::idempotency_abort($ctx['key'],$ctx['scope']);return is_wp_error($aborted)?$aborted:$response;}$finished=self::idempotency_finish($ctx['key'],$ctx['scope'],array('status'=>$status,'data'=>$wrapped->get_data()));return is_wp_error($finished)?$finished:$response;
 	}
 }

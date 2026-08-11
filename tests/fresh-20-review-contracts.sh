@@ -41,3 +41,8 @@ need 'update_versioned('"'"'live_events'"'"'' "$P/includes/class-vwlb-jobs.php" 
 # R09 — rate limiting is a single atomic upsert and fails closed on storage failure.
 need vwlb_rate_limit_store_unavailable "$P/includes/class-vwlb-security.php" r09-rate-store
 need 'ON DUPLICATE KEY UPDATE counter=IF' "$P/includes/class-vwlb-security.php" r09-atomic-rate
+
+# R10 — idempotency completion/abort is verified and REST/live success cannot ignore durable replay failure.
+need vwlb_idempotency_persist_failed "$P/includes/class-vwlb-security.php" r10-finish-check
+need vwlb_idempotency_abort_failed "$P/includes/class-vwlb-security.php" r10-abort-check
+need '$idem_done=VWLB_Security::idempotency_finish' "$P/includes/class-vwlb-live.php" r10-live-finish
