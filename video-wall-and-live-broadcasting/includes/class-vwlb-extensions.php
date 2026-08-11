@@ -584,24 +584,12 @@ final class VWLB_Extensions {
 
 
 	public static function create_premiere( $data, $idempotency_key ) {
-		$video=VWLB_Repository::find('videos',$data['video_id']??0);
-		if(!$video||'published'!==$video['status']||!VWLB_Security::can(VWLB_Contracts::CAP_PUBLISH,$video,'create_premiere'))return VWLB_Helpers::error('vwlb_premiere_video_invalid',__('A published, authorized video is required for a premiere.',VWLB_TEXT_DOMAIN),422);
-		$live_data=array(
-			'title'=>VWLB_Helpers::text($data['title']??$video['title'],255),'description'=>VWLB_Helpers::textarea($data['description']??$video['description']),
-			'scheduled_start'=>$data['scheduled_start']??null,'scheduled_end'=>$data['scheduled_end']??null,'timezone'=>$data['timezone']??'UTC',
-			'visibility'=>$data['visibility']??$video['visibility'],'provider'=>$data['provider']??'custom','language'=>$data['language']??$video['language'],
-			'chat_policy'=>array('enabled'=>true,'moderated'=>true,'slow_mode_seconds'=>max(0,min(300,absint($data['slow_mode_seconds']??0)))),
-			'recording_policy'=>array('record'=>false,'publish_replay'=>false,'consent_required'=>false),
-			'access_policy'=>array('audience'=>$data['visibility']??$video['visibility'],'premiere_video_public_id'=>$video['public_id']),
-		);
-		$live=VWLB_Live::schedule($live_data,$idempotency_key);if(is_wp_error($live))return $live;
-		self::schedule_live_extras($live['id'],array('capacity'=>$data['capacity']??0,'waiting_room'=>true,'reminders'=>$data['reminders']??array(1440,60,15)));
-		global $wpdb;$now=VWLB_Helpers::now();$public=VWLB_Helpers::public_id('pre');
-		$wpdb->insert(VWLB_Helpers::table('premieres'),array('public_id'=>$public,'video_id'=>$video['id'],'live_event_id'=>$live['id'],'owner_id'=>get_current_user_id(),'status'=>'scheduled','scheduled_at'=>VWLB_Helpers::datetime_in_timezone($data['scheduled_start']??null,$data['timezone']??'UTC'),'version'=>1,'created_at'=>$now,'updated_at'=>$now));
-		if(!$wpdb->insert_id)return VWLB_Helpers::error('vwlb_database_error',__('Premiere mapping could not be created.',VWLB_TEXT_DOMAIN),500);
-		VWLB_Helpers::audit('premiere',(int)$wpdb->insert_id,'create','','scheduled','Recorded premiere linked to moderated live discussion.');
-		VWLB_Helpers::outbox('VideoPremiereScheduled','video',$video['id'],array('premiere_public_id'=>$public,'live_public_id'=>$live['public_id']));
-		return array('id'=>$public,'video_public_id'=>$video['public_id'],'live_public_id'=>$live['public_id'],'scheduled_at'=>$data['scheduled_start']??null,'status'=>'scheduled');
+		$video=VWLB_Repository::find('videos',$data['video_id']??0);if(!$video||'published'!==$video['status']||!VWLB_Security::can(VWLB_Contracts::CAP_PUBLISH,$video,'create_premiere'))return VWLB_Helpers::error('vwlb_premiere_video_invalid',__('A published, authorized video is required for a premiere.',VWLB_TEXT_DOMAIN),422);
+		$live_data=array('title'=>VWLB_Helpers::text($data['title']??$video['title'],255),'description'=>VWLB_Helpers::textarea($data['description']??$video['description']),'scheduled_start'=>$data['scheduled_start']??null,'scheduled_end'=>$data['scheduled_end']??null,'timezone'=>$data['timezone']??'UTC','visibility'=>$data['visibility']??$video['visibility'],'provider'=>$data['provider']??'custom','language'=>$data['language']??$video['language'],'chat_policy'=>array('enabled'=>true,'moderated'=>true,'slow_mode_seconds'=>max(0,min(300,absint($data['slow_mode_seconds']??0)))),'recording_policy'=>array('record'=>false,'publish_replay'=>false,'consent_required'=>false),'access_policy'=>array('audience'=>$data['visibility']??$video['visibility'],'premiere_video_public_id'=>$video['public_id']));
+		$live=VWLB_Live::schedule($live_data,$idempotency_key);if(is_wp_error($live))return $live;$extras=self::schedule_live_extras($live['id'],array('capacity'=>$data['capacity']??0,'waiting_room'=>true,'reminders'=>$data['reminders']??array(1440,60,15)));if(is_wp_error($extras))return $extras;
+		global $wpdb;$table=VWLB_Helpers::table('premieres');$existing=$wpdb->get_row($wpdb->prepare("SELECT * FROM $table WHERE live_event_id=%d LIMIT 1",$live['id']),ARRAY_A);if($existing){if((int)$existing['video_id']!==(int)$video['id']||(int)$existing['owner_id']!==get_current_user_id())return VWLB_Helpers::error('vwlb_premiere_replay_conflict',__('This live event is already mapped to another premiere.',VWLB_TEXT_DOMAIN),409);return array('id'=>$existing['public_id'],'video_public_id'=>$video['public_id'],'live_public_id'=>$live['public_id'],'scheduled_at'=>VWLB_Helpers::iso_utc($existing['scheduled_at']),'status'=>$existing['status']);}
+		$now=VWLB_Helpers::now();$public=VWLB_Helpers::public_id('pre');$saved=$wpdb->insert($table,array('public_id'=>$public,'video_id'=>$video['id'],'live_event_id'=>$live['id'],'owner_id'=>get_current_user_id(),'status'=>'scheduled','scheduled_at'=>VWLB_Helpers::datetime_in_timezone($data['scheduled_start']??null,$data['timezone']??'UTC'),'version'=>1,'created_at'=>$now,'updated_at'=>$now));if(!$saved||!(int)$wpdb->insert_id)return VWLB_Helpers::error('vwlb_database_error',__('Premiere mapping could not be created.',VWLB_TEXT_DOMAIN),500);
+		VWLB_Helpers::audit('premiere',(int)$wpdb->insert_id,'create','','scheduled','Recorded premiere linked to moderated live discussion.');VWLB_Helpers::outbox('VideoPremiereScheduled','video',$video['id'],array('premiere_public_id'=>$public,'live_public_id'=>$live['public_id']));return array('id'=>$public,'video_public_id'=>$video['public_id'],'live_public_id'=>$live['public_id'],'scheduled_at'=>$data['scheduled_start']??null,'status'=>'scheduled');
 	}
 
 	public static function premiere( $id ) {

@@ -51,3 +51,7 @@ need '$idem_done=VWLB_Security::idempotency_finish' "$P/includes/class-vwlb-live
 need vwlb_live_extras_conflict "$P/includes/class-vwlb-extensions.php" r11-live-extras-cas
 need 'Live reminder could not be scheduled.' "$P/includes/class-vwlb-extensions.php" r11-reminder-write
 need '$extras=VWLB_Extensions::schedule_live_extras' "$P/includes/class-vwlb-rest.php" r11-rest-propagation
+
+# R12 — premiere mapping is idempotent across live-schedule replay and propagates extras failure.
+need vwlb_premiere_replay_conflict "$P/includes/class-vwlb-extensions.php" r12-premiere-conflict
+need 'WHERE live_event_id=%d LIMIT 1' "$P/includes/class-vwlb-extensions.php" r12-premiere-replay

@@ -43,3 +43,6 @@ REST mutations and live scheduling ignored failures while marking idempotency ke
 
 ## R11 — DEFECT FIXED
 Capacity/reminder setup used unchecked writes, duplicated reminders on retry, and the canonical REST schedule ignored extras failure. Event settings and reminder reconciliation are now transactional/versioned and errors propagate to the caller.
+
+## R12 — DEFECT FIXED
+Retrying a premiere with the same idempotency key could replay the live event and then fail on the unique premiere mapping; extras failures were also ignored. Existing same-video mappings are now replayed safely and conflicts/errors are explicit.
