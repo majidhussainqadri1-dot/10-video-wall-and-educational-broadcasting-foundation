@@ -13,3 +13,6 @@ This is repository/source evidence only, not staging/live evidence.
 ## R01 — DEFECT FIXED
 Waiting-room capacity enforcement was race-prone and attendee insert/update results were not checked. The live-event row is now serialized with `FOR UPDATE`, capacity is counted inside the transaction, and attendee persistence fails closed on CAS/database failure.
 
+
+## R02 — DEFECT FIXED
+Recording-consent changes could report success after a lost optimistic update. The attendee row is now locked and the versioned update must affect exactly one row before audit/event response.

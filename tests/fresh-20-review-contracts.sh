@@ -7,3 +7,7 @@ need(){ grep -R -F -- "$1" "$2" >/dev/null || { echo "FAIL fresh-20-review: $3" 
 need "FOR UPDATE" "$P/includes/class-vwlb-extensions.php" r01-event-lock
 need "vwlb_waiting_room_conflict" "$P/includes/class-vwlb-extensions.php" r01-cas
 need "Waiting-room attendance could not be saved." "$P/includes/class-vwlb-extensions.php" r01-insert-check
+
+# R02 — recording consent is locked and CAS persistence is verified.
+need vwlb_recording_consent_conflict "$P/includes/class-vwlb-extensions.php" r02-consent-cas
+need 'live_event_id=%d AND user_id=%d FOR UPDATE' "$P/includes/class-vwlb-extensions.php" r02-consent-lock
