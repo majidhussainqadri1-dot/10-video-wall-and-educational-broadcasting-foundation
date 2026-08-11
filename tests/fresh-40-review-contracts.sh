@@ -18,4 +18,9 @@ need "rest_mutation_before" "$P/includes/class-vwlb-security.php" r04-mutation-g
 need "idempotency_abort" "$P/includes/class-vwlb-security.php" r04-idempotency-abort
 need "'webhook'===\$name" "$P/includes/class-vwlb-security.php" r04-webhook-exception
 need "Idempotency-Key" "$P/assets/js/vwlb.js" r04-browser-idempotency
+# R05 — production sources/scenes preserve ownership, reject raw secrets/cross-event sources, and serialize program switching.
+need "contains_raw_secret" "$P/includes/class-vwlb-future-intelligence.php" r05-secret-rejection
+need "Every scene source must be an active source of the same live event" "$P/includes/class-vwlb-future-intelligence.php" r05-scene-source-scope
+need "find('live_events',\$event['id'],true)" "$P/includes/class-vwlb-future-intelligence.php" r05-program-lock
+need "id<>%d" "$P/includes/class-vwlb-future-intelligence.php" r05-single-program
 printf '%s\n' 'fresh 40-review regression contracts PASS'

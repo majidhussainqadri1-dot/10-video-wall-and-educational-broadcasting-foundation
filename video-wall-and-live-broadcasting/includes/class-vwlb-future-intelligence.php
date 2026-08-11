@@ -305,6 +305,17 @@ final class VWLB_Future_Intelligence {
 		return $event && VWLB_Security::can( VWLB_Contracts::CAP_BROADCAST, $event, $purpose );
 	}
 
+	private static function contains_raw_secret( $value ) {
+		if ( ! is_array( $value ) ) return false;
+		foreach ( $value as $key => $child ) {
+			$key = sanitize_key( (string) $key );
+			if ( str_ends_with( $key, '_ref' ) || str_ends_with( $key, '_id' ) ) { if ( is_array($child) && self::contains_raw_secret($child) ) return true; continue; }
+			if ( in_array( $key, array('secret','stream_key','password','api_key','access_token','refresh_token','private_key','token'), true ) ) return true;
+			if ( is_array( $child ) && self::contains_raw_secret( $child ) ) return true;
+		}
+		return false;
+	}
+
 	/** F10-FUT-001, 003 — multi-camera production sources and screen/slides inputs. */
 	public static function upsert_source( $live_id, $data ) {
 		$event = self::live( $live_id );
@@ -313,20 +324,20 @@ final class VWLB_Future_Intelligence {
 		if ( ! $type ) return VWLB_Helpers::error( 'vwlb_source_type_invalid', __( 'Production source type is invalid.', VWLB_TEXT_DOMAIN ), 422 );
 		$label = VWLB_Helpers::text( $data['label'] ?? '', 191 );
 		if ( ! $label ) return VWLB_Helpers::error( 'vwlb_source_label_required', __( 'Source label is required.', VWLB_TEXT_DOMAIN ), 422 );
+		$config=(array)($data['config']??array());if(self::contains_raw_secret($config))return VWLB_Helpers::error('vwlb_source_secret_forbidden',__('Raw credentials cannot be stored in production-source configuration.',VWLB_TEXT_DOMAIN),422);
 		global $wpdb; $table = VWLB_Helpers::table( 'production_sources' ); $now = VWLB_Helpers::now();
 		$id = absint( $data['id'] ?? 0 );
-		$row = array( 'live_event_id'=>(int)$event['id'], 'owner_id'=>get_current_user_id(), 'source_type'=>$type, 'label'=>$label,
+		$row = array( 'live_event_id'=>(int)$event['id'], 'source_type'=>$type, 'label'=>$label,
 			'provider_ref'=>VWLB_Helpers::text( $data['provider_ref'] ?? '', 191 ), 'state'=>VWLB_Helpers::enum( $data['state'] ?? 'ready', array('ready','muted','offline','failed','removed'), 'ready' ),
-			'config_json'=>VWLB_Helpers::json_encode( (array)( $data['config'] ?? array() ) ), 'updated_at'=>$now );
+			'config_json'=>VWLB_Helpers::json_encode( $config ), 'updated_at'=>$now );
 		if ( $id ) {
 			$current = self::public_row( 'production_sources', $id );
 			if ( ! $current || (int)$current['live_event_id'] !== (int)$event['id'] ) return VWLB_Helpers::error( 'vwlb_source_missing', __( 'Production source not found.', VWLB_TEXT_DOMAIN ), 404 );
 			$row['version'] = (int)$current['version'] + 1;
 			$ok = $wpdb->update( $table, $row, array( 'id'=>$id, 'version'=>(int)$current['version'] ) );
 			if ( 1 !== $ok ) return VWLB_Helpers::error( 'vwlb_version_conflict', __( 'Production source changed. Refresh and try again.', VWLB_TEXT_DOMAIN ), 409 );
-			$public = $current['public_id'];
 		} else {
-			$public = VWLB_Helpers::public_id( 'src' ); $row['public_id']=$public; $row['created_at']=$now; $row['version']=1;
+			$public = VWLB_Helpers::public_id( 'src' ); $row['public_id']=$public; $row['owner_id']=get_current_user_id(); $row['created_at']=$now; $row['version']=1;
 			if ( ! $wpdb->insert( $table, $row ) ) return VWLB_Helpers::error( 'vwlb_database_error', __( 'Production source could not be saved.', VWLB_TEXT_DOMAIN ), 500 );
 			$id = (int)$wpdb->insert_id;
 		}
@@ -341,11 +352,12 @@ final class VWLB_Future_Intelligence {
 		if ( ! self::require_live_control( $event, 'future_production_scene' ) ) return VWLB_Helpers::error( 'vwlb_forbidden', __( 'You cannot manage production scenes.', VWLB_TEXT_DOMAIN ), 403 );
 		$title = VWLB_Helpers::text( $data['title'] ?? '', 191 ); if ( ! $title ) return VWLB_Helpers::error( 'vwlb_scene_title_required', __( 'Scene title is required.', VWLB_TEXT_DOMAIN ), 422 );
 		$sources = array_values( array_unique( array_filter( array_map( 'absint', (array)( $data['source_ids'] ?? array() ) ) ) ) );
+		foreach($sources as $source_id){$source=self::public_row('production_sources',$source_id);if(!$source||(int)$source['live_event_id']!==(int)$event['id']||'removed'===$source['state'])return VWLB_Helpers::error('vwlb_scene_source_invalid',__('Every scene source must be an active source of the same live event.',VWLB_TEXT_DOMAIN),422,array('source_id'=>$source_id));}
 		global $wpdb; $table=VWLB_Helpers::table('production_scenes'); $now=VWLB_Helpers::now();
-		$id=absint($data['id']??0); $row=array('live_event_id'=>(int)$event['id'],'owner_id'=>get_current_user_id(),'title'=>$title,
+		$id=absint($data['id']??0); $row=array('live_event_id'=>(int)$event['id'],'title'=>$title,
 			'layout_json'=>VWLB_Helpers::json_encode((array)($data['layout']??array())),'source_ids_json'=>VWLB_Helpers::json_encode($sources),'updated_at'=>$now);
 		if($id){$current=self::public_row('production_scenes',$id);if(!$current||(int)$current['live_event_id']!==(int)$event['id'])return VWLB_Helpers::error('vwlb_scene_missing',__('Scene not found.',VWLB_TEXT_DOMAIN),404);$row['version']=(int)$current['version']+1;$ok=$wpdb->update($table,$row,array('id'=>$id,'version'=>(int)$current['version']));if(1!==$ok)return VWLB_Helpers::error('vwlb_version_conflict',__('Scene changed. Refresh and try again.',VWLB_TEXT_DOMAIN),409);}
-		else{$row['public_id']=VWLB_Helpers::public_id('scene');$row['state']='saved';$row['is_program']=0;$row['version']=1;$row['created_at']=$now;if(!$wpdb->insert($table,$row))return VWLB_Helpers::error('vwlb_database_error',__('Scene could not be saved.',VWLB_TEXT_DOMAIN),500);$id=(int)$wpdb->insert_id;}
+		else{$row['public_id']=VWLB_Helpers::public_id('scene');$row['owner_id']=get_current_user_id();$row['state']='saved';$row['is_program']=0;$row['version']=1;$row['created_at']=$now;if(!$wpdb->insert($table,$row))return VWLB_Helpers::error('vwlb_database_error',__('Scene could not be saved.',VWLB_TEXT_DOMAIN),500);$id=(int)$wpdb->insert_id;}
 		return self::public_row('production_scenes',$id);
 	}
 
@@ -354,13 +366,15 @@ final class VWLB_Future_Intelligence {
 		$scene=self::public_row('production_scenes',$scene_id); if(!$scene||(int)$scene['live_event_id']!==(int)$event['id'])return VWLB_Helpers::error('vwlb_scene_missing',__('Scene not found.',VWLB_TEXT_DOMAIN),404);
 		if((int)$scene['version']!==(int)$expected_version)return VWLB_Helpers::error('vwlb_version_conflict',__('Scene changed. Refresh and try again.',VWLB_TEXT_DOMAIN),409);
 		global $wpdb; $table=VWLB_Helpers::table('production_scenes');
-		return VWLB_DB::transaction(function()use($wpdb,$table,$event,$scene){
-			$wpdb->update($table,array('is_program'=>0,'updated_at'=>VWLB_Helpers::now()),array('live_event_id'=>$event['id'],'is_program'=>1));
-			$ok=$wpdb->update($table,array('is_program'=>1,'version'=>(int)$scene['version']+1,'updated_at'=>VWLB_Helpers::now()),array('id'=>$scene['id'],'version'=>$scene['version']));
+		return VWLB_DB::transaction(function()use($wpdb,$table,$event,$scene,$expected_version){
+			$locked_event=VWLB_Repository::find('live_events',$event['id'],true);if(!$locked_event)return VWLB_Helpers::error('vwlb_live_missing',__('Live event not found.',VWLB_TEXT_DOMAIN),404);
+			$fresh=self::public_row('production_scenes',$scene['id']);if(!$fresh||(int)$fresh['live_event_id']!==(int)$event['id']||(int)$fresh['version']!==(int)$expected_version)return VWLB_Helpers::error('vwlb_version_conflict',__('Scene changed. Refresh and try again.',VWLB_TEXT_DOMAIN),409);
+			$cleared=$wpdb->query($wpdb->prepare("UPDATE $table SET is_program=0,updated_at=%s WHERE live_event_id=%d AND is_program=1 AND id<>%d",VWLB_Helpers::now(),$event['id'],$fresh['id']));if(false===$cleared)return VWLB_Helpers::error('vwlb_database_error',__('The previous program scene could not be cleared.',VWLB_TEXT_DOMAIN),500);
+			$ok=$wpdb->update($table,array('is_program'=>1,'version'=>(int)$fresh['version']+1,'updated_at'=>VWLB_Helpers::now()),array('id'=>$fresh['id'],'version'=>$fresh['version']));
 			if(1!==$ok)return VWLB_Helpers::error('vwlb_version_conflict',__('Scene switch conflicted with another operator.',VWLB_TEXT_DOMAIN),409);
-			VWLB_Helpers::audit('live',$event['id'],'program_scene_switched',$event['status'],$event['status'],'',array('scene_id'=>$scene['id']));
-			do_action('vwlb_program_scene_switched',$event,self::public_row('production_scenes',$scene['id']));
-			return self::public_row('production_scenes',$scene['id']);
+			VWLB_Helpers::audit('live',$event['id'],'program_scene_switched',$event['status'],$event['status'],'',array('scene_id'=>$fresh['id']));
+			do_action('vwlb_program_scene_switched',$event,self::public_row('production_scenes',$fresh['id']));
+			return self::public_row('production_scenes',$fresh['id']);
 		});
 	}
 
