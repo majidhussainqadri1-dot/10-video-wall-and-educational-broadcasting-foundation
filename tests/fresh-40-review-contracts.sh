@@ -92,4 +92,8 @@ need "VWLB_DB::transaction(function()use" "$P/includes/class-vwlb-videos.php" r1
 need "vwlb_asset_link_failed" "$P/includes/class-vwlb-videos.php" r17-asset-atomic
 need "idempotency_abort(\$idempotency_key,'create_video')" "$P/includes/class-vwlb-videos.php" r17-idem-abort
 need "if(!\$inserted||!(int)\$wpdb->insert_id)" "$P/includes/class-vwlb-videos.php" r17-insert-check
+# R18 — generated captions require human review and caption persistence failure is not reported as success.
+need "'machine_draft'!==\$source&&\$can_review" "$P/includes/class-vwlb-videos.php" r18-human-review
+need "VWLB_Contracts::CAP_REVIEW" "$P/includes/class-vwlb-videos.php" r18-review-cap
+need "Caption could not be saved" "$P/includes/class-vwlb-videos.php" r18-db-check
 printf '%s\n' 'fresh 40-review regression contracts PASS'
