@@ -1,66 +1,38 @@
 from pathlib import Path
 import re
 
-intel_path=Path('video-wall-and-live-broadcasting/includes/class-vwlb-future-intelligence.php')
-rest_path=Path('video-wall-and-live-broadcasting/includes/class-vwlb-future-rest.php')
-reg_path=Path('tests/fresh-40-review-contracts.sh')
-t=intel_path.read_text()
-r=rest_path.read_text()
+intel=Path('video-wall-and-live-broadcasting/includes/class-vwlb-future-intelligence.php')
+adapters=Path('video-wall-and-live-broadcasting/includes/class-vwlb-future-adapters.php')
+reg=Path('tests/fresh-40-review-contracts.sh')
+t=intel.read_text(); a=adapters.read_text()
 
-invite = r'''	public static function invite_guest( $live_id, $user_id, $role='guest', $scope=array(), $ttl=7200 ) {
-		$event=self::live($live_id);if(!self::require_live_control($event,'future_invite_guest'))return VWLB_Helpers::error('vwlb_forbidden',__('You cannot invite broadcast guests.',VWLB_TEXT_DOMAIN),403);
-		$user_id=absint($user_id);if(!$user_id||!get_userdata($user_id))return VWLB_Helpers::error('vwlb_guest_invalid',__('Guest account is invalid.',VWLB_TEXT_DOMAIN),422);
-		$claims=apply_filters('vwlb_identity_claims',null,$user_id,array('contract'=>'File00IdentityClaims.v1','consumer'=>'File 10 guest delegation'));if(!is_array($claims)||empty($claims['identity_approved'])||empty($claims['age_ok'])||empty($claims['guardian_ok'])||!empty($claims['suspended']))return VWLB_Helpers::error('vwlb_guest_identity_unavailable',__('The guest does not currently satisfy File 00 identity and eligibility assertions.',VWLB_TEXT_DOMAIN),409);
-		$role=VWLB_Helpers::enum($role,array('guest','cohost','presenter'),'guest');$ttl=max(300,min(DAY_IN_SECONDS,(int)$ttl));
-		$scope_allowed=array('camera','microphone','screen','slides','media','scene_control','chat','polls');$scope=array_values(array_unique(array_intersect(array_map('sanitize_key',(array)$scope),$scope_allowed)));
-		global $wpdb;$table=VWLB_Helpers::table('broadcast_guests');$now=VWLB_Helpers::now();$existing=$wpdb->get_row($wpdb->prepare("SELECT * FROM $table WHERE live_event_id=%d AND user_id=%d",$event['id'],$user_id),ARRAY_A);
-		$row=array('role_name'=>$role,'status'=>'invited','scope_json'=>VWLB_Helpers::json_encode($scope),'expires_at'=>gmdate('Y-m-d H:i:s',time()+$ttl),'invited_by'=>get_current_user_id(),'accepted_at'=>null,'updated_at'=>$now);
-		if($existing){$row['version']=(int)$existing['version']+1;$changed=$wpdb->update($table,$row,array('id'=>$existing['id'],'version'=>$existing['version']));if(1!==$changed)return VWLB_Helpers::error('vwlb_version_conflict',__('Guest delegation changed concurrently.',VWLB_TEXT_DOMAIN),409);$id=(int)$existing['id'];}
-		else{$row+=array('public_id'=>VWLB_Helpers::public_id('guest'),'live_event_id'=>(int)$event['id'],'user_id'=>$user_id,'version'=>1,'created_at'=>$now);if(!$wpdb->insert($table,$row))return VWLB_Helpers::error('vwlb_database_error',__('Guest invitation could not be saved.',VWLB_TEXT_DOMAIN),500);$id=(int)$wpdb->insert_id;}
-		VWLB_Helpers::audit('broadcast_guest',$id,'invite','','invited','',array('live_event_id'=>$event['id'],'guest_user_id'=>$user_id,'role'=>$role,'scope'=>$scope));VWLB_Helpers::outbox('BroadcastGuestInvited','live',$event['id'],array('guest_user_id'=>$user_id,'role'=>$role));return self::public_row('broadcast_guests',$id);
+replacement=r'''	public static function configure_live( $live_id, $data, $expected_version=0 ) {
+		$event=self::live($live_id);if(!self::require_live_control($event,'future_live_config'))return VWLB_Helpers::error('vwlb_forbidden',__('You cannot configure this broadcast.',VWLB_TEXT_DOMAIN),403);
+		$latency=VWLB_Helpers::enum($data['latency_mode']??'standard',array('standard','low','ultra_low'),'standard');
+		$dvr=max(0,min(6*HOUR_IN_SECONDS,(int)($data['dvr_window_seconds']??0)));$protocols=array_values(array_unique(array_intersect(array_map('strtolower',(array)($data['protocols']??array('rtmp'))),array('rtmp','srt','webrtc'))));if(!$protocols)$protocols=array('rtmp');
+		$provider_caps=(array)apply_filters('vwlb_provider_future_capabilities',array(),$event['provider'],$event);foreach($protocols as $p){if('rtmp'!==$p&&!in_array($p,(array)($provider_caps['ingest_protocols']??array()),true))return VWLB_Helpers::error('vwlb_protocol_unavailable',__('Requested ingest protocol is not configured for this provider.',VWLB_TEXT_DOMAIN),503,array('protocol'=>$p));}
+		if('standard'!==$latency&&!in_array($latency,(array)($provider_caps['latency_modes']??array()),true))return VWLB_Helpers::error('vwlb_latency_mode_unavailable',__('Requested latency mode is not declared by the configured provider adapter.',VWLB_TEXT_DOMAIN),503,array('latency_mode'=>$latency));
+		if($dvr>0){$max_dvr=max(0,(int)($provider_caps['dvr_max_seconds']??0));if($max_dvr<=0||$dvr>$max_dvr)return VWLB_Helpers::error('vwlb_dvr_unavailable',__('Requested DVR window is not declared by the configured provider adapter.',VWLB_TEXT_DOMAIN),503,array('dvr_window_seconds'=>$dvr));}
+		$backup=VWLB_Helpers::text($data['backup_provider']??'',64);if($backup&&$backup===$event['provider'])return VWLB_Helpers::error('vwlb_backup_provider_invalid',__('Backup provider must differ from the primary provider.',VWLB_TEXT_DOMAIN),422);if($backup){$bp=VWLB_Providers::get($backup);$bc=$bp?$bp->capabilities():array();if(!$bp||empty($bc['live']))return VWLB_Helpers::error('vwlb_backup_provider_unavailable',__('Backup provider is not a configured live provider.',VWLB_TEXT_DOMAIN),503);}
+		$redundant=!empty($data['redundant_recording']);if($redundant&&!$backup)return VWLB_Helpers::error('vwlb_backup_provider_required',__('Redundant recording requires a distinct configured backup provider.',VWLB_TEXT_DOMAIN),422);
+		$languages=array_values(array_unique(array_filter(array_map(function($v){$v=VWLB_Helpers::text($v,32);return preg_match('/^[A-Za-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$/',$v)?$v:'';},(array)($data['translation_languages']??array())))));
+		global $wpdb;$table=VWLB_Helpers::table('future_live_config');$current=$wpdb->get_row($wpdb->prepare("SELECT * FROM $table WHERE live_event_id=%d",$event['id']),ARRAY_A);$now=VWLB_Helpers::now();
+		$row=array('latency_mode'=>$latency,'dvr_window_seconds'=>$dvr,'backup_provider'=>$backup,'multicam_enabled'=>!empty($data['multicam_enabled'])?1:0,'simulcast_enabled'=>!empty($data['simulcast_enabled'])?1:0,'redundant_recording'=>$redundant?1:0,'protocols_json'=>VWLB_Helpers::json_encode($protocols),'translation_languages_json'=>VWLB_Helpers::json_encode($languages),'updated_by'=>get_current_user_id(),'updated_at'=>$now);
+		if($current){if(!$expected_version||(int)$current['version']!==(int)$expected_version)return VWLB_Helpers::error('vwlb_version_conflict',__('Broadcast configuration changed. Refresh and submit its current version.',VWLB_TEXT_DOMAIN),409);$row['version']=(int)$current['version']+1;$ok=$wpdb->update($table,$row,array('id'=>$current['id'],'version'=>$current['version']));if(1!==$ok)return VWLB_Helpers::error('vwlb_version_conflict',__('Broadcast configuration changed. Refresh and try again.',VWLB_TEXT_DOMAIN),409);$id=(int)$current['id'];}
+		else{$row+=array('live_event_id'=>(int)$event['id'],'version'=>1,'created_at'=>$now);if(!$wpdb->insert($table,$row))return VWLB_Helpers::error('vwlb_database_error',__('Broadcast configuration could not be saved.',VWLB_TEXT_DOMAIN),500);$id=(int)$wpdb->insert_id;}
+		VWLB_Helpers::audit('live',$event['id'],'future_live_config_saved',$event['status'],$event['status'],'',array('latency_mode'=>$latency,'dvr_window_seconds'=>$dvr,'protocols'=>$protocols,'backup_provider'=>$backup,'redundant_recording'=>$redundant));return $wpdb->get_row($wpdb->prepare("SELECT * FROM $table WHERE id=%d",$id),ARRAY_A);
 	}
 '''
-accept = r'''	public static function accept_guest( $guest_public_id ) {
-		$row=self::public_row('broadcast_guests',$guest_public_id);if(!$row||(int)$row['user_id']!==get_current_user_id())return VWLB_Helpers::error('vwlb_guest_invite_missing',__('Guest invitation not found.',VWLB_TEXT_DOMAIN),404);
-		$claims=VWLB_Security::claims();if(empty($claims['authenticated'])||empty($claims['identity_approved'])||empty($claims['age_ok'])||empty($claims['guardian_ok'])||!empty($claims['suspended']))return VWLB_Helpers::error('vwlb_guest_identity_unavailable',__('Current File 00 identity assertions do not permit guest participation.',VWLB_TEXT_DOMAIN),403);
-		$event=self::live($row['live_event_id']);if(!$event||!in_array($event['status'],array('scheduled','rehearsal','ready','live'),true))return VWLB_Helpers::error('vwlb_guest_event_unavailable',__('The live event is no longer accepting guest participation.',VWLB_TEXT_DOMAIN),409);
-		if('invited'!==$row['status']||strtotime($row['expires_at'].' UTC')<=time())return VWLB_Helpers::error('vwlb_guest_invite_expired',__('Guest invitation is no longer active.',VWLB_TEXT_DOMAIN),409);
-		global $wpdb;$changed=$wpdb->update(VWLB_Helpers::table('broadcast_guests'),array('status'=>'accepted','accepted_at'=>VWLB_Helpers::now(),'version'=>(int)$row['version']+1,'updated_at'=>VWLB_Helpers::now()),array('id'=>$row['id'],'version'=>$row['version'],'status'=>'invited'));if(1!==$changed)return VWLB_Helpers::error('vwlb_version_conflict',__('Guest invitation changed concurrently.',VWLB_TEXT_DOMAIN),409);
-		VWLB_Helpers::audit('broadcast_guest',$row['id'],'accept','invited','accepted','',array('live_event_id'=>$event['id'],'guest_user_id'=>get_current_user_id()));VWLB_Helpers::outbox('BroadcastGuestAccepted','live',$event['id'],array('guest_user_id'=>get_current_user_id(),'guest_public_id'=>$row['public_id']));return self::public_row('broadcast_guests',$row['id']);
-	}
+pat=re.compile(r"\tpublic static function configure_live\(.*?\n\t}\n",re.S);m=pat.search(t)
+if not m: raise SystemExit('R07 configure_live not found')
+t=t[:m.start()]+replacement+t[m.end():];intel.write_text(t)
 
-	public static function revoke_guest( $guest_public_id ) {
-		$row=self::public_row('broadcast_guests',$guest_public_id);if(!$row)return VWLB_Helpers::error('vwlb_guest_invite_missing',__('Guest delegation not found.',VWLB_TEXT_DOMAIN),404);$event=self::live($row['live_event_id']);if(!self::require_live_control($event,'future_revoke_guest'))return VWLB_Helpers::error('vwlb_forbidden',__('You cannot revoke this broadcast guest.',VWLB_TEXT_DOMAIN),403);
-		if(in_array($row['status'],array('revoked','expired'),true))return self::public_row('broadcast_guests',$row['id']);
-		global $wpdb;$changed=$wpdb->update(VWLB_Helpers::table('broadcast_guests'),array('status'=>'revoked','version'=>(int)$row['version']+1,'updated_at'=>VWLB_Helpers::now()),array('id'=>$row['id'],'version'=>$row['version']));if(1!==$changed)return VWLB_Helpers::error('vwlb_version_conflict',__('Guest delegation changed concurrently.',VWLB_TEXT_DOMAIN),409);
-		VWLB_Helpers::audit('broadcast_guest',$row['id'],'revoke',$row['status'],'revoked','',array('live_event_id'=>$event['id'],'guest_user_id'=>$row['user_id']));VWLB_Helpers::outbox('BroadcastGuestRevoked','live',$event['id'],array('guest_user_id'=>(int)$row['user_id'],'guest_public_id'=>$row['public_id']));return self::public_row('broadcast_guests',$row['id']);
-	}
-'''
+old="$safe=array('accepted'=>true,'provider'=>$event['provider'],'mode'=>VWLB_Helpers::text($result['mode']??$config['latency_mode'],32),'dvr_window_seconds'=>max(0,(int)($result['dvr_window_seconds']??$config['dvr_window_seconds'])),'protocol'=>VWLB_Helpers::text($result['protocol']??'',32),'backup_ready'=>!empty($result['backup_ready']),'recording_redundant'=>!empty($result['recording_redundant']));"
+new="$safe=array('accepted'=>true,'provider'=>$event['provider'],'mode'=>VWLB_Helpers::enum($result['mode']??$config['latency_mode'],array('standard','low','ultra_low'),$config['latency_mode']),'dvr_window_seconds'=>max(0,min(6*HOUR_IN_SECONDS,(int)($result['dvr_window_seconds']??$config['dvr_window_seconds']))),'protocol'=>VWLB_Helpers::enum($result['protocol']??'',array('rtmp','srt','webrtc'),''),'backup_ready'=>!empty($result['backup_ready']),'recording_redundant'=>!empty($result['recording_redundant']));"
+if old in a:a=a.replace(old,new,1)
+elif new not in a:raise SystemExit('R07 adapter safe response pattern missing')
+adapters.write_text(a)
 
-def replace_method(name,replacement):
-    global t
-    pattern=re.compile(r"\tpublic static function "+re.escape(name)+r"\(.*?\n\t}\n",re.S)
-    m=pattern.search(t)
-    if not m: raise SystemExit(f'R06 method {name} not found')
-    t=t[:m.start()]+replacement+t[m.end():]
-
-replace_method('invite_guest',invite)
-replace_method('accept_guest',accept)
-intel_path.write_text(t)
-
-route_anchor="\t\t\t$this->route($n,'/broadcast-guests/(?P<id>[A-Za-z0-9_-]+)/accept','POST','guest_accept','login');\n"
-route_new=route_anchor+"\t\t\t$this->route($n,'/broadcast-guests/(?P<id>[A-Za-z0-9_-]+)/revoke','POST','guest_revoke','broadcast');\n"
-if "/revoke','POST','guest_revoke'" not in r:
-    if route_anchor not in r: raise SystemExit('R06 REST route anchor missing')
-    r=r.replace(route_anchor,route_new,1)
-cb_anchor="\tpublic function guest_accept(WP_REST_Request $r){return $this->response(VWLB_Future_Intelligence::accept_guest($r['id']));}\n"
-cb_new=cb_anchor+"\tpublic function guest_revoke(WP_REST_Request $r){return $this->response(VWLB_Future_Intelligence::revoke_guest($r['id']));}\n"
-if "function guest_revoke" not in r:
-    if cb_anchor not in r: raise SystemExit('R06 REST callback anchor missing')
-    r=r.replace(cb_anchor,cb_new,1)
-rest_path.write_text(r)
-
-reg=reg_path.read_text()
-marker="""# R06 — F10-FUT-002 guest/co-host delegation is File00-eligible, scoped, expiring, audited, CAS-protected and revocable.\nneed \"File 00 identity and eligibility assertions\" \"$P/includes/class-vwlb-future-intelligence.php\" r06-target-identity\nneed \"Guest invitation changed concurrently\" \"$P/includes/class-vwlb-future-intelligence.php\" r06-accept-cas\nneed \"BroadcastGuestRevoked\" \"$P/includes/class-vwlb-future-intelligence.php\" r06-revoke-event\nneed \"/revoke','POST','guest_revoke'\" \"$P/includes/class-vwlb-future-rest.php\" r06-revoke-route\n"""
-if '# R06 —' not in reg: reg=reg.replace("printf '%s\\n' 'fresh 40-review regression contracts PASS'\n",marker+"printf '%s\\n' 'fresh 40-review regression contracts PASS'\n")
-reg_path.write_text(reg)
+r=reg.read_text(); marker="""# R07 — provider-dependent DVR/latency/backup policy is capability-declared, version-safe and truthfully normalized.\nneed \"vwlb_latency_mode_unavailable\" \"$P/includes/class-vwlb-future-intelligence.php\" r07-latency-capability\nneed \"vwlb_dvr_unavailable\" \"$P/includes/class-vwlb-future-intelligence.php\" r07-dvr-capability\nneed \"vwlb_backup_provider_required\" \"$P/includes/class-vwlb-future-intelligence.php\" r07-backup-required\nneed \"submit its current version\" \"$P/includes/class-vwlb-future-intelligence.php\" r07-config-cas\nneed \"min(6*HOUR_IN_SECONDS\" \"$P/includes/class-vwlb-future-adapters.php\" r07-provider-result-bound\n"""
+if '# R07 —' not in r:r=r.replace("printf '%s\\n' 'fresh 40-review regression contracts PASS'\n",marker+"printf '%s\\n' 'fresh 40-review regression contracts PASS'\n")
+reg.write_text(r)
