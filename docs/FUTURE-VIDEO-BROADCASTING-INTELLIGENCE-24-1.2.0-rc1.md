@@ -1,8 +1,8 @@
 # File 10 — Future Video & Broadcasting Intelligence — 24 Enhancements
 
-**Amendment:** `SSH-F10-FUTURE-VIDEO-BROADCASTING-INTELLIGENCE-24-2026`  
-**Software candidate:** `1.2.0-rc1`  
-**Canonical owner:** File 10 — Video Wall and Live Broadcasting  
+**Amendment:** `SSH-F10-FUTURE-VIDEO-BROADCASTING-INTELLIGENCE-24-2026`
+**Software candidate:** `1.2.1-rc1`
+**Canonical owner:** File 10 — Video Wall and Live Broadcasting
 **Status rule:** source/package/automated QA evidence is separate from staging, live deployment and operational acceptance.
 
 This additive implementation preserves the existing `F10-FR-001..019` and `F10-NFR-001..010` requirements and adds stable requirements `F10-FUT-001..024`. File 10 remains the sole owner of recorded/live media truth. File 11 remains the Reel entity/feed owner; File 17 remains the general messages/calls owner; File 19 remains notification transport; File 20/25 remain shell/visual owners; File 06/12 remain knowledge/document truth owners.

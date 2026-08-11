@@ -191,4 +191,10 @@ need "verify_schema_sql" "$P/includes/class-vwlb-db.php" r36-verify-helper
 need "SHOW TABLES LIKE" "$P/includes/class-vwlb-db.php" r36-table-verify
 need "vwlb_schema_version_persist_failed" "$P/includes" r36-version-persist
 need "is_wp_error(\$result)" "$P/includes/class-vwlb-activator.php" r36-reconcile-fail-closed
+# R37 — source, tests, build and release workflow use one runtime/package identity without schema inflation.
+need "Version: 1.2.1-rc1" "$P/video-wall-and-live-broadcasting.php" r37-plugin-version
+need "VWLB_VERSION', '1.2.1-rc1" "$P/video-wall-and-live-broadcasting.php" r37-runtime-version
+need "VWLB_FUTURE_SCHEMA_VERSION', '1.2.0" "$P/video-wall-and-live-broadcasting.php" r37-schema-stable
+need "video-wall-and-live-broadcasting-1.2.1-rc1.zip" "$ROOT/tools/build-package.sh" r37-build-name
+need "file10-video-wall-live-1.2.1-rc1" "$ROOT/.github/workflows/file10-release.yml" r37-artifact-name
 printf '%s\n' 'fresh 40-review regression contracts PASS'
