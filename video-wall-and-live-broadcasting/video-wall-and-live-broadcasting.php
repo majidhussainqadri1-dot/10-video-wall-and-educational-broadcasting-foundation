@@ -29,7 +29,7 @@ $autoload = array(
 	'class-vwlb-videos.php', 'class-vwlb-live.php', 'class-vwlb-moderation.php',
 	'class-vwlb-jobs.php', 'class-vwlb-extensions.php', 'class-vwlb-podcasts.php',
 	'class-vwlb-observability.php', 'class-vwlb-rest.php', 'class-vwlb-extended-rest.php',
-	'class-vwlb-future-intelligence.php', 'class-vwlb-future-rest.php', 'class-vwlb-future-frontend.php',
+	'class-vwlb-future-intelligence.php', 'class-vwlb-future-adapters.php', 'class-vwlb-future-rest.php', 'class-vwlb-future-frontend.php',
 	'class-vwlb-frontend.php', 'class-vwlb-admin.php', 'class-vwlb-privacy.php',
 	'class-vwlb-seo.php', 'class-vwlb-integrations.php', 'class-vwlb-compatibility.php',
 	'class-vwlb-diagnostics.php', 'class-vwlb-plugin.php',
