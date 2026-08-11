@@ -162,4 +162,9 @@ need "public-safe-event-projection" "$P/includes/class-vwlb-integrations.php" r3
 need "vwlb_inbox_persist_failed" "$P/includes/class-vwlb-integrations.php" r31-inbox-db
 need "vwlb_inbox_event_conflict" "$P/includes/class-vwlb-integrations.php" r31-event-conflict
 need "vwlb_inbox_finalize_failed" "$P/includes/class-vwlb-integrations.php" r31-finalize
+# R32 — live public UI preserves sandbox isolation and reflects server-persisted participation/consent state.
+need "sandbox=\"<?php echo esc_attr(\$sandbox);?>\"" "$P/includes/class-vwlb-frontend.php" r32-live-sandbox
+need "loading=\"lazy\" allow=\"fullscreen; picture-in-picture\"" "$P/includes/class-vwlb-frontend.php" r32-live-iframe
+need "checked(!empty(\$extras['viewer']['recording_consent']))" "$P/includes/class-vwlb-frontend.php" r32-consent-state
+need "Waiting room joined" "$P/includes/class-vwlb-frontend.php" r32-waiting-state
 printf '%s\n' 'fresh 40-review regression contracts PASS'
