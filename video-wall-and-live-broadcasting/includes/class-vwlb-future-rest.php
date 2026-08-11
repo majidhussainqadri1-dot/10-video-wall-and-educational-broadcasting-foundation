@@ -19,6 +19,7 @@ final class VWLB_Future_REST {
 			$this->route($n,'/live-events/(?P<id>[A-Za-z0-9_-]+)/health','GET','health','operate');
 			$this->route($n,'/live-events/(?P<id>[A-Za-z0-9_-]+)/health','POST','health_record','operate');
 			$this->route($n,'/media-tracks/(?P<object_type>video|live)/(?P<id>[A-Za-z0-9_-]+)','POST','track_create','publish_or_broadcast');
+			$this->route($n,'/media-tracks/(?P<id>[A-Za-z0-9_-]+)/transition','POST','track_transition','review');
 			$this->route($n,'/media-tracks/(?P<object_type>video|live)/(?P<id>[A-Za-z0-9_-]+)/generate','POST','track_generate','publish_or_broadcast');
 			$this->route($n,'/videos/(?P<id>[A-Za-z0-9_-]+)/annotations','GET','annotations','public');
 			$this->route($n,'/videos/(?P<id>[A-Za-z0-9_-]+)/annotations','POST','annotation_create','publish');
@@ -64,6 +65,7 @@ final class VWLB_Future_REST {
 	public function health(WP_REST_Request $r){return $this->response(VWLB_Future_Intelligence::health_snapshot($r['id']));}
 	public function health_record(WP_REST_Request $r){return $this->response(VWLB_Future_Intelligence::record_health($r['id'],$this->body($r)),201);}
 	public function track_create(WP_REST_Request $r){return $this->response(VWLB_Future_Intelligence::create_track($r['object_type'],$r['id'],$this->body($r)),201);}
+	public function track_transition(WP_REST_Request $r){$d=$this->body($r);return $this->response(VWLB_Future_Intelligence::transition_track($r['id'],$d['action']??'',$this->version($d)));}
 	public function track_generate(WP_REST_Request $r){$d=$this->body($r);return $this->response(VWLB_Future_Adapters::request_track_generation($r['object_type'],$r['id'],$d['track_type']??'',$d['language']??'',$d['options']??array()),202);}
 	public function annotations(WP_REST_Request $r){return $this->response(VWLB_Future_Intelligence::annotations($r['id'],!empty($r['include_candidates'])));}
 	public function annotation_create(WP_REST_Request $r){return $this->response(VWLB_Future_Intelligence::create_annotation($r['id'],$this->body($r)),201);}

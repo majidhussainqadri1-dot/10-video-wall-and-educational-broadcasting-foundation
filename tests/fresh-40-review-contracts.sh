@@ -44,4 +44,11 @@ need "reconciliation is required" "$P/includes/class-vwlb-future-adapters.php" r
 need "vwlb_health_source_invalid" "$P/includes/class-vwlb-future-intelligence.php" r09-source-scope
 need "is_finite(\$candidate)" "$P/includes/class-vwlb-future-intelligence.php" r09-finite-audio
 need "min(1000000000" "$P/includes/class-vwlb-future-intelligence.php" r09-dropped-frame-bound
+# R10 — generated accessibility/language tracks have an explicit human-review state machine before publication.
+need "vwlb_track_secret_forbidden" "$P/includes/class-vwlb-future-intelligence.php" r10-track-secret
+need "transition_track" "$P/includes/class-vwlb-future-intelligence.php" r10-track-transition
+need "candidate','reviewed" "$P/includes/class-vwlb-future-intelligence.php" r10-candidate-review
+need "Human review is required before publishing generated tracks" "$P/includes/class-vwlb-future-intelligence.php" r10-human-review-contract
+need "MediaTrackPublished" "$P/includes/class-vwlb-future-intelligence.php" r10-publish-event
+need "/media-tracks/(?P<id>[A-Za-z0-9_-]+)/transition" "$P/includes/class-vwlb-future-rest.php" r10-transition-rest
 printf '%s\n' 'fresh 40-review regression contracts PASS'
