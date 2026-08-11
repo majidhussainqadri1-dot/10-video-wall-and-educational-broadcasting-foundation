@@ -179,4 +179,11 @@ need "vwlb_public_seo_content_url" "$P/includes/class-vwlb-seo.php" r34-no-raw-s
 need "'public'!==(\$raw['visibility']??'')" "$P/includes/class-vwlb-seo.php" r34-public-live-only
 need "if(!\$v||'published'!==(\$v['status']??'')" "$P/includes/class-vwlb-privacy.php" r34-conditional-noindex
 need "status_header((int)\$status)" "$P/includes/class-vwlb-frontend.php" r34-http-state
+# R35 — playback/progress/history/interactions fail closed on persistence errors and progress is bounded by verified duration.
+need "vwlb_playback_session_failed" "$P/includes/class-vwlb-videos.php" r35-session
+need "vwlb_history_delete_failed" "$P/includes/class-vwlb-videos.php" r35-history
+need "vwlb_progress_save_failed" "$P/includes/class-vwlb-videos.php" r35-progress
+need "\$verified?:\$reported" "$P/includes/class-vwlb-videos.php" r35-duration
+need "FOR UPDATE" "$P/includes/class-vwlb-videos.php" r35-interaction-lock
+need "vwlb_interaction_counter_failed" "$P/includes/class-vwlb-videos.php" r35-counter
 printf '%s\n' 'fresh 40-review regression contracts PASS'
