@@ -15,6 +15,8 @@ final class VWLB_Plugin {
 		VWLB_Extensions::register();
 		VWLB_Observability::register();
 		VWLB_Future_Intelligence::register();
+		add_filter('rest_request_before_callbacks',array('VWLB_Security','rest_mutation_before'),10,3);
+		add_filter('rest_request_after_callbacks',array('VWLB_Security','rest_mutation_after'),10,3);
 
 		$frontend=new VWLB_Frontend();$future_frontend=new VWLB_Future_Frontend();$admin=new VWLB_Admin();$privacy=new VWLB_Privacy();$integrations=new VWLB_Integrations();
 		$rest=new VWLB_REST();$extended=new VWLB_Extended_REST();$future_rest=new VWLB_Future_REST();$seo=new VWLB_SEO();

@@ -7,8 +7,15 @@
     node.textContent = message;
     node.classList.toggle('is-error', error);
   };
+  const idempotencyKey = () => {
+    if (window.crypto && typeof window.crypto.randomUUID === 'function') return window.crypto.randomUUID();
+    if (window.crypto && typeof window.crypto.getRandomValues === 'function') { const b = new Uint8Array(16); window.crypto.getRandomValues(b); return Array.from(b, (v) => v.toString(16).padStart(2, '0')).join(''); }
+    return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  };
   const request = async (path, options = {}) => {
     const headers = Object.assign({'Content-Type': 'application/json'}, options.headers || {});
+    const method = String(options.method || 'GET').toUpperCase();
+    if (!['GET', 'HEAD', 'OPTIONS'].includes(method) && !headers['Idempotency-Key']) headers['Idempotency-Key'] = options.idempotencyKey || idempotencyKey();
     if (cfg.nonce) headers['X-WP-Nonce'] = cfg.nonce;
     const response = await fetch(`${cfg.root}${path}`, Object.assign({credentials: 'same-origin'}, options, {headers}));
     let payload = null;
