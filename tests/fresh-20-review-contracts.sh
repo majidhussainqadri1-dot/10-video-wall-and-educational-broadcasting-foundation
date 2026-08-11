@@ -24,3 +24,8 @@ need '1!==$consumed' "$P/includes/class-vwlb-extensions.php" r04-atomic-consume
 # R05 — processing jobs reclaim stale running leases with an attempt CAS.
 need 'status='"'"'running'"'"' AND locked_at<' "$P/includes/class-vwlb-jobs.php" r05-stale-running
 need 'AND status=%s AND attempts=%d' "$P/includes/class-vwlb-jobs.php" r05-claim-cas
+
+# R06 — job finalization is lease-bound and asset completion is transactional.
+need vwlb_job_lease_lost "$P/includes/class-vwlb-jobs.php" r06-lease-finalize
+need vwlb_asset_finalize_conflict "$P/includes/class-vwlb-jobs.php" r06-asset-finalize
+need 'AND attempts=%d AND locked_by=%s' "$P/includes/class-vwlb-jobs.php" r06-owner-token

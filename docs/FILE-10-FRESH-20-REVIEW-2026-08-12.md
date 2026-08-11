@@ -25,3 +25,6 @@ Token creation did not verify its insert, and concurrent download resolutions co
 
 ## R05 — DEFECT FIXED
 A worker crash after claiming a job left status `running`, but the selector only considered pending/retry jobs; the job could never recover. Stale running leases are now reclaimable through a status+attempt CAS claim.
+
+## R06 — DEFECT FIXED
+A processing result could complete the job and emit `MediaAssetReady` even when the asset’s optimistic update lost a race; stale workers were also not bound to their lease on finalize/failure. Asset+job completion is now transactional and lease-token/CAS bound.

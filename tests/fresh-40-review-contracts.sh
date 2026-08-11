@@ -130,7 +130,7 @@ need "vwlb_webhook_replay_window" "$P/includes/class-vwlb-rest.php" r24-replay-w
 need "if(1!==\$locked)continue" "$P/includes/class-vwlb-jobs.php" r25-outbox-lock
 need "if(!is_wp_error(\$published))" "$P/includes/class-vwlb-jobs.php" r25-scheduled-cas
 need "array_intersect_key(\$state" "$P/includes/class-vwlb-jobs.php" r25-provider-redaction
-need "'status'=>'running'" "$P/includes/class-vwlb-jobs.php" r25-job-finalize-cas
+need "AND status='running' AND attempts=%d AND locked_by=%s" "$P/includes/class-vwlb-jobs.php" r25-job-finalize-cas
 # R26 — privacy export/erasure covers Future user-linked data and persistence/storage failures keep the eraser retryable.
 need "Broadcast guest participation" "$P/includes/class-vwlb-privacy.php" r26-export-guests
 need "Live poll responses" "$P/includes/class-vwlb-privacy.php" r26-export-polls
