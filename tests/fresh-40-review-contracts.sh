@@ -58,4 +58,9 @@ need "verified video duration" "$P/includes/class-vwlb-future-intelligence.php" 
 need "vwlb_annotation_secret_forbidden" "$P/includes/class-vwlb-future-intelligence.php" r11-secret
 need "unset(\$i['metadata_json'])" "$P/includes/class-vwlb-future-intelligence.php" r11-dto
 need "/video-annotations/(?P<id>[A-Za-z0-9_-]+)/transition" "$P/includes/class-vwlb-future-rest.php" r11-rest
+# R12 — transcript indexing binds tracks to the same video, bounds time to verified duration and limits search input.
+need "vwlb_transcript_track_invalid" "$P/includes/class-vwlb-future-intelligence.php" r12-track-scope
+need "Transcript segment end cannot precede" "$P/includes/class-vwlb-future-intelligence.php" r12-time-order
+need "verified video duration" "$P/includes/class-vwlb-future-intelligence.php" r12-duration
+need "vwlb_search_too_long" "$P/includes/class-vwlb-future-intelligence.php" r12-query-bound
 printf '%s\n' 'fresh 40-review regression contracts PASS'
