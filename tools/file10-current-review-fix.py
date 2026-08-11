@@ -21,11 +21,11 @@ need "VWLB_FUTURE_SCHEMA_VERSION', '1.2.0" "$P/video-wall-and-live-broadcasting.
 # Old unsafe implementation patterns must not reappear.
 forbid "return array('provider_event_ref'=>'custom_" "$P/includes/class-vwlb-providers.php" fake-custom-live-success
 forbid "return array('provider_event_ref'=>'','state'=>'configured')" "$P/includes/class-vwlb-providers.php" fake-base-live-success
-forbid "if(false===$inserted){return $this->response(array('accepted'=>true,'duplicate'=>true));}" "$P/includes/class-vwlb-rest.php" webhook-db-as-duplicate
-forbid "CAP_PUBLISH,$video,'review_caption'" "$P/includes/class-vwlb-videos.php" caption-publish-as-review
-forbid "'contentUrl'=>$video['source_url']" "$P/includes/class-vwlb-seo.php" raw-source-seo
+forbid "if(false===\$inserted){return \$this->response(array('accepted'=>true,'duplicate'=>true));}" "$P/includes/class-vwlb-rest.php" webhook-db-as-duplicate
+forbid "CAP_PUBLISH,\$video,'review_caption'" "$P/includes/class-vwlb-videos.php" caption-publish-as-review
+forbid "'contentUrl'=>\$video['source_url']" "$P/includes/class-vwlb-seo.php" raw-source-seo
 forbid "if(get_option('vwlb_schema_version')!==VWLB_SCHEMA_VERSION)VWLB_DB::install_schema();" "$P/includes/class-vwlb-activator.php" unchecked-base-migration
-forbid "status='active'" "$P/includes/class-vwlb-future-intelligence.php" client-simulcast-active-literal
+forbid "array('disabled','ready','active','failed')" "$P/includes/class-vwlb-future-intelligence.php" client-simulcast-active-state
 
 # Positive invariants for the corrected paths.
 need "rest_mutation_before" "$P/includes/class-vwlb-security.php" mutation-idempotency
