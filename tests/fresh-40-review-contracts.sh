@@ -40,4 +40,8 @@ need "array('disabled','ready')" "$P/includes/class-vwlb-future-intelligence.php
 need "status'=>'transitioning'" "$P/includes/class-vwlb-future-adapters.php" r08-transition-reservation
 need "submit its current version" "$P/includes/class-vwlb-future-adapters.php" r08-transition-version
 need "reconciliation is required" "$P/includes/class-vwlb-future-adapters.php" r08-provider-local-divergence
+# R09 — broadcaster health telemetry is bounded and cannot fabricate cross-event source identity.
+need "vwlb_health_source_invalid" "$P/includes/class-vwlb-future-intelligence.php" r09-source-scope
+need "is_finite(\$candidate)" "$P/includes/class-vwlb-future-intelligence.php" r09-finite-audio
+need "min(1000000000" "$P/includes/class-vwlb-future-intelligence.php" r09-dropped-frame-bound
 printf '%s\n' 'fresh 40-review regression contracts PASS'
