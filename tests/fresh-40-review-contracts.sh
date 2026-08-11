@@ -116,4 +116,10 @@ need "Active stream credentials could not be revoked" "$P/includes/class-vwlb-li
 need "scheduled_window_elapsed" "$P/includes/class-vwlb-live.php" r22-reconcile-event
 need "CAP_BROADCAST,\$event,'publish_replay'" "$P/includes/class-vwlb-live.php" r22-event-auth
 need "CAP_PUBLISH,\$video,'publish_replay'" "$P/includes/class-vwlb-live.php" r22-video-auth
+# R23 — moderation decisions are atomic and takedown claimants cannot self-issue restrict/remove/restore decisions.
+need "Moderation report could not be saved" "$P/includes/class-vwlb-moderation.php" r23-report-db
+need "Takedown report could not be saved" "$P/includes/class-vwlb-moderation.php" r23-takedown-db
+need "FOR UPDATE" "$P/includes/class-vwlb-moderation.php" r23-lock
+need "vwlb_takedown_decision_forbidden" "$P/includes/class-vwlb-moderation.php" r23-claimant-authority
+need "VWLB_DB::transaction" "$P/includes/class-vwlb-moderation.php" r23-atomicity
 printf '%s\n' 'fresh 40-review regression contracts PASS'
