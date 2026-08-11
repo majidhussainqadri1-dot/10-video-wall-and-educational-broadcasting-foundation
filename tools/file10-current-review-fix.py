@@ -1,22 +1,41 @@
 from pathlib import Path
-p=Path('video-wall-and-live-broadcasting/includes/class-vwlb-frontend.php');js=Path('video-wall-and-live-broadcasting/assets/js/vwlb.js');reg=Path('tests/fresh-40-review-contracts.sh');t=p.read_text();j=js.read_text()
-old="$v=$payload['video'];$p=$payload['playback'];$chapters=VWLB_Extensions::chapters('video',$v['id']);"
-new="$v=$payload['video'];$p=$payload['playback'];$raw=VWLB_Repository::find('videos',$v['public_id']);$chapters=$raw?VWLB_Extensions::chapters('video',$raw['id']):array();$low='';if($raw&&!empty($raw['asset_id'])&&'iframe'!==($p['type']??'')){$asset=VWLB_Repository::find('media_assets',$raw['asset_id']);if($asset&&'ready'===$asset['status']&&'passed'===$asset['scan_status']){$derivatives=VWLB_Helpers::json($asset['derivatives_json']??'{}');$candidate=$derivatives['mp4_low']??$derivatives['low_bandwidth']??'';if(is_array($candidate))$candidate=$candidate['url']??'';$low=esc_url_raw((string)$candidate,array('https'));}}"
-if old not in t:raise SystemExit('R33 chapter source pattern missing')
-t=t.replace(old,new,1)
-old="<video class=\"vwlb-player\" controls playsinline preload=\"metadata\" src=\"<?php echo esc_url($p['url']);?>\" data-resume=\"<?php echo esc_attr($payload['session']['resume_seconds']??0);?>\" data-no-autoplay=\"1\">"
-new="<video class=\"vwlb-player\" controls playsinline preload=\"metadata\" src=\"<?php echo esc_url($p['url']);?>\" data-standard-src=\"<?php echo esc_url($p['url']);?>\" data-low-bandwidth-src=\"<?php echo esc_url($low);?>\" data-resume=\"<?php echo esc_attr($payload['session']['resume_seconds']??0);?>\" data-no-autoplay=\"1\">"
-if old not in t:raise SystemExit('R33 player attributes pattern missing')
-t=t.replace(old,new,1);p.write_text(t)
-old="      bandwidth.addEventListener('click', () => {\n        const enabled = bandwidth.getAttribute('aria-pressed') !== 'true';\n        bandwidth.setAttribute('aria-pressed', enabled ? 'true' : 'false');\n        root.classList.toggle('vwlb-low-bandwidth', enabled);\n        try { localStorage.setItem('vwlb-low-bandwidth', enabled ? '1' : '0'); } catch (e) {}\n        status(root, enabled ? ((cfg.i18n && cfg.i18n.lowBandwidth) || 'Low bandwidth mode') : '');\n      });"
-new="      const switchBandwidth = (enabled) => {\n        if (player) {\n          const low = player.getAttribute('data-low-bandwidth-src') || '';\n          const standard = player.getAttribute('data-standard-src') || '';\n          if (enabled && !low) { status(root, (cfg.i18n && cfg.i18n.lowBandwidthUnavailable) || 'A dedicated low-bandwidth rendition is not available; adaptive playback will continue.', true); return false; }\n          const target = enabled ? low : standard;\n          if (target && player.currentSrc !== target && player.src !== target) { const at = player.currentTime || 0; const paused = player.paused; player.src = target; player.addEventListener('loadedmetadata', () => { if (at > 0 && at < player.duration) player.currentTime = at; if (!paused) player.play().catch(() => {}); }, {once:true}); }\n        }\n        bandwidth.setAttribute('aria-pressed', enabled ? 'true' : 'false'); root.classList.toggle('vwlb-low-bandwidth', enabled); try { localStorage.setItem('vwlb-low-bandwidth', enabled ? '1' : '0'); } catch (e) {} return true;\n      };\n      if (stored) switchBandwidth(true);\n      bandwidth.addEventListener('click', () => { const enabled = bandwidth.getAttribute('aria-pressed') !== 'true'; if (switchBandwidth(enabled)) status(root, enabled ? ((cfg.i18n && cfg.i18n.lowBandwidth) || 'Low bandwidth mode') : ''); });"
-if old not in j:raise SystemExit('R33 bandwidth handler pattern missing')
-j=j.replace(old,new,1)
-old="'sessionRest'=>__('You have been watching for a while. Consider a short rest.',VWLB_TEXT_DOMAIN))"
-# localized string lives in PHP, not JS; add there.
-t=p.read_text()
-if old in t:t=t.replace(old,"'sessionRest'=>__('You have been watching for a while. Consider a short rest.',VWLB_TEXT_DOMAIN),'lowBandwidthUnavailable'=>__('A dedicated low-bandwidth rendition is not available; adaptive playback will continue.',VWLB_TEXT_DOMAIN))",1)
-p.write_text(t);js.write_text(j)
-r=reg.read_text();marker="""# R33 — chapters use the internal canonical video row server-side and low-bandwidth UI actually switches to a verified low rendition when available.\nneed \"VWLB_Extensions::chapters('video',\$raw['id'])\" \"$P/includes/class-vwlb-frontend.php\" r33-chapters\nneed \"data-low-bandwidth-src\" \"$P/includes/class-vwlb-frontend.php\" r33-low-src\nneed \"switchBandwidth\" \"$P/assets/js/vwlb.js\" r33-switch\nneed \"lowBandwidthUnavailable\" \"$P/includes/class-vwlb-frontend.php\" r33-unavailable\nneed \"prefers-reduced-motion\" \"$P/assets/css/vwlb.css\" r33-reduced-motion\n"""
-if '# R33 —' not in r:r=r.replace("printf '%s\\n' 'fresh 40-review regression contracts PASS'\n",marker+"printf '%s\\n' 'fresh 40-review regression contracts PASS'\n")
+
+seo=Path('video-wall-and-live-broadcasting/includes/class-vwlb-seo.php')
+privacy=Path('video-wall-and-live-broadcasting/includes/class-vwlb-privacy.php')
+frontend=Path('video-wall-and-live-broadcasting/includes/class-vwlb-frontend.php')
+reg=Path('tests/fresh-40-review-contracts.sh')
+
+seo.write_text(r'''<?php
+/** Public-only VideoObject/BroadcastEvent structured data. */
+defined( 'ABSPATH' ) || exit;
+final class VWLB_SEO {
+	public function output(){
+		if(get_query_var('vwlb_video_id')){$video=VWLB_Repository::video_bundle(get_query_var('vwlb_video_id'));if(!$video||'published'!==($video['status']??'')||'public'!==($video['visibility']??''))return;$dto=VWLB_Repository::public_video_dto($video);if(!$dto)return;$data=array('@context'=>'https://schema.org','@type'=>'VideoObject','name'=>$dto['title'],'description'=>wp_strip_all_tags($dto['description']),'uploadDate'=>$dto['published_at'],'duration'=>'PT'.(int)$dto['duration_seconds'].'S','url'=>$dto['url']);if(!empty($dto['thumbnail_url']))$data['thumbnailUrl']=array($dto['thumbnail_url']);if($video['provider']!=='local'&&!empty($video['embed_url']))$data['embedUrl']=$video['embed_url'];$public_content=apply_filters('vwlb_public_seo_content_url','',$video);if($public_content)$data['contentUrl']=esc_url_raw($public_content,array('https'));$this->script($data);}
+		elseif(get_query_var('vwlb_live_id')){$raw=VWLB_Repository::find('live_events',get_query_var('vwlb_live_id'));if(!$raw||'public'!==($raw['visibility']??'')||!in_array($raw['status']??'',array('scheduled','live','ended','replay_published'),true))return;$event=VWLB_Live::state($raw['public_id']);if(is_wp_error($event))return;$status='live'===$event['status']?'https://schema.org/EventInProgress':('ended'===$event['status']||'replay_published'===$event['status']?'https://schema.org/EventCompleted':'https://schema.org/EventScheduled');$data=array('@context'=>'https://schema.org','@type'=>'BroadcastEvent','name'=>$event['title'],'description'=>wp_strip_all_tags($event['description']),'startDate'=>$event['scheduled_start'],'endDate'=>$event['scheduled_end'],'eventStatus'=>$status,'url'=>$event['url']);if('live'===$event['status'])$data['isLiveBroadcast']=true;$this->script($data);}
+	}
+	private function script($data){echo '<script type="application/ld+json">'.wp_json_encode(array_filter($data),JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE).'</script>' . "\n";}
+}
+''')
+
+pt=privacy.read_text()
+old="\tpublic function private_headers(){$private_slugs=array('video-history','studio-video','studio-live');if(is_page(array_values((array)get_option('vwlb_page_map',array())))&&(is_user_logged_in()||is_page($private_slugs)))VWLB_Helpers::no_cache_private();if(get_query_var('vwlb_video_id')||get_query_var('vwlb_live_id')||get_query_var('vwlb_podcast_id'))VWLB_Helpers::no_cache_private();}\n"
+new=r'''	public function private_headers(){
+		$private_slugs=array('video-history','studio-video','studio-live');if(is_page(array_values((array)get_option('vwlb_page_map',array())))&&(is_user_logged_in()||is_page($private_slugs)))VWLB_Helpers::no_cache_private();
+		if(get_query_var('vwlb_video_id')){$v=VWLB_Repository::find('videos',get_query_var('vwlb_video_id'));if(!$v||'published'!==($v['status']??'')||'public'!==($v['visibility']??''))VWLB_Helpers::no_cache_private();}
+		if(get_query_var('vwlb_live_id')){$e=VWLB_Repository::find('live_events',get_query_var('vwlb_live_id'));if(!$e||'public'!==($e['visibility']??'')||!in_array($e['status']??'',array('scheduled','live','ended','replay_published'),true))VWLB_Helpers::no_cache_private();}
+	}
+'''
+if old not in pt:raise SystemExit('R34 private headers pattern missing')
+pt=pt.replace(old,new,1);privacy.write_text(pt)
+
+ft=frontend.read_text()
+ft=ft.replace("\t\tVWLB_Helpers::no_cache_private();$this->enqueue();$id=get_query_var('vwlb_video_id');", "\t\t$this->enqueue();$id=get_query_var('vwlb_video_id');",1)
+ft=ft.replace("\t\tVWLB_Helpers::no_cache_private();$this->enqueue();$id=get_query_var('vwlb_live_id');", "\t\t$this->enqueue();$id=get_query_var('vwlb_live_id');",1)
+old_state="\tprivate function state($class,$title,$message){return '<section class=\"vwlb-state vwlb-state-'.esc_attr($class).'\" role=\"status\"><h2>'.esc_html($title).'</h2><p>'.esc_html($message).'</p><p><a href=\"'.esc_url(home_url('/')).'\">'.esc_html__('Home',VWLB_TEXT_DOMAIN).'</a></p></section>';}"
+new_state="\tprivate function state($class,$title,$message,$status=0){if(!$status&&'restricted'===$class)$status=404;if($status)status_header((int)$status);return '<section class=\"vwlb-state vwlb-state-'.esc_attr($class).'\" role=\"status\"><h2>'.esc_html($title).'</h2><p>'.esc_html($message).'</p><p><a href=\"'.esc_url(home_url('/')).'\">'.esc_html__('Home',VWLB_TEXT_DOMAIN).'</a></p></section>';}"
+if old_state not in ft:raise SystemExit('R34 state pattern missing')
+ft=ft.replace(old_state,new_state,1);frontend.write_text(ft)
+
+r=reg.read_text();marker="""# R34 — public eligible media may be indexed; private/restricted media is noindex and never emitted into structured data.\nneed \"'published'!==\(\$video['status']\" \"$P/includes/class-vwlb-seo.php\" r34-public-video-only\nneed \"vwlb_public_seo_content_url\" \"$P/includes/class-vwlb-seo.php\" r34-no-raw-source-url\nneed \"'public'!==\(\$raw['visibility']\" \"$P/includes/class-vwlb-seo.php\" r34-public-live-only\nneed \"if\(!\$v||'published'!==\" \"$P/includes/class-vwlb-privacy.php\" r34-conditional-noindex\nneed \"status_header\(\(int\)\$status\)\" \"$P/includes/class-vwlb-frontend.php\" r34-http-state\n"""
+if '# R34 —' not in r:r=r.replace("printf '%s\\n' 'fresh 40-review regression contracts PASS'\n",marker+"printf '%s\\n' 'fresh 40-review regression contracts PASS'\n")
 reg.write_text(r)
