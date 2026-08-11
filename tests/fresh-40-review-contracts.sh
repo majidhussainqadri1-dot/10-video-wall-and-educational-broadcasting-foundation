@@ -23,4 +23,9 @@ need "contains_raw_secret" "$P/includes/class-vwlb-future-intelligence.php" r05-
 need "Every scene source must be an active source of the same live event" "$P/includes/class-vwlb-future-intelligence.php" r05-scene-source-scope
 need "find('live_events',\$event['id'],true)" "$P/includes/class-vwlb-future-intelligence.php" r05-program-lock
 need "id<>%d" "$P/includes/class-vwlb-future-intelligence.php" r05-single-program
+# R06 — F10-FUT-002 guest/co-host delegation is File00-eligible, scoped, expiring, audited, CAS-protected and revocable.
+need "File 00 identity and eligibility assertions" "$P/includes/class-vwlb-future-intelligence.php" r06-target-identity
+need "Guest invitation changed concurrently" "$P/includes/class-vwlb-future-intelligence.php" r06-accept-cas
+need "BroadcastGuestRevoked" "$P/includes/class-vwlb-future-intelligence.php" r06-revoke-event
+need "/revoke','POST','guest_revoke'" "$P/includes/class-vwlb-future-rest.php" r06-revoke-route
 printf '%s\n' 'fresh 40-review regression contracts PASS'

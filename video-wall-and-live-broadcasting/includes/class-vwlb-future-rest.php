@@ -11,6 +11,7 @@ final class VWLB_Future_REST {
 			$this->route($n,'/live-events/(?P<id>[A-Za-z0-9_-]+)/production/scenes/(?P<scene>[A-Za-z0-9_-]+)/program','POST','scene_program','broadcast');
 			$this->route($n,'/live-events/(?P<id>[A-Za-z0-9_-]+)/guests','POST','guest_invite','broadcast');
 			$this->route($n,'/broadcast-guests/(?P<id>[A-Za-z0-9_-]+)/accept','POST','guest_accept','login');
+			$this->route($n,'/broadcast-guests/(?P<id>[A-Za-z0-9_-]+)/revoke','POST','guest_revoke','broadcast');
 			$this->route($n,'/live-events/(?P<id>[A-Za-z0-9_-]+)/future-config','POST','live_config','broadcast');
 			$this->route($n,'/live-events/(?P<id>[A-Za-z0-9_-]+)/future-config/apply','POST','live_config_apply','operate');
 			$this->route($n,'/live-events/(?P<id>[A-Za-z0-9_-]+)/simulcast-targets','POST','simulcast_save','broadcast');
@@ -55,6 +56,7 @@ final class VWLB_Future_REST {
 	public function scene_program(WP_REST_Request $r){$d=$this->body($r);return $this->response(VWLB_Future_Intelligence::switch_program_scene($r['id'],$r['scene'],$this->version($d)));}
 	public function guest_invite(WP_REST_Request $r){$d=$this->body($r);return $this->response(VWLB_Future_Intelligence::invite_guest($r['id'],$d['user_id']??0,$d['role']??'guest',$d['scope']??array(),$d['ttl']??7200),201);}
 	public function guest_accept(WP_REST_Request $r){return $this->response(VWLB_Future_Intelligence::accept_guest($r['id']));}
+	public function guest_revoke(WP_REST_Request $r){return $this->response(VWLB_Future_Intelligence::revoke_guest($r['id']));}
 	public function live_config(WP_REST_Request $r){$d=$this->body($r);return $this->response(VWLB_Future_Intelligence::configure_live($r['id'],$d,$this->version($d)));}
 	public function live_config_apply(WP_REST_Request $r){return $this->response(VWLB_Future_Adapters::apply_live_policy($r['id']));}
 	public function simulcast_save(WP_REST_Request $r){return $this->response(VWLB_Future_Intelligence::upsert_simulcast_target($r['id'],$this->body($r)),201);}
