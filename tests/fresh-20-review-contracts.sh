@@ -70,3 +70,9 @@ need 'VWLB_VERSION'"'"', '"'"'1.2.2-rc1' "$P/video-wall-and-live-broadcasting.ph
 need 'VWLB_FUTURE_SCHEMA_VERSION'"'"', '"'"'1.2.0' "$P/video-wall-and-live-broadcasting.php" r19-schema-not-inflated
 need video-wall-and-live-broadcasting-1.2.2-rc1.zip "$ROOT/tools/build-package.sh" r19-build-artifact
 need file10-video-wall-live-1.2.2-rc1 "$ROOT/.github/workflows/file10-release.yml" r19-release-artifact
+
+# R20 — final fresh review/release hygiene: no temporary mutation tooling and no stale current release identity.
+[[ ! -e "$ROOT/tools/file10-current-20-review-fix.py" ]] || { echo 'FAIL fresh-20-review: r20-loader-hygiene' >&2; exit 1; }
+[[ ! -e "$ROOT/.github/workflows/file10-20-review-fixer.yml" ]] || { echo 'FAIL fresh-20-review: r20-workflow-hygiene' >&2; exit 1; }
+if compgen -G "$ROOT/tools/file10-r20-payload-*.txt" >/dev/null; then echo 'FAIL fresh-20-review: r20-payload-hygiene' >&2; exit 1; fi
+! grep -F '1.2.1-rc1' "$ROOT/.github/workflows/file10-release.yml" >/dev/null || { echo 'FAIL fresh-20-review: r20-stale-release-identity' >&2; exit 1; }
