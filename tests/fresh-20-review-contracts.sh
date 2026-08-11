@@ -29,3 +29,7 @@ need 'AND status=%s AND attempts=%d' "$P/includes/class-vwlb-jobs.php" r05-claim
 need vwlb_job_lease_lost "$P/includes/class-vwlb-jobs.php" r06-lease-finalize
 need vwlb_asset_finalize_conflict "$P/includes/class-vwlb-jobs.php" r06-asset-finalize
 need 'AND attempts=%d AND locked_by=%s' "$P/includes/class-vwlb-jobs.php" r06-owner-token
+
+# R07 — outbox stale publishing leases are reclaimable and finalize by attempt token.
+need 'status='"'"'publishing'"'"' AND locked_at<' "$P/includes/class-vwlb-jobs.php" r07-stale-outbox
+need 'status='"'"'publishing'"'"' AND attempts=%d' "$P/includes/class-vwlb-jobs.php" r07-outbox-token

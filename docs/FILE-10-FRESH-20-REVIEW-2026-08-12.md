@@ -28,3 +28,6 @@ A worker crash after claiming a job left status `running`, but the selector only
 
 ## R06 — DEFECT FIXED
 A processing result could complete the job and emit `MediaAssetReady` even when the asset’s optimistic update lost a race; stale workers were also not bound to their lease on finalize/failure. Asset+job completion is now transactional and lease-token/CAS bound.
+
+## R07 — DEFECT FIXED
+An outbox worker crash after status `publishing` stranded the event forever because only pending/retry rows were selected. Stale publishing leases can now be reclaimed, and publish/failure writes are tied to the claimed attempt token.

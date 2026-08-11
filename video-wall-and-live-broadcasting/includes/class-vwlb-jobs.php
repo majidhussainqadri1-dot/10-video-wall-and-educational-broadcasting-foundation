@@ -41,14 +41,14 @@ final class VWLB_Jobs {
 	}
 
 	public static function publish_outbox($limit=20){
-		global $wpdb;$table=VWLB_Helpers::table('outbox');
-		$events=$wpdb->get_results($wpdb->prepare("SELECT * FROM $table WHERE status IN ('pending','retry') AND available_at<=%s ORDER BY id ASC LIMIT %d",VWLB_Helpers::now(),max(1,min(100,(int)$limit))),ARRAY_A);
-		foreach($events as $event){
-			$locked=$wpdb->update($table,array('status'=>'publishing','attempts'=>(int)$event['attempts']+1,'locked_at'=>VWLB_Helpers::now(),'updated_at'=>VWLB_Helpers::now()),array('id'=>$event['id'],'status'=>$event['status']));if(1!==$locked)continue;
-			try{do_action('vwlb_domain_event',$event['event_name'],VWLB_Helpers::json($event['payload_json']),$event);$wpdb->update($table,array('status'=>'published','published_at'=>VWLB_Helpers::now(),'last_error'=>'','updated_at'=>VWLB_Helpers::now()),array('id'=>$event['id']));}
-			catch(Throwable $e){$attempt=(int)$event['attempts']+1;$wpdb->update($table,array('status'=>$attempt>=8?'dead':'retry','available_at'=>gmdate('Y-m-d H:i:s',time()+min(HOUR_IN_SECONDS,pow(2,$attempt)*30)),'last_error'=>mb_substr($e->getMessage(),0,1000),'updated_at'=>VWLB_Helpers::now()),array('id'=>$event['id']));}
+		global $wpdb;$table=VWLB_Helpers::table('outbox');$now=VWLB_Helpers::now();$stale=gmdate('Y-m-d H:i:s',time()-15*MINUTE_IN_SECONDS);
+		$events=$wpdb->get_results($wpdb->prepare("SELECT * FROM $table WHERE ((status IN ('pending','retry') AND available_at<=%s) OR (status='publishing' AND locked_at<%s)) ORDER BY id ASC LIMIT %d",$now,$stale,max(1,min(100,(int)$limit))),ARRAY_A);
+		foreach($events as $event){$attempt=(int)$event['attempts']+1;$locked=$wpdb->query($wpdb->prepare("UPDATE $table SET status='publishing',attempts=%d,locked_at=%s,updated_at=%s WHERE id=%d AND status=%s AND attempts=%d",$attempt,$now,$now,$event['id'],$event['status'],$event['attempts']));if(1!==$locked)continue;
+			try{do_action('vwlb_domain_event',$event['event_name'],VWLB_Helpers::json($event['payload_json']),$event);$published=$wpdb->query($wpdb->prepare("UPDATE $table SET status='published',published_at=%s,last_error='',updated_at=%s WHERE id=%d AND status='publishing' AND attempts=%d",VWLB_Helpers::now(),VWLB_Helpers::now(),$event['id'],$attempt));if(1!==$published)continue;}
+			catch(Throwable $e){$wpdb->query($wpdb->prepare("UPDATE $table SET status=%s,available_at=%s,locked_at=NULL,last_error=%s,updated_at=%s WHERE id=%d AND status='publishing' AND attempts=%d",$attempt>=8?'dead':'retry',gmdate('Y-m-d H:i:s',time()+min(HOUR_IN_SECONDS,pow(2,$attempt)*30)),mb_substr($e->getMessage(),0,1000),VWLB_Helpers::now(),$event['id'],$attempt));}
 		}
 	}
+
 	public static function reconcile(){
 		global $wpdb;$now=VWLB_Helpers::now();
 		$videos=$wpdb->get_results($wpdb->prepare('SELECT * FROM '.VWLB_Helpers::table('videos').' WHERE status=%s AND scheduled_at<=%s LIMIT 100','scheduled',$now),ARRAY_A);
