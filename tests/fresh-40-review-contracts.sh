@@ -63,4 +63,10 @@ need "vwlb_transcript_track_invalid" "$P/includes/class-vwlb-future-intelligence
 need "Transcript segment end cannot precede" "$P/includes/class-vwlb-future-intelligence.php" r12-time-order
 need "verified video duration" "$P/includes/class-vwlb-future-intelligence.php" r12-duration
 need "vwlb_search_too_long" "$P/includes/class-vwlb-future-intelligence.php" r12-query-bound
+# R13 — live polls validate UTC windows, roll back failed options/responses and return a bounded public DTO.
+need "Poll closing time must be after its opening time" "$P/includes/class-vwlb-future-intelligence.php" r13-window-order
+need "Poll option could not be saved" "$P/includes/class-vwlb-future-intelligence.php" r13-option-atomic
+need "outside its active response window" "$P/includes/class-vwlb-future-intelligence.php" r13-window-enforce
+need "Previous poll response could not be replaced" "$P/includes/class-vwlb-future-intelligence.php" r13-response-atomic
+need "'not_diagnostic'=>true" "$P/includes/class-vwlb-future-intelligence.php" r13-public-dto
 printf '%s\n' 'fresh 40-review regression contracts PASS'
