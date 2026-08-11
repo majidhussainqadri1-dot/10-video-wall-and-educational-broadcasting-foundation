@@ -131,4 +131,11 @@ need "if(1!==\$locked)continue" "$P/includes/class-vwlb-jobs.php" r25-outbox-loc
 need "if(!is_wp_error(\$published))" "$P/includes/class-vwlb-jobs.php" r25-scheduled-cas
 need "array_intersect_key(\$state" "$P/includes/class-vwlb-jobs.php" r25-provider-redaction
 need "'status'=>'running'" "$P/includes/class-vwlb-jobs.php" r25-job-finalize-cas
+# R26 — privacy export/erasure covers Future user-linked data and persistence/storage failures keep the eraser retryable.
+need "Broadcast guest participation" "$P/includes/class-vwlb-privacy.php" r26-export-guests
+need "Live poll responses" "$P/includes/class-vwlb-privacy.php" r26-export-polls
+need "live_poll_responses" "$P/includes/class-vwlb-privacy.php" r26-erase-polls
+need "media_tracks','reviewed_by" "$P/includes/class-vwlb-privacy.php" r26-review-attribution
+need "vwlb_privacy_delete_failed" "$P/includes/class-vwlb-privacy.php" r26-db-fail-closed
+need "done'=>false" "$P/includes/class-vwlb-privacy.php" r26-retryable
 printf '%s\n' 'fresh 40-review regression contracts PASS'
