@@ -2,7 +2,7 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SOURCE="$ROOT/video-wall-and-live-broadcasting"
-OUT="${1:-$ROOT/packages/video-wall-and-live-broadcasting-1.1.0-rc1.zip}"
+OUT="${1:-$ROOT/packages/video-wall-and-live-broadcasting-1.2.0-rc1.zip}"
 [[ "$OUT" == /* ]] || OUT="$ROOT/$OUT"
 TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT
 mkdir -p "$TMP/video-wall-and-live-broadcasting" "$(dirname "$OUT")"
