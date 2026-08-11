@@ -167,4 +167,10 @@ need "sandbox=\"<?php echo esc_attr(\$sandbox);?>\"" "$P/includes/class-vwlb-fro
 need "loading=\"lazy\" allow=\"fullscreen; picture-in-picture\"" "$P/includes/class-vwlb-frontend.php" r32-live-iframe
 need "checked(!empty(\$extras['viewer']['recording_consent']))" "$P/includes/class-vwlb-frontend.php" r32-consent-state
 need "Waiting room joined" "$P/includes/class-vwlb-frontend.php" r32-waiting-state
+# R33 — chapters use the internal canonical video row server-side and low-bandwidth UI actually switches to a verified low rendition when available.
+need "VWLB_Extensions::chapters('video',\$raw['id'])" "$P/includes/class-vwlb-frontend.php" r33-chapters
+need "data-low-bandwidth-src" "$P/includes/class-vwlb-frontend.php" r33-low-src
+need "switchBandwidth" "$P/assets/js/vwlb.js" r33-switch
+need "lowBandwidthUnavailable" "$P/includes/class-vwlb-frontend.php" r33-unavailable
+need "prefers-reduced-motion" "$P/assets/css/vwlb.css" r33-reduced-motion
 printf '%s\n' 'fresh 40-review regression contracts PASS'

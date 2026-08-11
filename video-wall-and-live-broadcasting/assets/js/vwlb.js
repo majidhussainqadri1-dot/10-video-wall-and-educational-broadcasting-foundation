@@ -97,13 +97,18 @@
       const stored = window.localStorage ? localStorage.getItem('vwlb-low-bandwidth') === '1' : false;
       bandwidth.setAttribute('aria-pressed', stored ? 'true' : 'false');
       root.classList.toggle('vwlb-low-bandwidth', stored);
-      bandwidth.addEventListener('click', () => {
-        const enabled = bandwidth.getAttribute('aria-pressed') !== 'true';
-        bandwidth.setAttribute('aria-pressed', enabled ? 'true' : 'false');
-        root.classList.toggle('vwlb-low-bandwidth', enabled);
-        try { localStorage.setItem('vwlb-low-bandwidth', enabled ? '1' : '0'); } catch (e) {}
-        status(root, enabled ? ((cfg.i18n && cfg.i18n.lowBandwidth) || 'Low bandwidth mode') : '');
-      });
+      const switchBandwidth = (enabled) => {
+        if (player) {
+          const low = player.getAttribute('data-low-bandwidth-src') || '';
+          const standard = player.getAttribute('data-standard-src') || '';
+          if (enabled && !low) { status(root, (cfg.i18n && cfg.i18n.lowBandwidthUnavailable) || 'A dedicated low-bandwidth rendition is not available; adaptive playback will continue.', true); return false; }
+          const target = enabled ? low : standard;
+          if (target && player.currentSrc !== target && player.src !== target) { const at = player.currentTime || 0; const paused = player.paused; player.src = target; player.addEventListener('loadedmetadata', () => { if (at > 0 && at < player.duration) player.currentTime = at; if (!paused) player.play().catch(() => {}); }, {once:true}); }
+        }
+        bandwidth.setAttribute('aria-pressed', enabled ? 'true' : 'false'); root.classList.toggle('vwlb-low-bandwidth', enabled); try { localStorage.setItem('vwlb-low-bandwidth', enabled ? '1' : '0'); } catch (e) {} return true;
+      };
+      if (stored) switchBandwidth(true);
+      bandwidth.addEventListener('click', () => { const enabled = bandwidth.getAttribute('aria-pressed') !== 'true'; if (switchBandwidth(enabled)) status(root, enabled ? ((cfg.i18n && cfg.i18n.lowBandwidth) || 'Low bandwidth mode') : ''); });
     }
 
     const transcriptButton = root.querySelector('[data-vwlb-transcript-toggle]');
