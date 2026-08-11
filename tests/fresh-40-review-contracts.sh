@@ -34,4 +34,10 @@ need "vwlb_dvr_unavailable" "$P/includes/class-vwlb-future-intelligence.php" r07
 need "vwlb_backup_provider_required" "$P/includes/class-vwlb-future-intelligence.php" r07-backup-required
 need "submit its current version" "$P/includes/class-vwlb-future-intelligence.php" r07-config-cas
 need "min(6*HOUR_IN_SECONDS" "$P/includes/class-vwlb-future-adapters.php" r07-provider-result-bound
+# R08 — simulcast secrets are recursively rejected and provider transitions reserve a CAS state before external side effects.
+need "self::contains_raw_secret(\$config)" "$P/includes/class-vwlb-future-intelligence.php" r08-nested-secret
+need "array('disabled','ready')" "$P/includes/class-vwlb-future-intelligence.php" r08-no-client-active
+need "status'=>'transitioning'" "$P/includes/class-vwlb-future-adapters.php" r08-transition-reservation
+need "submit its current version" "$P/includes/class-vwlb-future-adapters.php" r08-transition-version
+need "reconciliation is required" "$P/includes/class-vwlb-future-adapters.php" r08-provider-local-divergence
 printf '%s\n' 'fresh 40-review regression contracts PASS'
