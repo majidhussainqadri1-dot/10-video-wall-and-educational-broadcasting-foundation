@@ -23,9 +23,17 @@ final class VWLB_Contracts {
 	const LIVE_STATES = array( 'draft', 'scheduled', 'rehearsal', 'ready', 'live', 'interrupted', 'ended', 'recording_processing', 'replay_review', 'replay_published', 'failed', 'restricted', 'removed' );
 	const TAKEDOWN_STATES = array( 'reported', 'restricted', 'reviewed', 'removed', 'restored', 'appealed', 'closed' );
 
+	const FUTURE_REQUIREMENTS = array(
+		'F10-FUT-001','F10-FUT-002','F10-FUT-003','F10-FUT-004','F10-FUT-005','F10-FUT-006',
+		'F10-FUT-007','F10-FUT-008','F10-FUT-009','F10-FUT-010','F10-FUT-011','F10-FUT-012',
+		'F10-FUT-013','F10-FUT-014','F10-FUT-015','F10-FUT-016','F10-FUT-017','F10-FUT-018',
+		'F10-FUT-019','F10-FUT-020','F10-FUT-021','F10-FUT-022','F10-FUT-023','F10-FUT-024',
+	);
+
 	const REQUIREMENTS = array(
 		'F10-FR-001','F10-FR-002','F10-FR-003','F10-FR-004','F10-FR-005','F10-FR-006','F10-FR-007','F10-FR-008','F10-FR-009','F10-FR-010','F10-FR-011','F10-FR-012','F10-FR-013','F10-FR-014','F10-FR-015','F10-FR-016','F10-FR-017','F10-FR-018','F10-FR-019',
 		'F10-NFR-001','F10-NFR-002','F10-NFR-003','F10-NFR-004','F10-NFR-005','F10-NFR-006','F10-NFR-007','F10-NFR-008','F10-NFR-009','F10-NFR-010',
+		'F10-FUT-001','F10-FUT-002','F10-FUT-003','F10-FUT-004','F10-FUT-005','F10-FUT-006','F10-FUT-007','F10-FUT-008','F10-FUT-009','F10-FUT-010','F10-FUT-011','F10-FUT-012','F10-FUT-013','F10-FUT-014','F10-FUT-015','F10-FUT-016','F10-FUT-017','F10-FUT-018','F10-FUT-019','F10-FUT-020','F10-FUT-021','F10-FUT-022','F10-FUT-023','F10-FUT-024',
 		'F10-CEN-01','AJ-15','AJ-16','AJ-17',
 	);
 
@@ -64,9 +72,11 @@ final class VWLB_Contracts {
 		'VideoPublished.v1','VideoRestricted.v1','LiveEventScheduled.v1','LiveBroadcastStarted.v1',
 		'LiveBroadcastEnded.v1','LiveReplayPublished.v1','MediaAssetReady.v1','PodcastEpisodePublished.v1',
 		'PodcastSeriesPublished.v1','VideoPremiereScheduled.v1','LiveWaitingRoomOpened.v1','LiveRecordingConsentChanged.v1','MediaRightsChanged.v1',
+		'BroadcastGuestInvited.v1','LivePollChanged.v1','VideoTimestampCorrectionPublished.v1','VideoFutureAnnotationPublished.v1','MediaAuxiliaryTrackPublished.v1','LiveProductionSceneChanged.v1','LiveSimulcastStateChanged.v1','VideoConsentRestricted.v1',
 	);
 	const CONSUMED_EVENTS = array(
 		'MembershipEntitlementChanged.v1','MessageUserBlocked.v1','CopyrightReportFiled.v1',
+		'KnowledgeEntryCorrected.v1','DocumentRightsChanged.v1','GuardianConsentChanged.v1',
 	);
 
 	public static function event( $name ) {
