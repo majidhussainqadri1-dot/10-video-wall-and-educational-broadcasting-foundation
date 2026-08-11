@@ -197,10 +197,8 @@ final class VWLB_Extensions {
 		foreach ( $sql as $statement ) {
 			dbDelta( $statement );
 		}
-		VWLB_Podcasts::install_schema();
-		self::ensure_private_dir();
-		update_option( self::OPTION, VWLB_EXT_SCHEMA_VERSION, false );
-		VWLB_Helpers::audit( 'system', 10, 'extension_schema_upgrade', '', VWLB_EXT_SCHEMA_VERSION, 'File 10 extension schema reconciled.' );
+		$verified=VWLB_DB::verify_schema_sql($sql);if(is_wp_error($verified))return $verified;$podcasts=VWLB_Podcasts::install_schema();if(is_wp_error($podcasts))return $podcasts;$private=self::ensure_private_dir();if(is_wp_error($private))return $private;if(!update_option( self::OPTION, VWLB_EXT_SCHEMA_VERSION, false )&&get_option( self::OPTION )!==VWLB_EXT_SCHEMA_VERSION)return VWLB_Helpers::error('vwlb_schema_version_persist_failed',__('File 10 extension schema version could not be recorded.',VWLB_TEXT_DOMAIN),500);
+		VWLB_Helpers::audit( 'system', 10, 'extension_schema_upgrade', '', VWLB_EXT_SCHEMA_VERSION, 'File 10 extension schema reconciled.' );return true;
 	}
 
 	private static function ensure_private_dir() {

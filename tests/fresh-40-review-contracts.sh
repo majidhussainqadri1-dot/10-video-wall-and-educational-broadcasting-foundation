@@ -186,4 +186,9 @@ need "vwlb_progress_save_failed" "$P/includes/class-vwlb-videos.php" r35-progres
 need "\$verified?:\$reported" "$P/includes/class-vwlb-videos.php" r35-duration
 need "FOR UPDATE" "$P/includes/class-vwlb-videos.php" r35-interaction-lock
 need "vwlb_interaction_counter_failed" "$P/includes/class-vwlb-videos.php" r35-counter
+# R36 — migration versions advance only after required tables and version-option persistence are verified.
+need "verify_schema_sql" "$P/includes/class-vwlb-db.php" r36-verify-helper
+need "SHOW TABLES LIKE" "$P/includes/class-vwlb-db.php" r36-table-verify
+need "vwlb_schema_version_persist_failed" "$P/includes" r36-version-persist
+need "is_wp_error(\$result)" "$P/includes/class-vwlb-activator.php" r36-reconcile-fail-closed
 printf '%s\n' 'fresh 40-review regression contracts PASS'

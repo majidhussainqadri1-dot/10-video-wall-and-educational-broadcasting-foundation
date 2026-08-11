@@ -278,8 +278,8 @@ final class VWLB_Future_Intelligence {
 		foreach ( $sql as $statement ) {
 			dbDelta( $statement );
 		}
-		update_option( self::OPTION, self::SCHEMA, false );
-		VWLB_Helpers::audit( 'system', 10, 'future_schema_upgrade', '', self::SCHEMA, 'File 10 Future Video & Broadcasting Intelligence schema reconciled.' );
+		$verified=VWLB_DB::verify_schema_sql($sql);if(is_wp_error($verified))return $verified;if(!update_option( self::OPTION, self::SCHEMA, false )&&get_option( self::OPTION )!==self::SCHEMA)return VWLB_Helpers::error('vwlb_schema_version_persist_failed',__('File 10 Future schema version could not be recorded.',VWLB_TEXT_DOMAIN),500);
+		VWLB_Helpers::audit( 'system', 10, 'future_schema_upgrade', '', self::SCHEMA, 'File 10 Future Video & Broadcasting Intelligence schema reconciled.' );return true;
 	}
 
 	private static function live( $id ) {

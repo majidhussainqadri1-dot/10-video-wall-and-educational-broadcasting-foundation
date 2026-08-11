@@ -29,9 +29,9 @@ final class VWLB_Activator {
 		}
 		if(!$acquired)return VWLB_Helpers::error('vwlb_schema_migration_busy',__('File 10 schema migration is already in progress. Retry shortly.',VWLB_TEXT_DOMAIN),503);
 		try{
-			if(get_option('vwlb_schema_version')!==VWLB_SCHEMA_VERSION)VWLB_DB::install_schema();
-			if(get_option(VWLB_Extensions::OPTION)!==VWLB_EXT_SCHEMA_VERSION)VWLB_Extensions::install_schema();
-			if(get_option(VWLB_Future_Intelligence::OPTION)!==VWLB_FUTURE_SCHEMA_VERSION)VWLB_Future_Intelligence::install_schema();
+			if(get_option('vwlb_schema_version')!==VWLB_SCHEMA_VERSION){$result=VWLB_DB::install_schema();if(is_wp_error($result))return $result;}
+			if(get_option(VWLB_Extensions::OPTION)!==VWLB_EXT_SCHEMA_VERSION){$result=VWLB_Extensions::install_schema();if(is_wp_error($result))return $result;}
+			if(get_option(VWLB_Future_Intelligence::OPTION)!==VWLB_FUTURE_SCHEMA_VERSION){$result=VWLB_Future_Intelligence::install_schema();if(is_wp_error($result))return $result;}
 			return true;
 		}catch(Throwable $e){
 			return VWLB_Helpers::error('vwlb_schema_migration_failed',__('File 10 schema migration failed safely.',VWLB_TEXT_DOMAIN),500,array('exception'=>get_class($e)));
