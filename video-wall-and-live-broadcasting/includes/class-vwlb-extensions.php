@@ -695,6 +695,7 @@ final class VWLB_Extensions {
 	}
 
 	public static function reels_media_contract( $value, $media_id, $context=array() ) {
+		$video=VWLB_Repository::video_bundle($media_id);if(!$video||!VWLB_Security::can_view($video,'file11_media_contract'))return VWLB_Helpers::error('vwlb_not_found',__('Media is unavailable.',VWLB_TEXT_DOMAIN),404);$asset=$video['asset']??array();if(!$asset||'ready'!==($asset['status']??'')||'passed'!==($asset['scan_status']??''))return VWLB_Helpers::error('vwlb_reel_media_not_ready',__('Reel media must be fully processed and malware-scanned by File 10.',VWLB_TEXT_DOMAIN),409);$derivatives=VWLB_Helpers::json($asset['derivatives_json']??'{}');if(!array_intersect_key($derivatives,array_flip(array('hls','mp4_high','mp4_low','mp4'))))return VWLB_Helpers::error('vwlb_reel_derivative_missing',__('A server-verified playable derivative is required before File 11 may reference this media.',VWLB_TEXT_DOMAIN),409);
 		$contract=self::media_contract($value,$media_id,'file11');
 		if(is_wp_error($contract))return $contract;
 		$duration=(int)$contract['duration_seconds'];

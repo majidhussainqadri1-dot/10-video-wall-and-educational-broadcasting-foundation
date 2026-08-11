@@ -150,4 +150,10 @@ need "Configured ingest endpoint is not a safe HTTPS remote URL" "$P/includes/cl
 need "return parent::create_live(\$event)" "$P/includes/class-vwlb-providers.php" r29-custom-live
 need "VWLB_Helpers::remote_url(\$base)" "$P/includes/class-vwlb-providers.php" r29-custom-ingest
 need "VWLB_Helpers::remote_url(\$state['playback_url']" "$P/includes/class-vwlb-providers.php" r29-custom-playback
+# R30 — cross-file ownership includes Future entities and File 11 can reference only File10-verified ready/scanned playable media.
+need "'watermark_policy'" "$P/includes/class-vwlb-integrations.php" r30-future-owner
+need "vwlb_reel_media_not_ready" "$P/includes/class-vwlb-extensions.php" r30-reel-ready
+need "vwlb_reel_derivative_missing" "$P/includes/class-vwlb-extensions.php" r30-reel-derivative
+need "file11_media_contract" "$P/includes/class-vwlb-extensions.php" r30-file11-scope
+need "conversation_owner'=>'File 17'" "$P/includes/class-vwlb-integrations.php" r30-file17-owner
 printf '%s\n' 'fresh 40-review regression contracts PASS'

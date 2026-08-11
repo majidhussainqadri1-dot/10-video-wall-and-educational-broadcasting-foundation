@@ -50,7 +50,8 @@ final class VWLB_Integrations {
 		foreach(array(
 			'recorded_video','video_channel','video_playlist','media_asset','upload_session','video_chapter','caption_track',
 			'podcast_series','podcast_episode','live_event','premiere','stream_credential','live_attendee','live_question','live_resource',
-			'playback_session','download_token','creator_media_metrics','media_moderation','copyright_takedown','provider_health'
+			'playback_session','download_token','creator_media_metrics','media_moderation','copyright_takedown','provider_health',
+			'production_source','production_scene','broadcast_guest','future_live_config','simulcast_target','broadcast_health_sample','media_track','transcript_segment','video_annotation','live_poll','live_poll_option','live_poll_response','consent_link','watermark_policy'
 		) as $entity){$owners[$entity]='File 10';}
 		return $owners;
 	}
