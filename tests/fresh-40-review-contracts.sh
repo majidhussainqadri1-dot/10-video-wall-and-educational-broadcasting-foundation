@@ -156,4 +156,10 @@ need "vwlb_reel_media_not_ready" "$P/includes/class-vwlb-extensions.php" r30-ree
 need "vwlb_reel_derivative_missing" "$P/includes/class-vwlb-extensions.php" r30-reel-derivative
 need "file11_media_contract" "$P/includes/class-vwlb-extensions.php" r30-file11-scope
 need "conversation_owner'=>'File 17'" "$P/includes/class-vwlb-integrations.php" r30-file17-owner
+# R31 — only declared public-safe File10 events leave the module; inbox persistence conflicts are not misclassified as duplicates.
+need "in_array(\$name,VWLB_Contracts::PUBLISHED_EVENTS,true)" "$P/includes/class-vwlb-integrations.php" r31-event-allowlist
+need "public-safe-event-projection" "$P/includes/class-vwlb-integrations.php" r31-payload-boundary
+need "vwlb_inbox_persist_failed" "$P/includes/class-vwlb-integrations.php" r31-inbox-db
+need "vwlb_inbox_event_conflict" "$P/includes/class-vwlb-integrations.php" r31-event-conflict
+need "vwlb_inbox_finalize_failed" "$P/includes/class-vwlb-integrations.php" r31-finalize
 printf '%s\n' 'fresh 40-review regression contracts PASS'
