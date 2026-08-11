@@ -1,18 +1,22 @@
 from pathlib import Path
-import re
 p=Path('video-wall-and-live-broadcasting/includes/class-vwlb-videos.php');reg=Path('tests/fresh-40-review-contracts.sh');t=p.read_text()
-old="$status=VWLB_Security::can(VWLB_Contracts::CAP_PUBLISH,$video,'review_caption')?'published':'review';"
-new="$source=VWLB_Helpers::enum($data['source']??'manual',array('manual','imported','machine_draft'),'manual');$can_review=VWLB_Security::can(VWLB_Contracts::CAP_REVIEW,$video,'review_caption');$status=('machine_draft'!==$source&&$can_review)?'published':'review';"
-if old not in t:raise SystemExit('R18 caption review pattern missing')
+old="$wpdb->insert(VWLB_Helpers::table('channels'),array('public_id'=>$public,'owner_id'=>get_current_user_id(),'title'=>$title,'slug'=>$slug,'description'=>VWLB_Helpers::textarea($data['description']??''),'branding_json'=>VWLB_Helpers::json_encode($data['branding']??array()),'roles_json'=>VWLB_Helpers::json_encode(array('owner'=>get_current_user_id())),'status'=>'active','visibility'=>VWLB_Helpers::enum($data['visibility']??'public',VWLB_Contracts::VISIBILITIES,'public'),'created_at'=>$now,'updated_at'=>$now));$id=(int)$wpdb->insert_id;"
+new="$saved=$wpdb->insert(VWLB_Helpers::table('channels'),array('public_id'=>$public,'owner_id'=>get_current_user_id(),'title'=>$title,'slug'=>$slug,'description'=>VWLB_Helpers::textarea($data['description']??''),'branding_json'=>VWLB_Helpers::json_encode($data['branding']??array()),'roles_json'=>VWLB_Helpers::json_encode(array('owner'=>get_current_user_id())),'status'=>'active','visibility'=>VWLB_Helpers::enum($data['visibility']??'public',VWLB_Contracts::VISIBILITIES,'public'),'created_at'=>$now,'updated_at'=>$now));if(!$saved||!(int)$wpdb->insert_id)return VWLB_Helpers::error('vwlb_database_error',__('Channel could not be created.',VWLB_TEXT_DOMAIN),500);$id=(int)$wpdb->insert_id;"
+if old not in t:raise SystemExit('R19 channel pattern missing')
 t=t.replace(old,new,1)
-old2="'source'=>VWLB_Helpers::enum($data['source']??'manual',array('manual','imported','machine_draft'),'manual')"
-if old2 not in t:raise SystemExit('R18 source field pattern missing')
-t=t.replace(old2,"'source'=>$source",1)
-old3=");$id=(int)$wpdb->insert_id;VWLB_Helpers::audit('caption',$id,'create','',$status);return array('id'=>$id,'status'=>$status,'version'=>$version);"
-new3=");if(!(int)$wpdb->insert_id)return VWLB_Helpers::error('vwlb_database_error',__('Caption could not be saved.',VWLB_TEXT_DOMAIN),500);$id=(int)$wpdb->insert_id;VWLB_Helpers::audit('caption',$id,'create','',$status,'',array('source'=>$source));return array('id'=>$id,'status'=>$status,'version'=>$version);"
-if old3 not in t:raise SystemExit('R18 insert check pattern missing')
-t=t.replace(old3,new3,1)
+old="$wpdb->insert(VWLB_Helpers::table('playlists'),array('public_id'=>$public,'channel_id'=>$channel_id,'owner_id'=>get_current_user_id(),'title'=>$title,'slug'=>sanitize_title($data['slug']??$title.'-'.substr($public,-6)),'description'=>VWLB_Helpers::textarea($data['description']??''),'status'=>'active','visibility'=>VWLB_Helpers::enum($data['visibility']??'public',VWLB_Contracts::VISIBILITIES,'public'),'created_at'=>$now,'updated_at'=>$now));$id=(int)$wpdb->insert_id;"
+new="$saved=$wpdb->insert(VWLB_Helpers::table('playlists'),array('public_id'=>$public,'channel_id'=>$channel_id,'owner_id'=>get_current_user_id(),'title'=>$title,'slug'=>sanitize_title($data['slug']??$title.'-'.substr($public,-6)),'description'=>VWLB_Helpers::textarea($data['description']??''),'status'=>'active','visibility'=>VWLB_Helpers::enum($data['visibility']??'public',VWLB_Contracts::VISIBILITIES,'public'),'created_at'=>$now,'updated_at'=>$now));if(!$saved||!(int)$wpdb->insert_id)return VWLB_Helpers::error('vwlb_database_error',__('Playlist could not be created.',VWLB_TEXT_DOMAIN),500);$id=(int)$wpdb->insert_id;"
+if old not in t:raise SystemExit('R19 playlist pattern missing')
+t=t.replace(old,new,1)
+old="$wpdb->delete(VWLB_Helpers::table('playlist_items'),array('playlist_id'=>$playlist['id']),array('%d'));foreach($video_ids as $order=>$video_id)"
+new="$deleted=$wpdb->delete(VWLB_Helpers::table('playlist_items'),array('playlist_id'=>$playlist['id']),array('%d'));if(false===$deleted)return VWLB_Helpers::error('vwlb_database_error',__('Existing playlist items could not be replaced.',VWLB_TEXT_DOMAIN),500);foreach($video_ids as $order=>$video_id)"
+if old not in t:raise SystemExit('R19 delete pattern missing')
+t=t.replace(old,new,1)
+old="$wpdb->insert(VWLB_Helpers::table('playlist_items'),array('playlist_id'=>$playlist['id'],'video_id'=>$video_id,'sort_order'=>$order,'created_at'=>VWLB_Helpers::now(),'updated_at'=>VWLB_Helpers::now()),array('%d','%d','%d','%s','%s'));"
+new="$saved=$wpdb->insert(VWLB_Helpers::table('playlist_items'),array('playlist_id'=>$playlist['id'],'video_id'=>$video_id,'sort_order'=>$order,'created_at'=>VWLB_Helpers::now(),'updated_at'=>VWLB_Helpers::now()),array('%d','%d','%d','%s','%s'));if(!$saved)return VWLB_Helpers::error('vwlb_database_error',__('A playlist item could not be saved.',VWLB_TEXT_DOMAIN),500);"
+if old not in t:raise SystemExit('R19 item pattern missing')
+t=t.replace(old,new,1)
 p.write_text(t)
-r=reg.read_text();marker="""# R18 — generated captions require human review and caption persistence failure is not reported as success.\nneed \"'machine_draft'!==\$source&&\$can_review\" \"$P/includes/class-vwlb-videos.php\" r18-human-review\nneed \"VWLB_Contracts::CAP_REVIEW\" \"$P/includes/class-vwlb-videos.php\" r18-review-cap\nneed \"Caption could not be saved\" \"$P/includes/class-vwlb-videos.php\" r18-db-check\n"""
-if '# R18 —' not in r:r=r.replace("printf '%s\\n' 'fresh 40-review regression contracts PASS'\n",marker+"printf '%s\\n' 'fresh 40-review regression contracts PASS'\n")
+r=reg.read_text();marker="""# R19 — channel/playlist creation and playlist replacement never report success after failed DB writes.\nneed \"Channel could not be created\" \"$P/includes/class-vwlb-videos.php\" r19-channel\nneed \"Playlist could not be created\" \"$P/includes/class-vwlb-videos.php\" r19-playlist\nneed \"Existing playlist items could not be replaced\" \"$P/includes/class-vwlb-videos.php\" r19-delete\nneed \"A playlist item could not be saved\" \"$P/includes/class-vwlb-videos.php\" r19-item\n"""
+if '# R19 —' not in r:r=r.replace("printf '%s\\n' 'fresh 40-review regression contracts PASS'\n",marker+"printf '%s\\n' 'fresh 40-review regression contracts PASS'\n")
 reg.write_text(r)
