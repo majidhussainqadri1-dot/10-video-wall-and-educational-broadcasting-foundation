@@ -32,3 +32,6 @@ The public live-poll answer path accepted either the opaque option `public_id` o
 ## R08 — DEFECT FIXED
 Future translation, dubbing, audio-description and sign-language records could be created, reviewed and published, but neither the recorded-video playback response nor the live viewer state exposed any approved track delivery contract. Published tracks therefore had no canonical viewer handoff. File 10 now exposes only `published` auxiliary tracks through a minimized DTO, never leaks provider references/metadata, permits a provider adapter to resolve a public/signed track reference, and adds the safe track set to recorded playback and live state responses.
 
+## R09 — DEFECT FIXED
+The public annotation read path exposed both `reviewed` and `published` records. Review completion is not publication, so a citation, correction, overlay or knowledge-link could become externally visible before its explicit publish transition. Public annotation reads now return only `published` records; reviewers may still request candidate/reviewed states through the authorized review path.
+

@@ -524,7 +524,7 @@ final class VWLB_Future_Intelligence {
 	}
 
 	public static function annotations( $video_id, $include_candidates=false ) {
-		$video=self::video($video_id);if(!$video||!VWLB_Security::can_view($video))return VWLB_Helpers::error('vwlb_not_found',__('Video not found.',VWLB_TEXT_DOMAIN),404);global $wpdb;$table=VWLB_Helpers::table('video_annotations');$statuses=$include_candidates&&VWLB_Security::can(VWLB_Contracts::CAP_REVIEW,$video,'future_annotation_list')?"('candidate','reviewed','published')":"('reviewed','published')";$items=$wpdb->get_results($wpdb->prepare("SELECT public_id,kind,start_ms,end_ms,title,body,source_owner,source_ref,status,metadata_json,version FROM $table WHERE video_id=%d AND status IN $statuses ORDER BY start_ms ASC,id ASC",$video['id']),ARRAY_A);foreach($items as &$i){$i['metadata']=VWLB_Helpers::json($i['metadata_json']);unset($i['metadata_json']);}return array('items'=>$items);
+		$video=self::video($video_id);if(!$video||!VWLB_Security::can_view($video))return VWLB_Helpers::error('vwlb_not_found',__('Video not found.',VWLB_TEXT_DOMAIN),404);global $wpdb;$table=VWLB_Helpers::table('video_annotations');$statuses=$include_candidates&&VWLB_Security::can(VWLB_Contracts::CAP_REVIEW,$video,'future_annotation_list')?"('candidate','reviewed','published')":"('published')";$items=$wpdb->get_results($wpdb->prepare("SELECT public_id,kind,start_ms,end_ms,title,body,source_owner,source_ref,status,metadata_json,version FROM $table WHERE video_id=%d AND status IN $statuses ORDER BY start_ms ASC,id ASC",$video['id']),ARRAY_A);foreach($items as &$i){$i['metadata']=VWLB_Helpers::json($i['metadata_json']);unset($i['metadata_json']);}return array('items'=>$items);
 	}
 
 	/** F10-FUT-020 — transcript index write and bounded search. */

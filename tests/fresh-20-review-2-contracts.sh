@@ -43,3 +43,6 @@ need "public static function published_tracks" "$P/includes/class-vwlb-future-in
 need "AND status=%s" "$P/includes/class-vwlb-future-intelligence.php" r08-only-published
 need "vwlb_public_media_track_ref" "$P/includes/class-vwlb-future-intelligence.php" r08-provider-resolution
 need "media_tracks" "$P/includes/class-vwlb-rest.php" r08-rest-delivery
+
+# R09 — public annotation listing exposes only explicitly published records.
+need "\"('published')\"" "$P/includes/class-vwlb-future-intelligence.php" r09-public-published-only
