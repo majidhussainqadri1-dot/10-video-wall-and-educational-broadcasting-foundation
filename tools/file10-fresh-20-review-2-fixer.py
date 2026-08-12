@@ -4,21 +4,16 @@ F=ROOT/'video-wall-and-live-broadcasting/includes/class-vwlb-future-intelligence
 TEST=ROOT/'tests/fresh-20-review-2-contracts.sh'
 LEDGER=ROOT/'docs/FILE-10-SECOND-FRESH-20-REVIEW-2026-08-12.md'
 s=F.read_text()
-old="if('correction'===$kind)VWLB_Helpers::outbox('VideoTimestampCorrectionPublished','video',$video['id'],array('annotation_public_id'=>$row['public_id'],'start_ms'=>$row['start_ms']));return self::public_row('video_annotations',$id);"
-new="return self::public_row('video_annotations',$id);"
+old="foreach($items as &$i){$i['metadata']=VWLB_Helpers::json($i['metadata_json']);unset($i['metadata_json']);}return array('items'=>$items);"
+new="$can_internal=$include_candidates&&VWLB_Security::can(VWLB_Contracts::CAP_REVIEW,$video,'future_annotation_list');foreach($items as &$i){if($can_internal)$i['metadata']=VWLB_Helpers::json($i['metadata_json']);unset($i['metadata_json']);}return array('items'=>$items);"
 if new not in s:
-    if old not in s: raise SystemExit('R13 create event anchor missing')
+    if old not in s: raise SystemExit('R14 annotation metadata anchor missing')
     s=s.replace(old,new,1)
-old2="if('published'===$to)VWLB_Helpers::outbox('VideoAnnotationPublished','video',$video['id'],array('annotation_public_id'=>$ann['public_id'],'kind'=>$ann['kind']));return self::public_row('video_annotations',$ann['id']);"
-new2="if('published'===$to){VWLB_Helpers::outbox('VideoAnnotationPublished','video',$video['id'],array('annotation_public_id'=>$ann['public_id'],'kind'=>$ann['kind']));if('correction'===$ann['kind'])VWLB_Helpers::outbox('VideoTimestampCorrectionPublished','video',$video['id'],array('annotation_public_id'=>$ann['public_id'],'start_ms'=>$ann['start_ms']));}return self::public_row('video_annotations',$ann['id']);"
-if new2 not in s:
-    if old2 not in s: raise SystemExit('R13 publish event anchor missing')
-    s=s.replace(old2,new2,1)
 F.write_text(s)
 ts=TEST.read_text()
-checks='''\n# R13 — correction publication fact is tied to the publish transition.\nneed "VideoTimestampCorrectionPublished" "$P/includes/class-vwlb-future-intelligence.php" r13-correction-publication-event\n'''
-if 'r13-correction-publication-event' not in ts: TEST.write_text(ts+checks)
+checks='''\n# R14 — arbitrary annotation metadata is reviewer-only.\nneed "can_internal" "$P/includes/class-vwlb-future-intelligence.php" r14-annotation-metadata-guard\n'''
+if 'r14-annotation-metadata-guard' not in ts: TEST.write_text(ts+checks)
 ls=LEDGER.read_text()
-entry='''## R13 — DEFECT FIXED\nCreating a timestamp correction emitted `VideoTimestampCorrectionPublished` while the new annotation was only `reviewed`. Downstream consumers could therefore receive a false publication fact. The correction-specific event now fires only when the annotation actually transitions to `published`.\n\n'''
-if '## R13 ' not in ls: LEDGER.write_text(ls+entry)
-print('R13 correction prepared')
+entry='''## R14 — DEFECT FIXED\nPublic annotation responses decoded and returned arbitrary `metadata_json`, although that field is not a public schema and is only secret-scanned. Internal provenance/provider/workflow details could leak. Metadata is now returned only to an authorized reviewer request; public DTOs contain only explicit public annotation fields.\n\n'''
+if '## R14 ' not in ls: LEDGER.write_text(ls+entry)
+print('R14 correction prepared')
