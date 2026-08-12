@@ -53,3 +53,6 @@ need "array('open','closed')" "$P/includes/class-vwlb-future-intelligence.php" r
 
 # R11 — consent updates must carry the client-observed version.
 need "Consent record changed. Refresh and submit its current version." "$P/includes/class-vwlb-future-intelligence.php" r11-consent-client-version
+
+# R12 — active consent cannot enter already expired.
+need "Active consent expiry must be in the future." "$P/includes/class-vwlb-future-intelligence.php" r12-active-expiry
