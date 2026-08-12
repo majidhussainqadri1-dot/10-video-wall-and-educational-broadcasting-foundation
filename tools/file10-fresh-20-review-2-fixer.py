@@ -78,13 +78,13 @@ if 'vwlb_page_map_persist_failed' not in s:
     s = s[:start] + new_pages + s[end:]
 ACT.write_text(s)
 
-checks = '''\n# R02 — activation page setup proves rollback snapshot, persistence and compensation.\nneed "is_wp_error( $snapshot )" "$P/includes/class-vwlb-activator.php" r02-snapshot-propagation\nneed "vwlb_activation_compensation_failed" "$P/includes/class-vwlb-activator.php" r02-compensation\nneed "vwlb_page_map_persist_failed" "$P/includes/class-vwlb-activator.php" r02-page-map\n'''
+checks = """\n# R02 — activation page setup proves rollback snapshot, persistence and compensation.\nneed 'is_wp_error( $snapshot )' \"$P/includes/class-vwlb-activator.php\" r02-snapshot-propagation\nneed \"vwlb_activation_compensation_failed\" \"$P/includes/class-vwlb-activator.php\" r02-compensation\nneed \"vwlb_page_map_persist_failed\" \"$P/includes/class-vwlb-activator.php\" r02-page-map\n"""
 ts = TEST.read_text()
 if 'r02-page-map' not in ts:
     TEST.write_text(ts + checks)
 
 ls = LEDGER.read_text()
-entry = '''## R02 — DEFECT FIXED\nActivation ignored rollback-snapshot failure, tolerated individual page-creation failures, and did not verify page-map persistence. Page setup now requires a durable pre-mutation snapshot, fails closed on page or mapping persistence failure, compensates pages created by the failed activation attempt, and propagates the error to activation before scheduling/version success.\n\n'''
+entry = '''## R02 — DEFECT FIXED\nActivation ignored rollback-snapshot failure, tolerated individual page-creation failures, and did not verify page-map persistence. Page setup now requires a durable pre-mutation snapshot, fails closed on page or mapping persistence failure, compensates pages created by the failed activation attempt, and propagates the error to activation before scheduling/version success. The first R02 regression-gate draft itself expanded a shell variable inside the grep pattern; that QA-only defect was corrected within R02 before product changes were accepted.\n\n'''
 if '## R02 ' not in ls:
     LEDGER.write_text(ls + entry)
 
