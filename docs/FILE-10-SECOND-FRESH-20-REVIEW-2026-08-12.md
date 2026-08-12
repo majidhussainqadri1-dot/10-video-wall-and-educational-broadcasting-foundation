@@ -50,3 +50,6 @@ Creating a timestamp correction emitted `VideoTimestampCorrectionPublished` whil
 ## R14 — DEFECT FIXED
 Public annotation responses decoded and returned arbitrary `metadata_json`, although that field is not a public schema and is only secret-scanned. Internal provenance/provider/workflow details could leak. Metadata is now returned only to an authorized reviewer request; public DTOs contain only explicit public annotation fields.
 
+## R15 — DEFECT FIXED
+Published auxiliary-track DTOs used the stored `file_ref` itself as the default public URL. Without a delivery adapter, a storage/provider reference could be returned directly. The resolver now defaults to an empty value and must explicitly return a viewer-safe public/signed URL; otherwise the track remains unavailable rather than leaking its stored reference.
+

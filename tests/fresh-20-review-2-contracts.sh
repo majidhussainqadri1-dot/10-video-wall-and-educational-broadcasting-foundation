@@ -62,3 +62,6 @@ need "VideoTimestampCorrectionPublished" "$P/includes/class-vwlb-future-intellig
 
 # R14 — arbitrary annotation metadata is reviewer-only.
 need "can_internal" "$P/includes/class-vwlb-future-intelligence.php" r14-annotation-metadata-guard
+
+# R15 — auxiliary track delivery fails closed without an explicit public/signed resolver.
+need "vwlb_public_media_track_ref', ''" "$P/includes/class-vwlb-future-intelligence.php" r15-track-resolver-fail-closed

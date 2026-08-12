@@ -490,7 +490,7 @@ final class VWLB_Future_Intelligence {
 		$rows = $wpdb->get_results( $wpdb->prepare( 'SELECT public_id,track_type,language,source,file_ref,provider_ref,version FROM ' . VWLB_Helpers::table('media_tracks') . ' WHERE object_type=%s AND object_id=%d AND status=%s ORDER BY track_type ASC, language ASC, id ASC', $object_type, (int) $object['id'], 'published' ), ARRAY_A );
 		$out = array();
 		foreach ( $rows as $row ) {
-			$resolved = apply_filters( 'vwlb_public_media_track_ref', (string) $row['file_ref'], $row, $object );
+			$resolved = apply_filters( 'vwlb_public_media_track_ref', '', $row, $object );
 			$src = esc_url_raw( is_string( $resolved ) ? $resolved : '' );
 			$out[] = array(
 				'public_id' => $row['public_id'],
