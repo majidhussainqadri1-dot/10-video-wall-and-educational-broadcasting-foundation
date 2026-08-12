@@ -46,3 +46,7 @@ need "media_tracks" "$P/includes/class-vwlb-rest.php" r08-rest-delivery
 
 # R09 — public annotation listing exposes only explicitly published records.
 need "\"('published')\"" "$P/includes/class-vwlb-future-intelligence.php" r09-public-published-only
+
+# R10 — draft polls are not publicly readable before explicit open/close lifecycle.
+need "future_poll_preview" "$P/includes/class-vwlb-future-intelligence.php" r10-poll-preview-guard
+need "array('open','closed')" "$P/includes/class-vwlb-future-intelligence.php" r10-public-poll-status

@@ -35,3 +35,6 @@ Future translation, dubbing, audio-description and sign-language records could b
 ## R09 — DEFECT FIXED
 The public annotation read path exposed both `reviewed` and `published` records. Review completion is not publication, so a citation, correction, overlay or knowledge-link could become externally visible before its explicit publish transition. Public annotation reads now return only `published` records; reviewers may still request candidate/reviewed states through the authorized review path.
 
+## R10 — DEFECT FIXED
+The public poll read contract checked event visibility but did not check the poll lifecycle state. Anyone who obtained an opaque poll identifier could therefore read a `draft` poll before the broadcaster explicitly opened it. Viewer reads are now limited to `open` or `closed` polls; only an authorized broadcaster may preview another state.
+
