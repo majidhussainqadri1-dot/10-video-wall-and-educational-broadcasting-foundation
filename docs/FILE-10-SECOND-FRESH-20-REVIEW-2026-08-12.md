@@ -47,3 +47,6 @@ An `active` consent link could be saved with an expiry timestamp already in the 
 ## R13 — DEFECT FIXED
 Creating a timestamp correction emitted `VideoTimestampCorrectionPublished` while the new annotation was only `reviewed`. Downstream consumers could therefore receive a false publication fact. The correction-specific event now fires only when the annotation actually transitions to `published`.
 
+## R14 — DEFECT FIXED
+Public annotation responses decoded and returned arbitrary `metadata_json`, although that field is not a public schema and is only secret-scanned. Internal provenance/provider/workflow details could leak. Metadata is now returned only to an authorized reviewer request; public DTOs contain only explicit public annotation fields.
+

@@ -59,3 +59,6 @@ need "Active consent expiry must be in the future." "$P/includes/class-vwlb-futu
 
 # R13 — correction publication fact is tied to the publish transition.
 need "VideoTimestampCorrectionPublished" "$P/includes/class-vwlb-future-intelligence.php" r13-correction-publication-event
+
+# R14 — arbitrary annotation metadata is reviewer-only.
+need "can_internal" "$P/includes/class-vwlb-future-intelligence.php" r14-annotation-metadata-guard
