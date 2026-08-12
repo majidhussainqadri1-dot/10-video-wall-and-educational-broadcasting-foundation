@@ -9,7 +9,13 @@ final class VWLB_Activator {
 		if ( isset($GLOBALS['wp_version']) && version_compare((string)$GLOBALS['wp_version'],'7.0','<') ) { deactivate_plugins(plugin_basename(VWLB_FILE)); wp_die(esc_html__('File 10 requires WordPress 7.0 or newer.',VWLB_TEXT_DOMAIN)); }
 		$migration=self::reconcile_schema();
 		if(is_wp_error($migration)){deactivate_plugins(plugin_basename(VWLB_FILE));wp_die(esc_html($migration->get_error_message()));}
-		self::capabilities(); self::pages(); self::schedules(); VWLB_Compatibility::migrate_legacy();
+		self::capabilities();
+		$pages = self::pages();
+		if ( is_wp_error( $pages ) ) {
+			deactivate_plugins( plugin_basename( VWLB_FILE ) );
+			wp_die( esc_html( $pages->get_error_message() ) );
+		}
+		self::schedules(); VWLB_Compatibility::migrate_legacy();
 		update_option('vwlb_version',VWLB_VERSION,false); update_option('vwlb_safe_mode',0,false); flush_rewrite_rules(false);
 	}
 
@@ -55,7 +61,7 @@ final class VWLB_Activator {
 	}
 	public static function cron_schedules($s){$s['vwlb_five_minutes']=array('interval'=>300,'display'=>'Every five minutes');return $s;}
 	private static function pages() {
-		$pages=array(
+		$pages = array(
 			'videos'=>array('title'=>__('Video Wall',VWLB_TEXT_DOMAIN),'content'=>'[vwlb_wall]'),
 			'video'=>array('title'=>__('Video',VWLB_TEXT_DOMAIN),'content'=>'[vwlb_video]'),
 			'live'=>array('title'=>__('Live',VWLB_TEXT_DOMAIN),'content'=>'[vwlb_live]'),
@@ -65,7 +71,52 @@ final class VWLB_Activator {
 			'video-history'=>array('title'=>__('Video History',VWLB_TEXT_DOMAIN),'content'=>'[vwlb_history]'),
 			'podcasts'=>array('title'=>__('Podcasts',VWLB_TEXT_DOMAIN),'content'=>'[vwlb_podcasts]')
 		);
-		$before=get_option('vwlb_page_map',array()); VWLB_DB::snapshot('activation_pages',$before);
-		$map=array(); foreach($pages as $slug=>$data){$page=get_page_by_path($slug);if($page && strpos((string)$page->post_content,'[vwlb_')===false){$slug='file-10-'.$slug;$page=get_page_by_path($slug);}if(!$page){$id=wp_insert_post(array('post_type'=>'page','post_status'=>'publish','post_title'=>$data['title'],'post_name'=>$slug,'post_content'=>$data['content']),true);if(!is_wp_error($id))$map[$slug]=(int)$id;}else{$map[$slug]=(int)$page->ID;}} update_option('vwlb_page_map',$map,false);
+		$before = get_option( 'vwlb_page_map', array() );
+		$snapshot = VWLB_DB::snapshot( 'activation_pages', $before );
+		if ( is_wp_error( $snapshot ) ) {
+			return $snapshot;
+		}
+		$map = array();
+		$created = array();
+		$compensate = static function() use ( &$created ) {
+			$failed = array();
+			foreach ( array_reverse( $created ) as $created_id ) {
+				if ( ! wp_delete_post( $created_id, true ) ) {
+					$failed[] = $created_id;
+				}
+			}
+			return $failed;
+		};
+		foreach ( $pages as $slug => $data ) {
+			$page = get_page_by_path( $slug );
+			if ( $page && strpos( (string) $page->post_content, '[vwlb_' ) === false ) {
+				$slug = 'file-10-' . $slug;
+				$page = get_page_by_path( $slug );
+			}
+			if ( ! $page ) {
+				$id = wp_insert_post( array( 'post_type'=>'page', 'post_status'=>'publish', 'post_title'=>$data['title'], 'post_name'=>$slug, 'post_content'=>$data['content'] ), true );
+				if ( is_wp_error( $id ) || ! $id ) {
+					$failed = $compensate();
+					if ( $failed ) {
+						return VWLB_Helpers::error( 'vwlb_activation_compensation_failed', __( 'File 10 page setup failed and created pages could not all be rolled back.', VWLB_TEXT_DOMAIN ), 500, array( 'page_ids'=>$failed ) );
+					}
+					return is_wp_error( $id ) ? $id : VWLB_Helpers::error( 'vwlb_activation_page_failed', __( 'A required File 10 page could not be created.', VWLB_TEXT_DOMAIN ), 500 );
+				}
+				$created[] = (int) $id;
+				$map[$slug] = (int) $id;
+			} else {
+				$map[$slug] = (int) $page->ID;
+			}
+		}
+		$stored = update_option( 'vwlb_page_map', $map, false );
+		if ( ! $stored && get_option( 'vwlb_page_map', array() ) !== $map ) {
+			$failed = $compensate();
+			if ( $failed ) {
+				return VWLB_Helpers::error( 'vwlb_activation_compensation_failed', __( 'File 10 page mapping failed and created pages could not all be rolled back.', VWLB_TEXT_DOMAIN ), 500, array( 'page_ids'=>$failed ) );
+			}
+			return VWLB_Helpers::error( 'vwlb_page_map_persist_failed', __( 'File 10 page mapping could not be recorded.', VWLB_TEXT_DOMAIN ), 500 );
+		}
+		return true;
 	}
+
 }

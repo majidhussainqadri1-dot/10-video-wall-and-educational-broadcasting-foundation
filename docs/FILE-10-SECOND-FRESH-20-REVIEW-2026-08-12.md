@@ -11,3 +11,6 @@ Sequential law: each round reviews only the corrected state produced by the imme
 ## R01 — DEFECT FIXED
 Database transaction wrappers could report domain success after `START TRANSACTION` or `COMMIT` storage failure, while rollback snapshots returned an insert ID without proving persistence. Transaction start/commit and snapshot persistence now fail closed with stable errors before a caller can treat the operation as durable.
 
+## R02 — DEFECT FIXED
+Activation ignored rollback-snapshot failure, tolerated individual page-creation failures, and did not verify page-map persistence. Page setup now requires a durable pre-mutation snapshot, fails closed on page or mapping persistence failure, compensates pages created by the failed activation attempt, and propagates the error to activation before scheduling/version success. The first R02 regression-gate draft itself expanded a shell variable inside the grep pattern; that QA-only defect was corrected within R02 before product changes were accepted.
+
