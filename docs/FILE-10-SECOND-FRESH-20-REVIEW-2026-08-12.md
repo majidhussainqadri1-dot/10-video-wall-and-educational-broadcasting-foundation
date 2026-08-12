@@ -38,3 +38,6 @@ The public annotation read path exposed both `reviewed` and `published` records.
 ## R10 — DEFECT FIXED
 The public poll read contract checked event visibility but did not check the poll lifecycle state. Anyone who obtained an opaque poll identifier could therefore read a `draft` poll before the broadcaster explicitly opened it. Viewer reads are now limited to `open` or `closed` polls; only an authorized broadcaster may preview another state.
 
+## R11 — DEFECT FIXED
+Consent-link updates locked the latest database row and used a server-side CAS, but did not require the caller to prove which version it had reviewed. A stale reviewer screen could therefore overwrite a newer consent decision. Existing consent records now require the submitted current version and reject stale/missing versions before mutation. The first R11 regression assertion expanded a shell variable under `set -u`; that QA-only defect was corrected inside R11 before the product correction was accepted.
+

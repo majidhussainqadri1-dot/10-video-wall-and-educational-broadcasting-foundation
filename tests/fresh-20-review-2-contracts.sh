@@ -50,3 +50,6 @@ need "\"('published')\"" "$P/includes/class-vwlb-future-intelligence.php" r09-pu
 # R10 — draft polls are not publicly readable before explicit open/close lifecycle.
 need "future_poll_preview" "$P/includes/class-vwlb-future-intelligence.php" r10-poll-preview-guard
 need "array('open','closed')" "$P/includes/class-vwlb-future-intelligence.php" r10-public-poll-status
+
+# R11 — consent updates must carry the client-observed version.
+need "Consent record changed. Refresh and submit its current version." "$P/includes/class-vwlb-future-intelligence.php" r11-consent-client-version
