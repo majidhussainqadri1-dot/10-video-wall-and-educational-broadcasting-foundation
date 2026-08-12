@@ -23,7 +23,7 @@ final class VWLB_Extended_REST {
 			$this->route($n,'/live-events/(?P<id>[A-Za-z0-9_-]+)/recording-consent','POST','recording_consent','login');
 			$this->route($n,'/live-events/(?P<id>[A-Za-z0-9_-]+)/questions','POST','live_question','login');
 			$this->route($n,'/live-events/(?P<id>[A-Za-z0-9_-]+)/resources','POST','live_resource','broadcast');
-			$this->route($n,'/live-questions/(?P<id>\d+)/moderate','POST','live_question_moderate','moderate');
+			$this->route($n,'/live-questions/(?P<id>[A-Za-z0-9_-]+)/moderate','POST','live_question_moderate','moderate');
 			$this->route($n,'/downloads','POST','download_token','login');
 			$this->route($n,'/downloads/(?P<id>[A-Za-z0-9_-]+)/resolve','POST','download_resolve','login');
 			$this->route($n,'/creator/studio','GET','creator_studio','submit');

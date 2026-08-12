@@ -33,15 +33,15 @@ final class VWLB_Diagnostics {
 		$action=VWLB_Helpers::enum($data['action']??'',array('install_schema','install_extension_schema','reschedule_cron','retry_dead_jobs','retry_dead_outbox','enable_safe_mode','disable_safe_mode','recount_interactions','expire_ephemeral','reset_provider_circuit'),'');
 		if(!$action)return VWLB_Helpers::error('vwlb_repair_invalid',__('Unknown repair action.',VWLB_TEXT_DOMAIN));
 		$step=VWLB_Security::require_step_up('repair_'.$action);if(is_wp_error($step))return $step;
-		VWLB_DB::snapshot('repair_before',self::full());global $wpdb;
+		$snapshot=VWLB_DB::snapshot('repair_before',self::full());if(is_wp_error($snapshot))return $snapshot;global $wpdb;
 		switch($action){
 			case'install_schema':$m=VWLB_Activator::reconcile_schema();if(is_wp_error($m))return $m;break;
 			case'install_extension_schema':$m=VWLB_Activator::reconcile_schema();if(is_wp_error($m))return $m;break;
-			case'reschedule_cron':VWLB_Activator::schedules();break;
+			case'reschedule_cron':$scheduled=VWLB_Activator::schedules();if(is_wp_error($scheduled))return $scheduled;break;
 			case'retry_dead_jobs':$changed=$wpdb->query("UPDATE ".VWLB_Helpers::table('processing_jobs')." SET status='retry',available_at=UTC_TIMESTAMP(),locked_at=NULL,locked_by=NULL WHERE status='dead'");if(false===$changed)return VWLB_Helpers::error('vwlb_repair_database_failed',__('Dead processing jobs could not be reset.',VWLB_TEXT_DOMAIN),500);break;
 			case'retry_dead_outbox':$changed=$wpdb->query("UPDATE ".VWLB_Helpers::table('outbox')." SET status='retry',available_at=UTC_TIMESTAMP(),locked_at=NULL WHERE status='dead'");if(false===$changed)return VWLB_Helpers::error('vwlb_repair_database_failed',__('Dead outbox events could not be reset.',VWLB_TEXT_DOMAIN),500);break;
-			case'enable_safe_mode':update_option('vwlb_safe_mode',1,false);break;
-			case'disable_safe_mode':update_option('vwlb_safe_mode',0,false);break;
+			case'enable_safe_mode':$saved=update_option('vwlb_safe_mode',1,false);if(!$saved&&(int)get_option('vwlb_safe_mode',0)!==1)return VWLB_Helpers::error('vwlb_repair_persist_failed',__('Safe Mode could not be enabled durably.',VWLB_TEXT_DOMAIN),500);break;
+			case'disable_safe_mode':$saved=update_option('vwlb_safe_mode',0,false);if(!$saved&&(int)get_option('vwlb_safe_mode',1)!==0)return VWLB_Helpers::error('vwlb_repair_persist_failed',__('Safe Mode could not be disabled durably.',VWLB_TEXT_DOMAIN),500);break;
 			case'expire_ephemeral':VWLB_Jobs::cleanup();VWLB_Extensions::cleanup();break;
 			case'reset_provider_circuit':$provider=sanitize_key($data['provider']??'');if(!$provider||!VWLB_Providers::get($provider))return VWLB_Helpers::error('vwlb_provider_required',__('A configured provider is required.',VWLB_TEXT_DOMAIN),422);$changed=$wpdb->update(VWLB_Helpers::table('provider_health'),array('state'=>'unknown','failures'=>0,'circuit_open_until'=>null,'last_error_code'=>'','updated_at'=>VWLB_Helpers::now()),array('provider'=>$provider));if(false===$changed)return VWLB_Helpers::error('vwlb_repair_database_failed',__('Provider circuit state could not be reset.',VWLB_TEXT_DOMAIN),500);break;
 			case'recount_interactions':$videos=$wpdb->get_col('SELECT id FROM '.VWLB_Helpers::table('videos'));foreach($videos as $id){foreach(array('like','dislike') as $type){$count=(int)$wpdb->get_var($wpdb->prepare('SELECT COUNT(*) FROM '.VWLB_Helpers::table('interactions').' WHERE video_id=%d AND interaction=%s',$id,$type));$changed=$wpdb->update(VWLB_Helpers::table('videos'),array($type.'_count'=>$count),array('id'=>$id));if(false===$changed)return VWLB_Helpers::error('vwlb_repair_database_failed',__('Interaction counters could not be reconciled.',VWLB_TEXT_DOMAIN),500);}}break;

@@ -15,7 +15,7 @@ final class VWLB_Activator {
 			deactivate_plugins( plugin_basename( VWLB_FILE ) );
 			wp_die( esc_html( $pages->get_error_message() ) );
 		}
-		self::schedules(); VWLB_Compatibility::migrate_legacy();
+		$scheduled=self::schedules();if(is_wp_error($scheduled)){deactivate_plugins(plugin_basename(VWLB_FILE));wp_die(esc_html($scheduled->get_error_message()));}$legacy=VWLB_Compatibility::migrate_legacy();if(is_wp_error($legacy)){deactivate_plugins(plugin_basename(VWLB_FILE));wp_die(esc_html($legacy->get_error_message()));}
 		update_option('vwlb_version',VWLB_VERSION,false); update_option('vwlb_safe_mode',0,false); flush_rewrite_rules(false);
 	}
 
@@ -86,11 +86,7 @@ final class VWLB_Activator {
 		foreach($roles as $name=>$caps){$role=get_role($name);if($role){foreach($caps as $cap){$role->add_cap($cap);}}}
 	}
 	public static function schedules() {
-		add_filter('cron_schedules',array(__CLASS__,'cron_schedules'));
-		if(!wp_next_scheduled('vwlb_process_jobs'))wp_schedule_event(time()+60,'vwlb_five_minutes','vwlb_process_jobs');
-		if(!wp_next_scheduled('vwlb_publish_outbox'))wp_schedule_event(time()+90,'vwlb_five_minutes','vwlb_publish_outbox');
-		if(!wp_next_scheduled('vwlb_reconcile_states'))wp_schedule_event(time()+120,'hourly','vwlb_reconcile_states');
-		if(!wp_next_scheduled('vwlb_cleanup'))wp_schedule_event(time()+300,'daily','vwlb_cleanup');
+		add_filter('cron_schedules',array(__CLASS__,'cron_schedules'));$defs=array(array('vwlb_process_jobs',60,'vwlb_five_minutes'),array('vwlb_publish_outbox',90,'vwlb_five_minutes'),array('vwlb_reconcile_states',120,'hourly'),array('vwlb_cleanup',300,'daily'));foreach($defs as $def){[$hook,$delay,$recurrence]=$def;if(!wp_next_scheduled($hook)){$scheduled=wp_schedule_event(time()+$delay,$recurrence,$hook,array(),true);if(is_wp_error($scheduled)||false===$scheduled)return is_wp_error($scheduled)?$scheduled:VWLB_Helpers::error('vwlb_cron_schedule_failed',__('A required File 10 background worker could not be scheduled.',VWLB_TEXT_DOMAIN),500,array('hook'=>$hook));}if(!wp_next_scheduled($hook))return VWLB_Helpers::error('vwlb_cron_schedule_unverified',__('A required File 10 background worker schedule could not be verified.',VWLB_TEXT_DOMAIN),500,array('hook'=>$hook));}return true;
 	}
 	public static function cron_schedules($s){$s['vwlb_five_minutes']=array('interval'=>300,'display'=>'Every five minutes');return $s;}
 	private static function pages() {
