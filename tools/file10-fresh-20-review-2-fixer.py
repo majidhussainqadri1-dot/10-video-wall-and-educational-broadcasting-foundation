@@ -3,6 +3,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 ACT = ROOT / 'video-wall-and-live-broadcasting/includes/class-vwlb-activator.php'
 TEST = ROOT / 'tests/fresh-20-review-2-contracts.sh'
+F40 = ROOT / 'tests/fresh-40-review-contracts.sh'
 LEDGER = ROOT / 'docs/FILE-10-SECOND-FRESH-20-REVIEW-2026-08-12.md'
 
 s = ACT.read_text()
@@ -67,13 +68,21 @@ if 'delete_migration_lock_if_matches' not in s:
     s = s[:start] + new_block + s[end:]
 ACT.write_text(s)
 
+f = F40.read_text()
+old_gate = 'need "is_wp_error(\\$result)" "$P/includes/class-vwlb-activator.php" r36-reconcile-fail-closed'
+new_gate = "need 'is_wp_error( $result )' \"$P/includes/class-vwlb-activator.php\" r36-reconcile-fail-closed"
+if old_gate in f:
+    F40.write_text(f.replace(old_gate, new_gate, 1))
+elif new_gate not in f:
+    raise SystemExit('R03 historical migration regression anchor missing')
+
 checks = """\n# R03 — migration lock takeover and release are owner-token/compare-and-delete bound.\nneed \"delete_migration_lock_if_matches\" \"$P/includes/class-vwlb-activator.php\" r03-lock-helper\nneed \"option_name=%s AND option_value=%s\" \"$P/includes/class-vwlb-activator.php\" r03-lock-cas\nneed 'self::delete_migration_lock_if_matches( $token )' \"$P/includes/class-vwlb-activator.php\" r03-owner-release\n"""
 ts = TEST.read_text()
 if 'r03-owner-release' not in ts:
     TEST.write_text(ts + checks)
 
 ls = LEDGER.read_text()
-entry = '''## R03 — DEFECT FIXED\nThe migration lock stored only a timestamp. After TTL expiry a second upgrader could take over, while the first upgrader's unconditional `finally` deletion could then remove the new owner's lock and permit overlapping schema work. The lock now carries a unique owner token, stale takeover uses an exact value compare-and-delete, and release removes only the lock owned by the current upgrader.\n\n'''
+entry = '''## R03 — DEFECT FIXED\nThe migration lock stored only a timestamp. After TTL expiry a second upgrader could take over, while the first upgrader's unconditional `finally` deletion could then remove the new owner's lock and permit overlapping schema work. The lock now carries a unique owner token, stale takeover uses an exact value compare-and-delete, and release removes only the lock owned by the current upgrader. A historical whitespace-sensitive static assertion was updated within R03 after it rejected the semantically stronger fail-closed code.\n\n'''
 if '## R03 ' not in ls:
     LEDGER.write_text(ls + entry)
 
