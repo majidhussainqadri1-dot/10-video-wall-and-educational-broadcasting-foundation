@@ -1,89 +1,25 @@
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
-ACT = ROOT / 'video-wall-and-live-broadcasting/includes/class-vwlb-activator.php'
-TEST = ROOT / 'tests/fresh-20-review-2-contracts.sh'
-F40 = ROOT / 'tests/fresh-40-review-contracts.sh'
-LEDGER = ROOT / 'docs/FILE-10-SECOND-FRESH-20-REVIEW-2026-08-12.md'
-
-s = ACT.read_text()
-start = s.index("\tpublic static function reconcile_schema() {")
-end = s.index("\n\tpublic static function deactivate()", start)
-new_block = r'''\tprivate static function delete_migration_lock_if_matches( $expected ) {
-\t\tglobal $wpdb;
-\t\t$deleted = $wpdb->query(
-\t\t\t$wpdb->prepare(
-\t\t\t\t"DELETE FROM {$wpdb->options} WHERE option_name=%s AND option_value=%s",
-\t\t\t\tself::MIGRATION_LOCK,
-\t\t\t\t(string) $expected
-\t\t\t)
-\t\t);
-\t\tif ( 1 === $deleted ) {
-\t\t\twp_cache_delete( self::MIGRATION_LOCK, 'options' );
-\t\t\twp_cache_delete( 'notoptions', 'options' );
-\t\t\twp_cache_delete( 'alloptions', 'options' );
-\t\t\treturn true;
-\t\t}
-\t\treturn false;
-\t}
-
-\tpublic static function reconcile_schema() {
-\t\t$token = time() . '|' . wp_generate_uuid4();
-\t\t$acquired = add_option( self::MIGRATION_LOCK, $token, '', false );
-\t\tif ( ! $acquired ) {
-\t\t\t$current = (string) get_option( self::MIGRATION_LOCK, '' );
-\t\t\t$parts = explode( '|', $current, 2 );
-\t\t\t$locked_at = absint( $parts[0] ?? 0 );
-\t\t\tif ( $locked_at && ( time() - $locked_at ) > self::MIGRATION_LOCK_TTL ) {
-\t\t\t\tif ( self::delete_migration_lock_if_matches( $current ) ) {
-\t\t\t\t\t$acquired = add_option( self::MIGRATION_LOCK, $token, '', false );
-\t\t\t\t}
-\t\t\t}
-\t\t}
-\t\tif ( ! $acquired ) {
-\t\t\treturn VWLB_Helpers::error( 'vwlb_schema_migration_busy', __( 'File 10 schema migration is already in progress. Retry shortly.', VWLB_TEXT_DOMAIN ), 503 );
-\t\t}
-\t\ttry {
-\t\t\tif ( get_option( 'vwlb_schema_version' ) !== VWLB_SCHEMA_VERSION ) {
-\t\t\t\t$result = VWLB_DB::install_schema();
-\t\t\t\tif ( is_wp_error( $result ) ) return $result;
-\t\t\t}
-\t\t\tif ( get_option( VWLB_Extensions::OPTION ) !== VWLB_EXT_SCHEMA_VERSION ) {
-\t\t\t\t$result = VWLB_Extensions::install_schema();
-\t\t\t\tif ( is_wp_error( $result ) ) return $result;
-\t\t\t}
-\t\t\tif ( get_option( VWLB_Future_Intelligence::OPTION ) !== VWLB_FUTURE_SCHEMA_VERSION ) {
-\t\t\t\t$result = VWLB_Future_Intelligence::install_schema();
-\t\t\t\tif ( is_wp_error( $result ) ) return $result;
-\t\t\t}
-\t\t\treturn true;
-\t\t} catch ( Throwable $e ) {
-\t\t\treturn VWLB_Helpers::error( 'vwlb_schema_migration_failed', __( 'File 10 schema migration failed safely.', VWLB_TEXT_DOMAIN ), 500, array( 'exception'=>get_class( $e ) ) );
-\t\t} finally {
-\t\t\tself::delete_migration_lock_if_matches( $token );
-\t\t}
-\t}
-'''.replace('\\t','\t')
-if 'delete_migration_lock_if_matches' not in s:
-    s = s[:start] + new_block + s[end:]
-ACT.write_text(s)
-
-f = F40.read_text()
-old_gate = 'need "is_wp_error(\\$result)" "$P/includes/class-vwlb-activator.php" r36-reconcile-fail-closed'
-new_gate = "need 'is_wp_error( $result )' \"$P/includes/class-vwlb-activator.php\" r36-reconcile-fail-closed"
-if old_gate in f:
-    F40.write_text(f.replace(old_gate, new_gate, 1))
-elif new_gate not in f:
-    raise SystemExit('R03 historical migration regression anchor missing')
-
-checks = """\n# R03 — migration lock takeover and release are owner-token/compare-and-delete bound.\nneed \"delete_migration_lock_if_matches\" \"$P/includes/class-vwlb-activator.php\" r03-lock-helper\nneed \"option_name=%s AND option_value=%s\" \"$P/includes/class-vwlb-activator.php\" r03-lock-cas\nneed 'self::delete_migration_lock_if_matches( $token )' \"$P/includes/class-vwlb-activator.php\" r03-owner-release\n"""
-ts = TEST.read_text()
-if 'r03-owner-release' not in ts:
-    TEST.write_text(ts + checks)
-
-ls = LEDGER.read_text()
-entry = '''## R03 — DEFECT FIXED\nThe migration lock stored only a timestamp. After TTL expiry a second upgrader could take over, while the first upgrader's unconditional `finally` deletion could then remove the new owner's lock and permit overlapping schema work. The lock now carries a unique owner token, stale takeover uses an exact value compare-and-delete, and release removes only the lock owned by the current upgrader. A historical whitespace-sensitive static assertion was updated within R03 after it rejected the semantically stronger fail-closed code.\n\n'''
-if '## R03 ' not in ls:
-    LEDGER.write_text(ls + entry)
-
-print('R03 correction prepared')
+ROOT=Path(__file__).resolve().parents[1]
+F=ROOT/'video-wall-and-live-broadcasting/includes/class-vwlb-future-intelligence.php'
+TEST=ROOT/'tests/fresh-20-review-2-contracts.sh'
+LEDGER=ROOT/'docs/FILE-10-SECOND-FRESH-20-REVIEW-2026-08-12.md'
+s=F.read_text()
+old="""\t\tif ( $id ) {\n\t\t\t$current = self::public_row( 'production_sources', $id );\n\t\t\tif ( ! $current || (int)$current['live_event_id'] !== (int)$event['id'] ) return VWLB_Helpers::error( 'vwlb_source_missing', __( 'Production source not found.', VWLB_TEXT_DOMAIN ), 404 );\n\t\t\t$row['version'] = (int)$current['version'] + 1;\n\t\t\t$ok = $wpdb->update( $table, $row, array( 'id'=>$id, 'version'=>(int)$current['version'] ) );\n\t\t\tif ( 1 !== $ok ) return VWLB_Helpers::error( 'vwlb_version_conflict', __( 'Production source changed. Refresh and try again.', VWLB_TEXT_DOMAIN ), 409 );\n\t\t} else {\n"""
+new="""\t\tif ( $id ) {\n\t\t\t$current = self::public_row( 'production_sources', $id );\n\t\t\tif ( ! $current || (int)$current['live_event_id'] !== (int)$event['id'] ) return VWLB_Helpers::error( 'vwlb_source_missing', __( 'Production source not found.', VWLB_TEXT_DOMAIN ), 404 );\n\t\t\t$expected_version = absint( $data['version'] ?? 0 );\n\t\t\tif ( ! $expected_version || $expected_version !== (int) $current['version'] ) return VWLB_Helpers::error( 'vwlb_version_conflict', __( 'Production source changed. Refresh and submit its current version.', VWLB_TEXT_DOMAIN ), 409 );\n\t\t\t$row['version'] = $expected_version + 1;\n\t\t\t$ok = $wpdb->update( $table, $row, array( 'id'=>$id, 'version'=>$expected_version ) );\n\t\t\tif ( 1 !== $ok ) return VWLB_Helpers::error( 'vwlb_version_conflict', __( 'Production source changed. Refresh and try again.', VWLB_TEXT_DOMAIN ), 409 );\n\t\t} else {\n"""
+if new not in s:
+    if old not in s: raise SystemExit('R04 source anchor missing')
+    s=s.replace(old,new,1)
+old2="if($id){$current=self::public_row('production_scenes',$id);if(!$current||(int)$current['live_event_id']!==(int)$event['id'])return VWLB_Helpers::error('vwlb_scene_missing',__('Scene not found.',VWLB_TEXT_DOMAIN),404);$row['version']=(int)$current['version']+1;$ok=$wpdb->update($table,$row,array('id'=>$id,'version'=>(int)$current['version']));if(1!==$ok)return VWLB_Helpers::error('vwlb_version_conflict',__('Scene changed. Refresh and try again.',VWLB_TEXT_DOMAIN),409);}"
+new2="if($id){$current=self::public_row('production_scenes',$id);if(!$current||(int)$current['live_event_id']!==(int)$event['id'])return VWLB_Helpers::error('vwlb_scene_missing',__('Scene not found.',VWLB_TEXT_DOMAIN),404);$expected_version=absint($data['version']??0);if(!$expected_version||$expected_version!==(int)$current['version'])return VWLB_Helpers::error('vwlb_version_conflict',__('Scene changed. Refresh and submit its current version.',VWLB_TEXT_DOMAIN),409);$row['version']=$expected_version+1;$ok=$wpdb->update($table,$row,array('id'=>$id,'version'=>$expected_version));if(1!==$ok)return VWLB_Helpers::error('vwlb_version_conflict',__('Scene changed. Refresh and try again.',VWLB_TEXT_DOMAIN),409);}"
+if new2 not in s:
+    if old2 not in s: raise SystemExit('R04 scene anchor missing')
+    s=s.replace(old2,new2,1)
+F.write_text(s)
+checks="""\n# R04 — source/scene edits require the caller's current optimistic version.\nneed "Production source changed. Refresh and submit its current version." "$P/includes/class-vwlb-future-intelligence.php" r04-source-client-version\nneed "Scene changed. Refresh and submit its current version." "$P/includes/class-vwlb-future-intelligence.php" r04-scene-client-version\nneed "'version'=>$expected_version" "$P/includes/class-vwlb-future-intelligence.php" r04-cas-version\n"""
+ts=TEST.read_text()
+if 'r04-cas-version' not in ts: TEST.write_text(ts+checks)
+ls=LEDGER.read_text()
+entry="""## R04 — DEFECT FIXED\nMulti-camera production source and scene edit APIs performed a server-side CAS, but they re-read the newest row and applied the caller's stale payload without requiring the caller's expected version. A stale operator screen could therefore overwrite a newer operator change. Existing-row edits now require the caller's current version and use that exact version in the conditional update; missing/stale versions fail with 409 before mutation.\n\n"""
+if '## R04 ' not in ls: LEDGER.write_text(ls+entry)
+print('R04 correction prepared')
