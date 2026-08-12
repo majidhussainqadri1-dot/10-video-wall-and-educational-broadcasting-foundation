@@ -4,16 +4,16 @@ F=ROOT/'video-wall-and-live-broadcasting/includes/class-vwlb-future-intelligence
 TEST=ROOT/'tests/fresh-20-review-2-contracts.sh'
 LEDGER=ROOT/'docs/FILE-10-SECOND-FRESH-20-REVIEW-2026-08-12.md'
 s=F.read_text()
-old="$statuses=$include_candidates&&VWLB_Security::can(VWLB_Contracts::CAP_REVIEW,$video,'future_annotation_list')?\"('candidate','reviewed','published')\":\"('reviewed','published')\";"
-new="$statuses=$include_candidates&&VWLB_Security::can(VWLB_Contracts::CAP_REVIEW,$video,'future_annotation_list')?\"('candidate','reviewed','published')\":\"('published')\";"
+old="$poll=self::public_row('live_polls',$poll_id);if(!$poll)return null;$event=self::live($poll['live_event_id']);if(!$event||!VWLB_Security::can_view($event))return null;global $wpdb;"
+new="$poll=self::public_row('live_polls',$poll_id);if(!$poll)return null;$event=self::live($poll['live_event_id']);if(!$event||!VWLB_Security::can_view($event))return null;if(!in_array($poll['status'],array('open','closed'),true)&&!VWLB_Security::can(VWLB_Contracts::CAP_BROADCAST,$event,'future_poll_preview'))return null;global $wpdb;"
 if new not in s:
-    if old not in s: raise SystemExit('R09 annotation visibility anchor missing')
+    if old not in s: raise SystemExit('R10 poll visibility anchor missing')
     s=s.replace(old,new,1)
 F.write_text(s)
 ts=TEST.read_text()
-checks='''\n# R09 — public annotation listing exposes only explicitly published records.\nneed "\\\"('published')\\\"" "$P/includes/class-vwlb-future-intelligence.php" r09-public-published-only\n'''
-if 'r09-public-published-only' not in ts: TEST.write_text(ts+checks)
+checks='''\n# R10 — draft polls are not publicly readable before explicit open/close lifecycle.\nneed "future_poll_preview" "$P/includes/class-vwlb-future-intelligence.php" r10-poll-preview-guard\nneed "array('open','closed')" "$P/includes/class-vwlb-future-intelligence.php" r10-public-poll-status\n'''
+if 'r10-poll-preview-guard' not in ts: TEST.write_text(ts+checks)
 ls=LEDGER.read_text()
-entry='''## R09 — DEFECT FIXED\nThe public annotation read path exposed both `reviewed` and `published` records. Review completion is not publication, so a citation, correction, overlay or knowledge-link could become externally visible before its explicit publish transition. Public annotation reads now return only `published` records; reviewers may still request candidate/reviewed states through the authorized review path.\n\n'''
-if '## R09 ' not in ls: LEDGER.write_text(ls+entry)
-print('R09 correction prepared')
+entry='''## R10 — DEFECT FIXED\nThe public poll read contract checked event visibility but did not check the poll lifecycle state. Anyone who obtained an opaque poll identifier could therefore read a `draft` poll before the broadcaster explicitly opened it. Viewer reads are now limited to `open` or `closed` polls; only an authorized broadcaster may preview another state.\n\n'''
+if '## R10 ' not in ls: LEDGER.write_text(ls+entry)
+print('R10 correction prepared')
