@@ -4,16 +4,21 @@ F=ROOT/'video-wall-and-live-broadcasting/includes/class-vwlb-future-intelligence
 TEST=ROOT/'tests/fresh-20-review-2-contracts.sh'
 LEDGER=ROOT/'docs/FILE-10-SECOND-FRESH-20-REVIEW-2026-08-12.md'
 s=F.read_text()
-old="if(!empty($data['expires_at'])&&!$expires)return VWLB_Helpers::error('vwlb_consent_time_invalid',__('Consent expiry time is invalid.',VWLB_TEXT_DOMAIN),422);$metadata="
-new="if(!empty($data['expires_at'])&&!$expires)return VWLB_Helpers::error('vwlb_consent_time_invalid',__('Consent expiry time is invalid.',VWLB_TEXT_DOMAIN),422);if('active'===$status&&$expires&&strtotime($expires.' UTC')<=time())return VWLB_Helpers::error('vwlb_consent_time_invalid',__('Active consent expiry must be in the future.',VWLB_TEXT_DOMAIN),422);$metadata="
+old="if('correction'===$kind)VWLB_Helpers::outbox('VideoTimestampCorrectionPublished','video',$video['id'],array('annotation_public_id'=>$row['public_id'],'start_ms'=>$row['start_ms']));return self::public_row('video_annotations',$id);"
+new="return self::public_row('video_annotations',$id);"
 if new not in s:
-    if old not in s: raise SystemExit('R12 consent expiry anchor missing')
+    if old not in s: raise SystemExit('R13 create event anchor missing')
     s=s.replace(old,new,1)
+old2="if('published'===$to)VWLB_Helpers::outbox('VideoAnnotationPublished','video',$video['id'],array('annotation_public_id'=>$ann['public_id'],'kind'=>$ann['kind']));return self::public_row('video_annotations',$ann['id']);"
+new2="if('published'===$to){VWLB_Helpers::outbox('VideoAnnotationPublished','video',$video['id'],array('annotation_public_id'=>$ann['public_id'],'kind'=>$ann['kind']));if('correction'===$ann['kind'])VWLB_Helpers::outbox('VideoTimestampCorrectionPublished','video',$video['id'],array('annotation_public_id'=>$ann['public_id'],'start_ms'=>$ann['start_ms']));}return self::public_row('video_annotations',$ann['id']);"
+if new2 not in s:
+    if old2 not in s: raise SystemExit('R13 publish event anchor missing')
+    s=s.replace(old2,new2,1)
 F.write_text(s)
 ts=TEST.read_text()
-checks='''\n# R12 — active consent cannot enter already expired.\nneed "Active consent expiry must be in the future." "$P/includes/class-vwlb-future-intelligence.php" r12-active-expiry\n'''
-if 'r12-active-expiry' not in ts: TEST.write_text(ts+checks)
+checks='''\n# R13 — correction publication fact is tied to the publish transition.\nneed "VideoTimestampCorrectionPublished" "$P/includes/class-vwlb-future-intelligence.php" r13-correction-publication-event\n'''
+if 'r13-correction-publication-event' not in ts: TEST.write_text(ts+checks)
 ls=LEDGER.read_text()
-entry='''## R12 — DEFECT FIXED\nAn `active` consent link could be saved with an expiry timestamp already in the past, leaving the video available until a later reconciliation run. Active consent now requires a future expiry; explicitly expired/withdrawn states retain immediate restriction semantics.\n\n'''
-if '## R12 ' not in ls: LEDGER.write_text(ls+entry)
-print('R12 correction prepared')
+entry='''## R13 — DEFECT FIXED\nCreating a timestamp correction emitted `VideoTimestampCorrectionPublished` while the new annotation was only `reviewed`. Downstream consumers could therefore receive a false publication fact. The correction-specific event now fires only when the annotation actually transitions to `published`.\n\n'''
+if '## R13 ' not in ls: LEDGER.write_text(ls+entry)
+print('R13 correction prepared')
