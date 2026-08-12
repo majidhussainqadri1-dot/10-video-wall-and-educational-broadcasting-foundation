@@ -65,3 +65,7 @@ need "can_internal" "$P/includes/class-vwlb-future-intelligence.php" r14-annotat
 
 # R15 — auxiliary track delivery fails closed without an explicit public/signed resolver.
 need "vwlb_public_media_track_ref', ''" "$P/includes/class-vwlb-future-intelligence.php" r15-track-resolver-fail-closed
+
+# R16 — watermark grants are non-cacheable stateful POST operations.
+need "/grant','POST','watermark_grant'" "$P/includes/class-vwlb-future-rest.php" r16-watermark-post
+need "private, no-store" "$P/includes/class-vwlb-future-rest.php" r16-watermark-no-store

@@ -32,7 +32,7 @@ final class VWLB_Future_REST {
 			$this->route($n,'/live-polls/(?P<id>[A-Za-z0-9_-]+)/answers','POST','poll_answer','login');
 			$this->route($n,'/videos/(?P<id>[A-Za-z0-9_-]+)/consent-links','POST','consent_save','review');
 			$this->route($n,'/watermarks/(?P<object_type>video|live)/(?P<id>[A-Za-z0-9_-]+)','POST','watermark_save','publish_or_broadcast');
-			$this->route($n,'/watermarks/(?P<object_type>video|live)/(?P<id>[A-Za-z0-9_-]+)/grant','GET','watermark_grant','public');
+			$this->route($n,'/watermarks/(?P<object_type>video|live)/(?P<id>[A-Za-z0-9_-]+)/grant','POST','watermark_grant','public');
 		}
 	}
 
@@ -79,5 +79,5 @@ final class VWLB_Future_REST {
 	public function poll_answer(WP_REST_Request $r){$d=$this->body($r);return $this->response(VWLB_Future_Intelligence::answer_poll($r['id'],$d['option_ids']??array()));}
 	public function consent_save(WP_REST_Request $r){return $this->response(VWLB_Future_Intelligence::upsert_consent_link($r['id'],$this->body($r)),201);}
 	public function watermark_save(WP_REST_Request $r){return $this->response(VWLB_Future_Intelligence::set_watermark_policy($r['object_type'],$r['id'],$this->body($r)),201);}
-	public function watermark_grant(WP_REST_Request $r){$type=$r['object_type'];$object='video'===$type?VWLB_Repository::find('videos',$r['id']):VWLB_Repository::find('live_events',$r['id']);if(!$object||!VWLB_Security::can_view($object))return VWLB_Helpers::error('vwlb_not_found',__('Media not found.',VWLB_TEXT_DOMAIN),404);return $this->response(VWLB_Future_Intelligence::watermark_payload(array('mode'=>'off'),$type,$object,array('claims'=>VWLB_Security::claims())));}
+	public function watermark_grant(WP_REST_Request $r){$type=$r['object_type'];$object='video'===$type?VWLB_Repository::find('videos',$r['id']):VWLB_Repository::find('live_events',$r['id']);if(!$object||!VWLB_Security::can_view($object))return VWLB_Helpers::error('vwlb_not_found',__('Media not found.',VWLB_TEXT_DOMAIN),404);$response=$this->response(VWLB_Future_Intelligence::watermark_payload(array('mode'=>'off'),$type,$object,array('claims'=>VWLB_Security::claims())));if(!is_wp_error($response))$response->header('Cache-Control','private, no-store');return $response;}
 }

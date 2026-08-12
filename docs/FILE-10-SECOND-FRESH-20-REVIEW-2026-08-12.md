@@ -53,3 +53,6 @@ Public annotation responses decoded and returned arbitrary `metadata_json`, alth
 ## R15 — DEFECT FIXED
 Published auxiliary-track DTOs used the stored `file_ref` itself as the default public URL. Without a delivery adapter, a storage/provider reference could be returned directly. The resolver now defaults to an empty value and must explicitly return a viewer-safe public/signed URL; otherwise the track remains unavailable rather than leaking its stored reference.
 
+## R16 — DEFECT FIXED
+Forensic watermark grants mint a fresh token and audit evidence, but the route exposed that stateful operation as `GET`. Browser/intermediary caching or speculative retrieval was unsafe. The grant now uses `POST` and returns `Cache-Control: private, no-store`.
+
