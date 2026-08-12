@@ -67,3 +67,6 @@ Moderation/copyright restore blindly forced videos to `published` and live event
 
 ## R20 — DEFECT FIXED
 Privacy erasure left durable REST idempotency rows whose scope encoded the user identity (and historical response bodies could predate secret-safe handling), then created a new privacy-audit record keyed by the erased user's raw ID. Erasure now removes matching idempotency rows, anonymizes additional retained reviewer/credential references and writes a non-identifying erasure receipt instead of re-linking the subject.
+
+## Release-hygiene closure
+All twenty sequential review/fix rounds are closed. The corrected runtime/package/release identity is `1.2.4-rc1`; database schema constants remain unchanged (`base 1.1.0`, `extension 1.1.0`, `future 1.2.0`) because this corrective cycle introduced no structural schema migration. Active release-identity regression expectations were synchronized, temporary review machinery is removed, and the cleaned exact HEAD must pass the canonical PHP 8.3/8.4 File 10 Release QA before it can be called Automated-QA Green. This remains repository evidence only, not staging/live evidence.

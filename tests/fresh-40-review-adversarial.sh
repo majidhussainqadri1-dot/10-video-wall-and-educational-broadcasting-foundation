@@ -6,8 +6,8 @@ fail(){ echo "FAIL fresh-40-adversarial: $*" >&2; exit 1; }
 forbid(){ if grep -R -F -- "$1" "$2" >/dev/null; then fail "$3"; fi; }
 need(){ grep -R -F -- "$1" "$2" >/dev/null || fail "$3"; }
 
-# Release identity: current runtime is 1.2.3-rc1 while schema versions remain independently governed.
-need "Version: 1.2.3-rc1" "$P/video-wall-and-live-broadcasting.php" runtime-version
+# Release identity: current runtime is 1.2.4-rc1 while schema versions remain independently governed.
+need "Version: 1.2.4-rc1" "$P/video-wall-and-live-broadcasting.php" runtime-version
 forbid "Version: 1.2.0-rc1" "$P/video-wall-and-live-broadcasting.php" stale-runtime-version
 need "VWLB_FUTURE_SCHEMA_VERSION', '1.2.0" "$P/video-wall-and-live-broadcasting.php" future-schema-stable
 

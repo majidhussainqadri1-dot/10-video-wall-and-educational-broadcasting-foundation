@@ -64,12 +64,12 @@ need '['"'"'consent_version'"'"']=VWLB_Helpers::text' "$P/includes/class-vwlb-re
 # R14 — live-resource creation verifies persistence before success.
 need 'Live resource could not be saved.' "$P/includes/class-vwlb-extensions.php" r14-resource-insert
 
-# R19 — runtime/build/release artifact identity advances to 1.2.3-rc1 with schema versions unchanged.
-need 'Version: 1.2.3-rc1' "$P/video-wall-and-live-broadcasting.php" r19-runtime-version
-need 'VWLB_VERSION'"'"', '"'"'1.2.3-rc1' "$P/video-wall-and-live-broadcasting.php" r19-runtime-constant
+# R19 — runtime/build/release artifact identity advances to 1.2.4-rc1 with schema versions unchanged.
+need 'Version: 1.2.4-rc1' "$P/video-wall-and-live-broadcasting.php" r19-runtime-version
+need 'VWLB_VERSION'"'"', '"'"'1.2.4-rc1' "$P/video-wall-and-live-broadcasting.php" r19-runtime-constant
 need 'VWLB_FUTURE_SCHEMA_VERSION'"'"', '"'"'1.2.0' "$P/video-wall-and-live-broadcasting.php" r19-schema-not-inflated
-need video-wall-and-live-broadcasting-1.2.3-rc1.zip "$ROOT/tools/build-package.sh" r19-build-artifact
-need file10-video-wall-live-1.2.3-rc1 "$ROOT/.github/workflows/file10-release.yml" r19-release-artifact
+need video-wall-and-live-broadcasting-1.2.4-rc1.zip "$ROOT/tools/build-package.sh" r19-build-artifact
+need file10-video-wall-live-1.2.4-rc1 "$ROOT/.github/workflows/file10-release.yml" r19-release-artifact
 
 # R20 — final fresh review/release hygiene: no temporary mutation tooling and no stale current release identity.
 [[ ! -e "$ROOT/tools/file10-current-20-review-fix.py" ]] || { echo 'FAIL fresh-20-review: r20-loader-hygiene' >&2; exit 1; }
