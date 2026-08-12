@@ -13,3 +13,8 @@ need "vwlb_snapshot_persist_failed" "$P/includes/class-vwlb-db.php" r01-snapshot
 need 'is_wp_error( $snapshot )' "$P/includes/class-vwlb-activator.php" r02-snapshot-propagation
 need "vwlb_activation_compensation_failed" "$P/includes/class-vwlb-activator.php" r02-compensation
 need "vwlb_page_map_persist_failed" "$P/includes/class-vwlb-activator.php" r02-page-map
+
+# R03 — migration lock takeover and release are owner-token/compare-and-delete bound.
+need "delete_migration_lock_if_matches" "$P/includes/class-vwlb-activator.php" r03-lock-helper
+need "option_name=%s AND option_value=%s" "$P/includes/class-vwlb-activator.php" r03-lock-cas
+need 'self::delete_migration_lock_if_matches( $token )' "$P/includes/class-vwlb-activator.php" r03-owner-release

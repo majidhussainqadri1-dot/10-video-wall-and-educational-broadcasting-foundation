@@ -14,3 +14,6 @@ Database transaction wrappers could report domain success after `START TRANSACTI
 ## R02 — DEFECT FIXED
 Activation ignored rollback-snapshot failure, tolerated individual page-creation failures, and did not verify page-map persistence. Page setup now requires a durable pre-mutation snapshot, fails closed on page or mapping persistence failure, compensates pages created by the failed activation attempt, and propagates the error to activation before scheduling/version success. The first R02 regression-gate draft itself expanded a shell variable inside the grep pattern; that QA-only defect was corrected within R02 before product changes were accepted.
 
+## R03 — DEFECT FIXED
+The migration lock stored only a timestamp. After TTL expiry a second upgrader could take over, while the first upgrader's unconditional `finally` deletion could then remove the new owner's lock and permit overlapping schema work. The lock now carries a unique owner token, stale takeover uses an exact value compare-and-delete, and release removes only the lock owned by the current upgrader. A historical whitespace-sensitive static assertion was updated within R03 after it rejected the semantically stronger fail-closed code.
+

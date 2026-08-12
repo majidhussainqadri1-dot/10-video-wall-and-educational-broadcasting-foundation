@@ -190,7 +190,7 @@ need "vwlb_interaction_counter_failed" "$P/includes/class-vwlb-videos.php" r35-c
 need "verify_schema_sql" "$P/includes/class-vwlb-db.php" r36-verify-helper
 need "SHOW TABLES LIKE" "$P/includes/class-vwlb-db.php" r36-table-verify
 need "vwlb_schema_version_persist_failed" "$P/includes" r36-version-persist
-need "is_wp_error(\$result)" "$P/includes/class-vwlb-activator.php" r36-reconcile-fail-closed
+need 'is_wp_error( $result )' "$P/includes/class-vwlb-activator.php" r36-reconcile-fail-closed
 # R37 — source, tests, build and release workflow use one runtime/package identity without schema inflation.
 need "Version: 1.2.2-rc1" "$P/video-wall-and-live-broadcasting.php" r37-plugin-version
 need "VWLB_VERSION', '1.2.2-rc1" "$P/video-wall-and-live-broadcasting.php" r37-runtime-version

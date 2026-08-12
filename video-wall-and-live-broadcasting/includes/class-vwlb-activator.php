@@ -24,25 +24,58 @@ final class VWLB_Activator {
 	 * a unique key, so add_option() is the cross-request compare-and-set primitive here.
 	 * A bounded stale-lock takeover prevents a crashed upgrader from wedging File 10.
 	 */
+	private static function delete_migration_lock_if_matches( $expected ) {
+		global $wpdb;
+		$deleted = $wpdb->query(
+			$wpdb->prepare(
+				"DELETE FROM {$wpdb->options} WHERE option_name=%s AND option_value=%s",
+				self::MIGRATION_LOCK,
+				(string) $expected
+			)
+		);
+		if ( 1 === $deleted ) {
+			wp_cache_delete( self::MIGRATION_LOCK, 'options' );
+			wp_cache_delete( 'notoptions', 'options' );
+			wp_cache_delete( 'alloptions', 'options' );
+			return true;
+		}
+		return false;
+	}
+
 	public static function reconcile_schema() {
-		$acquired=add_option(self::MIGRATION_LOCK,time(),'no',false);
-		if(!$acquired){
-			$locked_at=absint(get_option(self::MIGRATION_LOCK,0));
-			if($locked_at && (time()-$locked_at)>self::MIGRATION_LOCK_TTL){
-				delete_option(self::MIGRATION_LOCK);
-				$acquired=add_option(self::MIGRATION_LOCK,time(),'no',false);
+		$token = time() . '|' . wp_generate_uuid4();
+		$acquired = add_option( self::MIGRATION_LOCK, $token, '', false );
+		if ( ! $acquired ) {
+			$current = (string) get_option( self::MIGRATION_LOCK, '' );
+			$parts = explode( '|', $current, 2 );
+			$locked_at = absint( $parts[0] ?? 0 );
+			if ( $locked_at && ( time() - $locked_at ) > self::MIGRATION_LOCK_TTL ) {
+				if ( self::delete_migration_lock_if_matches( $current ) ) {
+					$acquired = add_option( self::MIGRATION_LOCK, $token, '', false );
+				}
 			}
 		}
-		if(!$acquired)return VWLB_Helpers::error('vwlb_schema_migration_busy',__('File 10 schema migration is already in progress. Retry shortly.',VWLB_TEXT_DOMAIN),503);
-		try{
-			if(get_option('vwlb_schema_version')!==VWLB_SCHEMA_VERSION){$result=VWLB_DB::install_schema();if(is_wp_error($result))return $result;}
-			if(get_option(VWLB_Extensions::OPTION)!==VWLB_EXT_SCHEMA_VERSION){$result=VWLB_Extensions::install_schema();if(is_wp_error($result))return $result;}
-			if(get_option(VWLB_Future_Intelligence::OPTION)!==VWLB_FUTURE_SCHEMA_VERSION){$result=VWLB_Future_Intelligence::install_schema();if(is_wp_error($result))return $result;}
+		if ( ! $acquired ) {
+			return VWLB_Helpers::error( 'vwlb_schema_migration_busy', __( 'File 10 schema migration is already in progress. Retry shortly.', VWLB_TEXT_DOMAIN ), 503 );
+		}
+		try {
+			if ( get_option( 'vwlb_schema_version' ) !== VWLB_SCHEMA_VERSION ) {
+				$result = VWLB_DB::install_schema();
+				if ( is_wp_error( $result ) ) return $result;
+			}
+			if ( get_option( VWLB_Extensions::OPTION ) !== VWLB_EXT_SCHEMA_VERSION ) {
+				$result = VWLB_Extensions::install_schema();
+				if ( is_wp_error( $result ) ) return $result;
+			}
+			if ( get_option( VWLB_Future_Intelligence::OPTION ) !== VWLB_FUTURE_SCHEMA_VERSION ) {
+				$result = VWLB_Future_Intelligence::install_schema();
+				if ( is_wp_error( $result ) ) return $result;
+			}
 			return true;
-		}catch(Throwable $e){
-			return VWLB_Helpers::error('vwlb_schema_migration_failed',__('File 10 schema migration failed safely.',VWLB_TEXT_DOMAIN),500,array('exception'=>get_class($e)));
-		}finally{
-			delete_option(self::MIGRATION_LOCK);
+		} catch ( Throwable $e ) {
+			return VWLB_Helpers::error( 'vwlb_schema_migration_failed', __( 'File 10 schema migration failed safely.', VWLB_TEXT_DOMAIN ), 500, array( 'exception'=>get_class( $e ) ) );
+		} finally {
+			self::delete_migration_lock_if_matches( $token );
 		}
 	}
 
