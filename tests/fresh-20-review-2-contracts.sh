@@ -37,3 +37,9 @@ need "'status'=>'transitioning'" "$P/includes/class-vwlb-future-adapters.php" r0
 need "WHERE poll_id=%d AND public_id=%s" "$P/includes/class-vwlb-future-intelligence.php" r07-public-option-id
 forbid(){ ! grep -F -- "$1" "$2" >/dev/null || { echo "FAIL second-fresh-20: $3" >&2; exit 1; }; }
 forbid "ctype_digit(\$raw)" "$P/includes/class-vwlb-future-intelligence.php" r07-no-numeric-pk-answer
+
+# R08 — reviewed/published Future tracks have a public-safe viewer delivery contract.
+need "public static function published_tracks" "$P/includes/class-vwlb-future-intelligence.php" r08-published-track-contract
+need "AND status=%s" "$P/includes/class-vwlb-future-intelligence.php" r08-only-published
+need "vwlb_public_media_track_ref" "$P/includes/class-vwlb-future-intelligence.php" r08-provider-resolution
+need "media_tracks" "$P/includes/class-vwlb-rest.php" r08-rest-delivery

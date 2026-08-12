@@ -481,6 +481,30 @@ final class VWLB_Future_Intelligence {
 		VWLB_Helpers::audit('media_track',$track['id'],'track_'.$action,$from,$to,'',array('object_type'=>$track['object_type'],'object_id'=>$track['object_id'],'track_type'=>$track['track_type'],'language'=>$track['language']));if('published'===$to)VWLB_Helpers::outbox('MediaTrackPublished',$track['object_type'],$track['object_id'],array('track_public_id'=>$track['public_id'],'track_type'=>$track['track_type'],'language'=>$track['language']));return self::public_row('media_tracks',$track['id']);
 	}
 
+	/** F10-FUT-012..015 — public-safe delivery contract for reviewed and published auxiliary tracks. */
+	public static function published_tracks( $object_type, $object_id ) {
+		$object_type = VWLB_Helpers::enum( $object_type, array( 'video', 'live' ), '' );
+		$object = 'video' === $object_type ? self::video( $object_id ) : ( 'live' === $object_type ? self::live( $object_id ) : null );
+		if ( ! $object || ! VWLB_Security::can_view( $object ) ) return array();
+		global $wpdb;
+		$rows = $wpdb->get_results( $wpdb->prepare( 'SELECT public_id,track_type,language,source,file_ref,provider_ref,version FROM ' . VWLB_Helpers::table('media_tracks') . ' WHERE object_type=%s AND object_id=%d AND status=%s ORDER BY track_type ASC, language ASC, id ASC', $object_type, (int) $object['id'], 'published' ), ARRAY_A );
+		$out = array();
+		foreach ( $rows as $row ) {
+			$resolved = apply_filters( 'vwlb_public_media_track_ref', (string) $row['file_ref'], $row, $object );
+			$src = esc_url_raw( is_string( $resolved ) ? $resolved : '' );
+			$out[] = array(
+				'public_id' => $row['public_id'],
+				'track_type' => $row['track_type'],
+				'language' => $row['language'],
+				'source' => $row['source'],
+				'src' => $src,
+				'available' => (bool) $src,
+				'version' => (int) $row['version'],
+			);
+		}
+		return $out;
+	}
+
 	/** F10-FUT-016/017/018/021/024 — reviewable timed annotations and knowledge links. */
 	public static function create_annotation( $video_id, $data ) {
 		$video=self::video($video_id);if(!$video||!VWLB_Security::can(VWLB_Contracts::CAP_PUBLISH,$video,'future_annotation'))return VWLB_Helpers::error('vwlb_forbidden',__('You cannot annotate this video.',VWLB_TEXT_DOMAIN),403);
