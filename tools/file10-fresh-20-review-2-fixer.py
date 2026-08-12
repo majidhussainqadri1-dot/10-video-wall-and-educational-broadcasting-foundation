@@ -1,24 +1,21 @@
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
-F=ROOT/'video-wall-and-live-broadcasting/includes/class-vwlb-future-adapters.php'
+F=ROOT/'video-wall-and-live-broadcasting/includes/class-vwlb-future-intelligence.php'
 TEST=ROOT/'tests/fresh-20-review-2-contracts.sh'
 LEDGER=ROOT/'docs/FILE-10-SECOND-FRESH-20-REVIEW-2026-08-12.md'
 s=F.read_text()
-old="if(is_wp_error($result)){$wpdb->update($table,array('status'=>'failed','version'=>$reserved_version+1,'last_state_json'=>VWLB_Helpers::json_encode(array('status'=>'failed','provider_code'=>$result->get_error_code(),'updated_at'=>gmdate('c'))),'updated_at'=>VWLB_Helpers::now()),array('id'=>$target['id'],'version'=>$reserved_version));return $result;}"
-new="if(is_wp_error($result)){$failed=$wpdb->update($table,array('status'=>'failed','version'=>$reserved_version+1,'last_state_json'=>VWLB_Helpers::json_encode(array('status'=>'failed','provider_code'=>$result->get_error_code(),'updated_at'=>gmdate('c'))),'updated_at'=>VWLB_Helpers::now()),array('id'=>$target['id'],'version'=>$reserved_version,'status'=>'transitioning'));if(1!==$failed)return VWLB_Helpers::error('vwlb_simulcast_reconcile_required',__('The provider failed and local failure state could not be finalized; reconciliation is required.',VWLB_TEXT_DOMAIN),503,array('provider_code'=>$result->get_error_code()));return $result;}"
+old="foreach($raw_ids as $raw){if(ctype_digit($raw))$id=(int)$wpdb->get_var($wpdb->prepare(\"SELECT id FROM $option_table WHERE poll_id=%d AND id=%d\",$poll['id'],(int)$raw));else$id=(int)$wpdb->get_var($wpdb->prepare(\"SELECT id FROM $option_table WHERE poll_id=%d AND public_id=%s\",$poll['id'],$raw));if($id)$ids[]=$id;}"
+new="foreach($raw_ids as $raw){$id=(int)$wpdb->get_var($wpdb->prepare(\"SELECT id FROM $option_table WHERE poll_id=%d AND public_id=%s\",$poll['id'],$raw));if($id)$ids[]=$id;}"
 if new not in s:
-    if old not in s: raise SystemExit('R06 provider-error anchor missing')
+    if old not in s: raise SystemExit('R07 poll identifier anchor missing')
     s=s.replace(old,new,1)
-old2="if(!is_array($result)||empty($result['accepted'])){$wpdb->update($table,array('status'=>'failed','version'=>$reserved_version+1,'last_state_json'=>VWLB_Helpers::json_encode(array('status'=>'failed','provider_code'=>'unavailable','updated_at'=>gmdate('c'))),'updated_at'=>VWLB_Helpers::now()),array('id'=>$target['id'],'version'=>$reserved_version));return VWLB_Helpers::error('vwlb_simulcast_adapter_unavailable',__('Simulcast provider adapter is unavailable.',VWLB_TEXT_DOMAIN),503);}"
-new2="if(!is_array($result)||empty($result['accepted'])){$failed=$wpdb->update($table,array('status'=>'failed','version'=>$reserved_version+1,'last_state_json'=>VWLB_Helpers::json_encode(array('status'=>'failed','provider_code'=>'unavailable','updated_at'=>gmdate('c'))),'updated_at'=>VWLB_Helpers::now()),array('id'=>$target['id'],'version'=>$reserved_version,'status'=>'transitioning'));if(1!==$failed)return VWLB_Helpers::error('vwlb_simulcast_reconcile_required',__('The provider was unavailable and local failure state could not be finalized; reconciliation is required.',VWLB_TEXT_DOMAIN),503);return VWLB_Helpers::error('vwlb_simulcast_adapter_unavailable',__('Simulcast provider adapter is unavailable.',VWLB_TEXT_DOMAIN),503);}"
-if new2 not in s:
-    if old2 not in s: raise SystemExit('R06 unavailable anchor missing')
-    s=s.replace(old2,new2,1)
 F.write_text(s)
 ts=TEST.read_text()
-checks='''\n# R06 — provider failure paths must durably leave simulcast transitioning state or demand reconciliation.\nneed "provider failed and local failure state could not be finalized" "$P/includes/class-vwlb-future-adapters.php" r06-provider-failure-persist\nneed "provider was unavailable and local failure state could not be finalized" "$P/includes/class-vwlb-future-adapters.php" r06-unavailable-persist\nneed "'status'=>'transitioning'" "$P/includes/class-vwlb-future-adapters.php" r06-failure-lease-bound\n'''
-if 'r06-unavailable-persist' not in ts: TEST.write_text(ts+checks)
+checks='''\n# R07 — public poll answers use opaque option IDs only; internal numeric PKs are not accepted.\nneed "WHERE poll_id=%d AND public_id=%s" "$P/includes/class-vwlb-future-intelligence.php" r07-public-option-id\nforbid(){ ! grep -F -- "$1" "$2" >/dev/null || { echo "FAIL second-fresh-20: $3" >&2; exit 1; }; }\nforbid "ctype_digit($raw)" "$P/includes/class-vwlb-future-intelligence.php" r07-no-numeric-pk-answer\n'''
+# Escape the generated shell variable so set -u cannot expand it while parsing the test.
+checks=checks.replace('ctype_digit($raw)', 'ctype_digit(\\$raw)')
+if 'r07-no-numeric-pk-answer' not in ts: TEST.write_text(ts+checks)
 ls=LEDGER.read_text()
-entry='''## R06 — DEFECT FIXED\nThe simulcast transition reserved local state as `transitioning`, but both provider-error branches ignored whether the subsequent local `failed` state write succeeded. A database/CAS race could therefore strand the target in `transitioning` while the caller saw only the provider error. Failure-state writes are now version/status-bound and verified; if File 10 cannot persist the provider failure truth, the API returns an explicit reconciliation-required error instead of masking local divergence.\n\n'''
-if '## R06 ' not in ls: LEDGER.write_text(ls+entry)
-print('R06 correction prepared')
+entry='''## R07 — DEFECT FIXED\nThe public live-poll answer path accepted either the opaque option `public_id` or a guessed numeric database primary key. Public DTOs intentionally hide internal IDs, so accepting them reintroduced a guessable identifier path and weakened the object-identity boundary. Poll answers now resolve only the option public ID within the current poll; internal numeric option keys remain server-side implementation details.\n\n'''
+if '## R07 ' not in ls: LEDGER.write_text(ls+entry)
+print('R07 correction prepared')
