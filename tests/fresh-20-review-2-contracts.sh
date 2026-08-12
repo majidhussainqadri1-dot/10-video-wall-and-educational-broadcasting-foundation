@@ -56,3 +56,6 @@ need "Consent record changed. Refresh and submit its current version." "$P/inclu
 
 # R12 — active consent cannot enter already expired.
 need "Active consent expiry must be in the future." "$P/includes/class-vwlb-future-intelligence.php" r12-active-expiry
+
+# R13 — correction publication fact is tied to the publish transition.
+need "VideoTimestampCorrectionPublished" "$P/includes/class-vwlb-future-intelligence.php" r13-correction-publication-event

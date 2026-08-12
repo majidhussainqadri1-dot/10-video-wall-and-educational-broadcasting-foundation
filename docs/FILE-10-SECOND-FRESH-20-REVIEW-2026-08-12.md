@@ -44,3 +44,6 @@ Consent-link updates locked the latest database row and used a server-side CAS, 
 ## R12 — DEFECT FIXED
 An `active` consent link could be saved with an expiry timestamp already in the past, leaving the video available until a later reconciliation run. Active consent now requires a future expiry; explicitly expired/withdrawn states retain immediate restriction semantics.
 
+## R13 — DEFECT FIXED
+Creating a timestamp correction emitted `VideoTimestampCorrectionPublished` while the new annotation was only `reviewed`. Downstream consumers could therefore receive a false publication fact. The correction-specific event now fires only when the annotation actually transitions to `published`.
+
