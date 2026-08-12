@@ -1,0 +1,45 @@
+name: File 10 Third Fresh 20 Review Sequential Fixer
+on:
+  push:
+    branches:
+      - fix/file-10-third-fresh-20-review-v1.2.4-rc1
+permissions:
+  contents: write
+jobs:
+  apply-reviewed-fixes:
+    if: github.actor != 'github-actions[bot]' && startsWith(github.event.head_commit.message, 'Start File 10 third fresh 20-review')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Configure PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: none
+      - name: Install archive tools
+        run: sudo apt-get update && sudo apt-get install -y zip unzip
+      - name: Apply twenty sequential review corrections
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/file10-third-fresh-20-review-fixer.py
+      - name: Final corrected-state validation
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash ./tests/run-all.sh
+          git diff --check
+      - name: Push corrected source and permanent review evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add video-wall-and-live-broadcasting tests docs tools
+          git reset tools/file10-third-fresh-20-review-fixer.py || true
+          if ! git diff --cached --quiet; then
+            git commit -m "Apply File 10 third fresh 20-review corrections"
+            git push origin HEAD:${GITHUB_REF_NAME}
+          fi
