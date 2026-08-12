@@ -32,3 +32,8 @@ need "expected_version=absint" "$P/includes/class-vwlb-future-intelligence.php" 
 need "provider failed and local failure state could not be finalized" "$P/includes/class-vwlb-future-adapters.php" r06-provider-failure-persist
 need "provider was unavailable and local failure state could not be finalized" "$P/includes/class-vwlb-future-adapters.php" r06-unavailable-persist
 need "'status'=>'transitioning'" "$P/includes/class-vwlb-future-adapters.php" r06-failure-lease-bound
+
+# R07 — public poll answers use opaque option IDs only; internal numeric PKs are not accepted.
+need "WHERE poll_id=%d AND public_id=%s" "$P/includes/class-vwlb-future-intelligence.php" r07-public-option-id
+forbid(){ ! grep -F -- "$1" "$2" >/dev/null || { echo "FAIL second-fresh-20: $3" >&2; exit 1; }; }
+forbid "ctype_digit(\$raw)" "$P/includes/class-vwlb-future-intelligence.php" r07-no-numeric-pk-answer

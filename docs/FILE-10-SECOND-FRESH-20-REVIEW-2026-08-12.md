@@ -26,3 +26,6 @@ Simulcast target edits had the same stale-client overwrite class as production s
 ## R06 — DEFECT FIXED
 The simulcast transition reserved local state as `transitioning`, but both provider-error branches ignored whether the subsequent local `failed` state write succeeded. A database/CAS race could therefore strand the target in `transitioning` while the caller saw only the provider error. Failure-state writes are now version/status-bound and verified; if File 10 cannot persist the provider failure truth, the API returns an explicit reconciliation-required error instead of masking local divergence.
 
+## R07 — DEFECT FIXED
+The public live-poll answer path accepted either the opaque option `public_id` or a guessed numeric database primary key. Public DTOs intentionally hide internal IDs, so accepting them reintroduced a guessable identifier path and weakened the object-identity boundary. Poll answers now resolve only the option public ID within the current poll; internal numeric option keys remain server-side implementation details.
+
