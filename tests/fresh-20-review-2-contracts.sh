@@ -69,3 +69,7 @@ need "vwlb_public_media_track_ref', ''" "$P/includes/class-vwlb-future-intellige
 # R16 — watermark grants are non-cacheable stateful POST operations.
 need "/grant','POST','watermark_grant'" "$P/includes/class-vwlb-future-rest.php" r16-watermark-post
 need "private, no-store" "$P/includes/class-vwlb-future-rest.php" r16-watermark-no-store
+
+# R17 — live viewer state containing delivery refs is private/no-store.
+need "media_tracks" "$P/includes/class-vwlb-rest.php" r17-live-track-state
+need "Cache-Control','private, no-store" "$P/includes/class-vwlb-rest.php" r17-live-no-store

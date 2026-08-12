@@ -56,3 +56,6 @@ Published auxiliary-track DTOs used the stored `file_ref` itself as the default 
 ## R16 — DEFECT FIXED
 Forensic watermark grants mint a fresh token and audit evidence, but the route exposed that stateful operation as `GET`. Browser/intermediary caching or speculative retrieval was unsafe. The grant now uses `POST` and returns `Cache-Control: private, no-store`.
 
+## R17 — DEFECT FIXED
+Live viewer state now includes adapter-resolved auxiliary-track references, which may be viewer/session-specific. The endpoint lacked an explicit no-store policy, so signed delivery data could be reused as shared cache content. Live state now returns `Cache-Control: private, no-store`.
+
