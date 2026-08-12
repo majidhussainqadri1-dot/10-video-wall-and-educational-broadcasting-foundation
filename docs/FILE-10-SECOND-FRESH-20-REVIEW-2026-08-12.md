@@ -62,3 +62,6 @@ Live viewer state now includes adapter-resolved auxiliary-track references, whic
 ## R18 — DEFECT FIXED
 Scheduled cleanup expired guest/co-host delegations with one bulk SQL update that neither advanced optimistic versions nor emitted audit/outbox evidence. Stale studio views and downstream realtime/provider bridges could miss the revocation boundary. Expiry is now per-row CAS/versioned, audited and emits `BroadcastGuestExpired`.
 
+## R19 — DEFECT FIXED
+Re-inviting or changing an existing guest/co-host delegation refreshed the latest database row and then applied the caller payload without proving which version the studio had reviewed. A stale studio could therefore overwrite a newer delegation change or revocation intent. Existing delegation changes now require the caller-observed version, use it as the CAS token, and the REST contract forwards that version explicitly.
+

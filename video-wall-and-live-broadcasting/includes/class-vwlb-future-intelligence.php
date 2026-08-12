@@ -381,7 +381,7 @@ final class VWLB_Future_Intelligence {
 	}
 
 	/** F10-FUT-002 — time-bounded guest/co-host delegation, never a new identity authority. */
-	public static function invite_guest( $live_id, $user_id, $role='guest', $scope=array(), $ttl=7200 ) {
+	public static function invite_guest( $live_id, $user_id, $role='guest', $scope=array(), $ttl=7200, $expected_version=0 ) {
 		$event=self::live($live_id);if(!self::require_live_control($event,'future_invite_guest'))return VWLB_Helpers::error('vwlb_forbidden',__('You cannot invite broadcast guests.',VWLB_TEXT_DOMAIN),403);
 		$user_id=absint($user_id);if(!$user_id||!get_userdata($user_id))return VWLB_Helpers::error('vwlb_guest_invalid',__('Guest account is invalid.',VWLB_TEXT_DOMAIN),422);
 		$claims=apply_filters('vwlb_identity_claims',null,$user_id,array('contract'=>'File00IdentityClaims.v1','consumer'=>'File 10 guest delegation'));if(!is_array($claims)||empty($claims['identity_approved'])||empty($claims['age_ok'])||empty($claims['guardian_ok'])||!empty($claims['suspended']))return VWLB_Helpers::error('vwlb_guest_identity_unavailable',__('The guest does not currently satisfy File 00 identity and eligibility assertions.',VWLB_TEXT_DOMAIN),409);
@@ -389,7 +389,7 @@ final class VWLB_Future_Intelligence {
 		$scope_allowed=array('camera','microphone','screen','slides','media','scene_control','chat','polls');$scope=array_values(array_unique(array_intersect(array_map('sanitize_key',(array)$scope),$scope_allowed)));
 		global $wpdb;$table=VWLB_Helpers::table('broadcast_guests');$now=VWLB_Helpers::now();$existing=$wpdb->get_row($wpdb->prepare("SELECT * FROM $table WHERE live_event_id=%d AND user_id=%d",$event['id'],$user_id),ARRAY_A);
 		$row=array('role_name'=>$role,'status'=>'invited','scope_json'=>VWLB_Helpers::json_encode($scope),'expires_at'=>gmdate('Y-m-d H:i:s',time()+$ttl),'invited_by'=>get_current_user_id(),'accepted_at'=>null,'updated_at'=>$now);
-		if($existing){$row['version']=(int)$existing['version']+1;$changed=$wpdb->update($table,$row,array('id'=>$existing['id'],'version'=>$existing['version']));if(1!==$changed)return VWLB_Helpers::error('vwlb_version_conflict',__('Guest delegation changed concurrently.',VWLB_TEXT_DOMAIN),409);$id=(int)$existing['id'];}
+		if($existing){$expected_version=absint($expected_version);if(!$expected_version||$expected_version!==(int)$existing['version'])return VWLB_Helpers::error('vwlb_version_conflict',__('Guest delegation changed. Refresh and submit its current version.',VWLB_TEXT_DOMAIN),409);$row['version']=$expected_version+1;$changed=$wpdb->update($table,$row,array('id'=>$existing['id'],'version'=>$expected_version));if(1!==$changed)return VWLB_Helpers::error('vwlb_version_conflict',__('Guest delegation changed concurrently.',VWLB_TEXT_DOMAIN),409);$id=(int)$existing['id'];}
 		else{$row+=array('public_id'=>VWLB_Helpers::public_id('guest'),'live_event_id'=>(int)$event['id'],'user_id'=>$user_id,'version'=>1,'created_at'=>$now);if(!$wpdb->insert($table,$row))return VWLB_Helpers::error('vwlb_database_error',__('Guest invitation could not be saved.',VWLB_TEXT_DOMAIN),500);$id=(int)$wpdb->insert_id;}
 		VWLB_Helpers::audit('broadcast_guest',$id,'invite','','invited','',array('live_event_id'=>$event['id'],'guest_user_id'=>$user_id,'role'=>$role,'scope'=>$scope));VWLB_Helpers::outbox('BroadcastGuestInvited','live',$event['id'],array('guest_user_id'=>$user_id,'role'=>$role));return self::public_row('broadcast_guests',$id);
 	}

@@ -56,7 +56,7 @@ final class VWLB_Future_REST {
 	public function source_save(WP_REST_Request $r){return $this->response(VWLB_Future_Intelligence::upsert_source($r['id'],$this->body($r)),201);}
 	public function scene_save(WP_REST_Request $r){return $this->response(VWLB_Future_Intelligence::upsert_scene($r['id'],$this->body($r)),201);}
 	public function scene_program(WP_REST_Request $r){$d=$this->body($r);return $this->response(VWLB_Future_Intelligence::switch_program_scene($r['id'],$r['scene'],$this->version($d)));}
-	public function guest_invite(WP_REST_Request $r){$d=$this->body($r);return $this->response(VWLB_Future_Intelligence::invite_guest($r['id'],$d['user_id']??0,$d['role']??'guest',$d['scope']??array(),$d['ttl']??7200),201);}
+	public function guest_invite(WP_REST_Request $r){$d=$this->body($r);return $this->response(VWLB_Future_Intelligence::invite_guest($r['id'],$d['user_id']??0,$d['role']??'guest',$d['scope']??array(),$d['ttl']??7200,$d['version']??0),201);}
 	public function guest_accept(WP_REST_Request $r){return $this->response(VWLB_Future_Intelligence::accept_guest($r['id']));}
 	public function guest_revoke(WP_REST_Request $r){return $this->response(VWLB_Future_Intelligence::revoke_guest($r['id']));}
 	public function live_config(WP_REST_Request $r){$d=$this->body($r);return $this->response(VWLB_Future_Intelligence::configure_live($r['id'],$d,$this->version($d)));}

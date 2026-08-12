@@ -77,3 +77,6 @@ need "Cache-Control','private, no-store" "$P/includes/class-vwlb-rest.php" r17-l
 # R18 — automatic guest expiry is versioned, audited and emitted as a lifecycle fact.
 need "BroadcastGuestExpired" "$P/includes/class-vwlb-future-intelligence.php" r18-guest-expired-event
 need "delegation_ttl" "$P/includes/class-vwlb-future-intelligence.php" r18-guest-expiry-audit
+
+# R19 — existing guest delegation updates require the caller-observed version.
+need "Guest delegation changed. Refresh and submit its current version." "$P/includes/class-vwlb-future-intelligence.php" r19-guest-client-version
