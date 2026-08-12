@@ -17,3 +17,6 @@ Activation ignored rollback-snapshot failure, tolerated individual page-creation
 ## R03 — DEFECT FIXED
 The migration lock stored only a timestamp. After TTL expiry a second upgrader could take over, while the first upgrader's unconditional `finally` deletion could then remove the new owner's lock and permit overlapping schema work. The lock now carries a unique owner token, stale takeover uses an exact value compare-and-delete, and release removes only the lock owned by the current upgrader. A historical whitespace-sensitive static assertion was updated within R03 after it rejected the semantically stronger fail-closed code.
 
+## R04 — DEFECT FIXED
+Multi-camera production source and scene edit APIs performed a server-side CAS, but they re-read the newest row and applied the caller's stale payload without requiring the caller's expected version. A stale operator screen could therefore overwrite a newer operator change. Existing-row edits now require the caller's current version and use that exact version in the conditional update; missing/stale versions fail with 409 before mutation. The first R04 static assertion accidentally expanded a shell variable under `set -u`; that QA-only defect was corrected within R04 before accepting the product change.
+

@@ -333,8 +333,10 @@ final class VWLB_Future_Intelligence {
 		if ( $id ) {
 			$current = self::public_row( 'production_sources', $id );
 			if ( ! $current || (int)$current['live_event_id'] !== (int)$event['id'] ) return VWLB_Helpers::error( 'vwlb_source_missing', __( 'Production source not found.', VWLB_TEXT_DOMAIN ), 404 );
-			$row['version'] = (int)$current['version'] + 1;
-			$ok = $wpdb->update( $table, $row, array( 'id'=>$id, 'version'=>(int)$current['version'] ) );
+			$expected_version = absint( $data['version'] ?? 0 );
+			if ( ! $expected_version || $expected_version !== (int) $current['version'] ) return VWLB_Helpers::error( 'vwlb_version_conflict', __( 'Production source changed. Refresh and submit its current version.', VWLB_TEXT_DOMAIN ), 409 );
+			$row['version'] = $expected_version + 1;
+			$ok = $wpdb->update( $table, $row, array( 'id'=>$id, 'version'=>$expected_version ) );
 			if ( 1 !== $ok ) return VWLB_Helpers::error( 'vwlb_version_conflict', __( 'Production source changed. Refresh and try again.', VWLB_TEXT_DOMAIN ), 409 );
 		} else {
 			$public = VWLB_Helpers::public_id( 'src' ); $row['public_id']=$public; $row['owner_id']=get_current_user_id(); $row['created_at']=$now; $row['version']=1;
@@ -356,7 +358,7 @@ final class VWLB_Future_Intelligence {
 		global $wpdb; $table=VWLB_Helpers::table('production_scenes'); $now=VWLB_Helpers::now();
 		$id=absint($data['id']??0); $row=array('live_event_id'=>(int)$event['id'],'title'=>$title,
 			'layout_json'=>VWLB_Helpers::json_encode((array)($data['layout']??array())),'source_ids_json'=>VWLB_Helpers::json_encode($sources),'updated_at'=>$now);
-		if($id){$current=self::public_row('production_scenes',$id);if(!$current||(int)$current['live_event_id']!==(int)$event['id'])return VWLB_Helpers::error('vwlb_scene_missing',__('Scene not found.',VWLB_TEXT_DOMAIN),404);$row['version']=(int)$current['version']+1;$ok=$wpdb->update($table,$row,array('id'=>$id,'version'=>(int)$current['version']));if(1!==$ok)return VWLB_Helpers::error('vwlb_version_conflict',__('Scene changed. Refresh and try again.',VWLB_TEXT_DOMAIN),409);}
+		if($id){$current=self::public_row('production_scenes',$id);if(!$current||(int)$current['live_event_id']!==(int)$event['id'])return VWLB_Helpers::error('vwlb_scene_missing',__('Scene not found.',VWLB_TEXT_DOMAIN),404);$expected_version=absint($data['version']??0);if(!$expected_version||$expected_version!==(int)$current['version'])return VWLB_Helpers::error('vwlb_version_conflict',__('Scene changed. Refresh and submit its current version.',VWLB_TEXT_DOMAIN),409);$row['version']=$expected_version+1;$ok=$wpdb->update($table,$row,array('id'=>$id,'version'=>$expected_version));if(1!==$ok)return VWLB_Helpers::error('vwlb_version_conflict',__('Scene changed. Refresh and try again.',VWLB_TEXT_DOMAIN),409);}
 		else{$row['public_id']=VWLB_Helpers::public_id('scene');$row['owner_id']=get_current_user_id();$row['state']='saved';$row['is_program']=0;$row['version']=1;$row['created_at']=$now;if(!$wpdb->insert($table,$row))return VWLB_Helpers::error('vwlb_database_error',__('Scene could not be saved.',VWLB_TEXT_DOMAIN),500);$id=(int)$wpdb->insert_id;}
 		return self::public_row('production_scenes',$id);
 	}

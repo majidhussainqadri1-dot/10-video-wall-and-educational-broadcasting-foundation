@@ -18,3 +18,8 @@ need "vwlb_page_map_persist_failed" "$P/includes/class-vwlb-activator.php" r02-p
 need "delete_migration_lock_if_matches" "$P/includes/class-vwlb-activator.php" r03-lock-helper
 need "option_name=%s AND option_value=%s" "$P/includes/class-vwlb-activator.php" r03-lock-cas
 need 'self::delete_migration_lock_if_matches( $token )' "$P/includes/class-vwlb-activator.php" r03-owner-release
+
+# R04 — source/scene edits require the caller's current optimistic version.
+need "Production source changed. Refresh and submit its current version." "$P/includes/class-vwlb-future-intelligence.php" r04-source-client-version
+need "Scene changed. Refresh and submit its current version." "$P/includes/class-vwlb-future-intelligence.php" r04-scene-client-version
+need 'version'=>\$expected_version "$P/includes/class-vwlb-future-intelligence.php" r04-cas-version
