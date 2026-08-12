@@ -3,9 +3,27 @@
 defined( 'ABSPATH' ) || exit;
 final class VWLB_DB {
 	public static function transaction( $callback ) {
-		global $wpdb; $wpdb->query('START TRANSACTION');
-		try { $result = call_user_func($callback); if(is_wp_error($result)){ $wpdb->query('ROLLBACK'); return $result; } $wpdb->query('COMMIT'); return $result; }
-		catch ( Throwable $e ) { $wpdb->query('ROLLBACK'); return VWLB_Helpers::error('vwlb_transaction_failed',__('The operation could not be completed.',VWLB_TEXT_DOMAIN),500,array('exception'=>get_class($e))); }
+		global $wpdb;
+		$started = $wpdb->query( 'START TRANSACTION' );
+		if ( false === $started ) {
+			return VWLB_Helpers::error( 'vwlb_transaction_start_failed', __( 'The operation could not start a database transaction.', VWLB_TEXT_DOMAIN ), 500 );
+		}
+		try {
+			$result = call_user_func( $callback );
+			if ( is_wp_error( $result ) ) {
+				$wpdb->query( 'ROLLBACK' );
+				return $result;
+			}
+			$committed = $wpdb->query( 'COMMIT' );
+			if ( false === $committed ) {
+				$wpdb->query( 'ROLLBACK' );
+				return VWLB_Helpers::error( 'vwlb_transaction_commit_failed', __( 'The operation could not be committed safely.', VWLB_TEXT_DOMAIN ), 500 );
+			}
+			return $result;
+		} catch ( Throwable $e ) {
+			$wpdb->query( 'ROLLBACK' );
+			return VWLB_Helpers::error( 'vwlb_transaction_failed', __( 'The operation could not be completed.', VWLB_TEXT_DOMAIN ), 500, array( 'exception' => get_class( $e ) ) );
+		}
 	}
 	public static function schema_sql() {
 		global $wpdb; $c=$wpdb->get_charset_collate(); $p=$wpdb->prefix.'vwlb_';
@@ -35,5 +53,24 @@ final class VWLB_DB {
 	}
 	public static function verify_schema_sql($sql){global $wpdb;foreach((array)$sql as $statement){if(!preg_match('/CREATE\s+TABLE\s+([^\s(]+)/i',(string)$statement,$m))continue;$table=trim($m[1],'`');$found=$wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s',$wpdb->esc_like($table)));if($found!==$table)return VWLB_Helpers::error('vwlb_schema_incomplete',__('A required File 10 database table is missing after migration.',VWLB_TEXT_DOMAIN),500,array('table'=>$table));}return true;}
 	public static function install_schema() { require_once ABSPATH.'wp-admin/includes/upgrade.php'; $sql=self::schema_sql(); foreach($sql as $statement){ dbDelta($statement); } $verified=self::verify_schema_sql($sql);if(is_wp_error($verified))return $verified;if(!update_option('vwlb_schema_version',VWLB_SCHEMA_VERSION,false)&&get_option('vwlb_schema_version')!==VWLB_SCHEMA_VERSION)return VWLB_Helpers::error('vwlb_schema_version_persist_failed',__('File 10 schema version could not be recorded.',VWLB_TEXT_DOMAIN),500);return true; }
-	public static function snapshot( $type, $payload, $object_type='', $object_id='' ) { global $wpdb; $wpdb->insert(VWLB_Helpers::table('rollback_snapshots'),array('public_id'=>VWLB_Helpers::public_id('snap'),'snapshot_type'=>sanitize_key($type),'object_type'=>sanitize_key($object_type),'object_id'=>(string)$object_id,'payload_json'=>VWLB_Helpers::json_encode($payload),'created_by'=>get_current_user_id(),'created_at'=>VWLB_Helpers::now(),'expires_at'=>gmdate('Y-m-d H:i:s',time()+90*DAY_IN_SECONDS))); return (int)$wpdb->insert_id; }
+	public static function snapshot( $type, $payload, $object_type='', $object_id='' ) {
+		global $wpdb;
+		$inserted = $wpdb->insert(
+			VWLB_Helpers::table( 'rollback_snapshots' ),
+			array(
+				'public_id' => VWLB_Helpers::public_id( 'snap' ),
+				'snapshot_type' => sanitize_key( $type ),
+				'object_type' => sanitize_key( $object_type ),
+				'object_id' => (string) $object_id,
+				'payload_json' => VWLB_Helpers::json_encode( $payload ),
+				'created_by' => get_current_user_id(),
+				'created_at' => VWLB_Helpers::now(),
+				'expires_at' => gmdate( 'Y-m-d H:i:s', time() + 90 * DAY_IN_SECONDS ),
+			)
+		);
+		if ( ! $inserted || ! $wpdb->insert_id ) {
+			return VWLB_Helpers::error( 'vwlb_snapshot_persist_failed', __( 'The rollback snapshot could not be stored.', VWLB_TEXT_DOMAIN ), 500 );
+		}
+		return (int) $wpdb->insert_id;
+	}
 }
