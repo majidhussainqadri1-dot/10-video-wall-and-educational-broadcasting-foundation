@@ -6,86 +6,75 @@ TEST = ROOT / 'tests/fresh-20-review-2-contracts.sh'
 LEDGER = ROOT / 'docs/FILE-10-SECOND-FRESH-20-REVIEW-2026-08-12.md'
 
 s = ACT.read_text()
-old = "\t\tself::capabilities(); self::pages(); self::schedules(); VWLB_Compatibility::migrate_legacy();\n"
-new = """\t\tself::capabilities();\n\t\t$pages = self::pages();\n\t\tif ( is_wp_error( $pages ) ) {\n\t\t\tdeactivate_plugins( plugin_basename( VWLB_FILE ) );\n\t\t\twp_die( esc_html( $pages->get_error_message() ) );\n\t\t}\n\t\tself::schedules(); VWLB_Compatibility::migrate_legacy();\n"""
-if new not in s:
-    if old not in s:
-        raise SystemExit('R02 activate anchor missing')
-    s = s.replace(old, new, 1)
-
-start = s.index("\tprivate static function pages() {")
-end = s.rfind("\n}")
-new_pages = r'''\tprivate static function pages() {
-\t\t$pages = array(
-\t\t\t'videos'=>array('title'=>__('Video Wall',VWLB_TEXT_DOMAIN),'content'=>'[vwlb_wall]'),
-\t\t\t'video'=>array('title'=>__('Video',VWLB_TEXT_DOMAIN),'content'=>'[vwlb_video]'),
-\t\t\t'live'=>array('title'=>__('Live',VWLB_TEXT_DOMAIN),'content'=>'[vwlb_live]'),
-\t\t\t'channel'=>array('title'=>__('Channel',VWLB_TEXT_DOMAIN),'content'=>'[vwlb_channel]'),
-\t\t\t'studio-video'=>array('title'=>__('Video Studio',VWLB_TEXT_DOMAIN),'content'=>'[vwlb_studio_video]'),
-\t\t\t'studio-live'=>array('title'=>__('Live Studio',VWLB_TEXT_DOMAIN),'content'=>'[vwlb_studio_live]'),
-\t\t\t'video-history'=>array('title'=>__('Video History',VWLB_TEXT_DOMAIN),'content'=>'[vwlb_history]'),
-\t\t\t'podcasts'=>array('title'=>__('Podcasts',VWLB_TEXT_DOMAIN),'content'=>'[vwlb_podcasts]')
+start = s.index("\tpublic static function reconcile_schema() {")
+end = s.index("\n\tpublic static function deactivate()", start)
+new_block = r'''\tprivate static function delete_migration_lock_if_matches( $expected ) {
+\t\tglobal $wpdb;
+\t\t$deleted = $wpdb->query(
+\t\t\t$wpdb->prepare(
+\t\t\t\t"DELETE FROM {$wpdb->options} WHERE option_name=%s AND option_value=%s",
+\t\t\t\tself::MIGRATION_LOCK,
+\t\t\t\t(string) $expected
+\t\t\t)
 \t\t);
-\t\t$before = get_option( 'vwlb_page_map', array() );
-\t\t$snapshot = VWLB_DB::snapshot( 'activation_pages', $before );
-\t\tif ( is_wp_error( $snapshot ) ) {
-\t\t\treturn $snapshot;
+\t\tif ( 1 === $deleted ) {
+\t\t\twp_cache_delete( self::MIGRATION_LOCK, 'options' );
+\t\t\twp_cache_delete( 'notoptions', 'options' );
+\t\t\twp_cache_delete( 'alloptions', 'options' );
+\t\t\treturn true;
 \t\t}
-\t\t$map = array();
-\t\t$created = array();
-\t\t$compensate = static function() use ( &$created ) {
-\t\t\t$failed = array();
-\t\t\tforeach ( array_reverse( $created ) as $created_id ) {
-\t\t\t\tif ( ! wp_delete_post( $created_id, true ) ) {
-\t\t\t\t\t$failed[] = $created_id;
-\t\t\t\t}
-\t\t\t}
-\t\t\treturn $failed;
-\t\t};
-\t\tforeach ( $pages as $slug => $data ) {
-\t\t\t$page = get_page_by_path( $slug );
-\t\t\tif ( $page && strpos( (string) $page->post_content, '[vwlb_' ) === false ) {
-\t\t\t\t$slug = 'file-10-' . $slug;
-\t\t\t\t$page = get_page_by_path( $slug );
-\t\t\t}
-\t\t\tif ( ! $page ) {
-\t\t\t\t$id = wp_insert_post( array( 'post_type'=>'page', 'post_status'=>'publish', 'post_title'=>$data['title'], 'post_name'=>$slug, 'post_content'=>$data['content'] ), true );
-\t\t\t\tif ( is_wp_error( $id ) || ! $id ) {
-\t\t\t\t\t$failed = $compensate();
-\t\t\t\t\tif ( $failed ) {
-\t\t\t\t\t\treturn VWLB_Helpers::error( 'vwlb_activation_compensation_failed', __( 'File 10 page setup failed and created pages could not all be rolled back.', VWLB_TEXT_DOMAIN ), 500, array( 'page_ids'=>$failed ) );
-\t\t\t\t\t}
-\t\t\t\t\treturn is_wp_error( $id ) ? $id : VWLB_Helpers::error( 'vwlb_activation_page_failed', __( 'A required File 10 page could not be created.', VWLB_TEXT_DOMAIN ), 500 );
-\t\t\t\t}
-\t\t\t\t$created[] = (int) $id;
-\t\t\t\t$map[$slug] = (int) $id;
-\t\t\t} else {
-\t\t\t\t$map[$slug] = (int) $page->ID;
-\t\t\t}
-\t\t}
-\t\t$stored = update_option( 'vwlb_page_map', $map, false );
-\t\tif ( ! $stored && get_option( 'vwlb_page_map', array() ) !== $map ) {
-\t\t\t$failed = $compensate();
-\t\t\tif ( $failed ) {
-\t\t\t\treturn VWLB_Helpers::error( 'vwlb_activation_compensation_failed', __( 'File 10 page mapping failed and created pages could not all be rolled back.', VWLB_TEXT_DOMAIN ), 500, array( 'page_ids'=>$failed ) );
-\t\t\t}
-\t\t\treturn VWLB_Helpers::error( 'vwlb_page_map_persist_failed', __( 'File 10 page mapping could not be recorded.', VWLB_TEXT_DOMAIN ), 500 );
-\t\t}
-\t\treturn true;
+\t\treturn false;
 \t}
-'''.replace('\\t', '\t')
-if 'vwlb_page_map_persist_failed' not in s:
-    s = s[:start] + new_pages + s[end:]
+
+\tpublic static function reconcile_schema() {
+\t\t$token = time() . '|' . wp_generate_uuid4();
+\t\t$acquired = add_option( self::MIGRATION_LOCK, $token, '', false );
+\t\tif ( ! $acquired ) {
+\t\t\t$current = (string) get_option( self::MIGRATION_LOCK, '' );
+\t\t\t$parts = explode( '|', $current, 2 );
+\t\t\t$locked_at = absint( $parts[0] ?? 0 );
+\t\t\tif ( $locked_at && ( time() - $locked_at ) > self::MIGRATION_LOCK_TTL ) {
+\t\t\t\tif ( self::delete_migration_lock_if_matches( $current ) ) {
+\t\t\t\t\t$acquired = add_option( self::MIGRATION_LOCK, $token, '', false );
+\t\t\t\t}
+\t\t\t}
+\t\t}
+\t\tif ( ! $acquired ) {
+\t\t\treturn VWLB_Helpers::error( 'vwlb_schema_migration_busy', __( 'File 10 schema migration is already in progress. Retry shortly.', VWLB_TEXT_DOMAIN ), 503 );
+\t\t}
+\t\ttry {
+\t\t\tif ( get_option( 'vwlb_schema_version' ) !== VWLB_SCHEMA_VERSION ) {
+\t\t\t\t$result = VWLB_DB::install_schema();
+\t\t\t\tif ( is_wp_error( $result ) ) return $result;
+\t\t\t}
+\t\t\tif ( get_option( VWLB_Extensions::OPTION ) !== VWLB_EXT_SCHEMA_VERSION ) {
+\t\t\t\t$result = VWLB_Extensions::install_schema();
+\t\t\t\tif ( is_wp_error( $result ) ) return $result;
+\t\t\t}
+\t\t\tif ( get_option( VWLB_Future_Intelligence::OPTION ) !== VWLB_FUTURE_SCHEMA_VERSION ) {
+\t\t\t\t$result = VWLB_Future_Intelligence::install_schema();
+\t\t\t\tif ( is_wp_error( $result ) ) return $result;
+\t\t\t}
+\t\t\treturn true;
+\t\t} catch ( Throwable $e ) {
+\t\t\treturn VWLB_Helpers::error( 'vwlb_schema_migration_failed', __( 'File 10 schema migration failed safely.', VWLB_TEXT_DOMAIN ), 500, array( 'exception'=>get_class( $e ) ) );
+\t\t} finally {
+\t\t\tself::delete_migration_lock_if_matches( $token );
+\t\t}
+\t}
+'''.replace('\\t','\t')
+if 'delete_migration_lock_if_matches' not in s:
+    s = s[:start] + new_block + s[end:]
 ACT.write_text(s)
 
-checks = """\n# R02 — activation page setup proves rollback snapshot, persistence and compensation.\nneed 'is_wp_error( $snapshot )' \"$P/includes/class-vwlb-activator.php\" r02-snapshot-propagation\nneed \"vwlb_activation_compensation_failed\" \"$P/includes/class-vwlb-activator.php\" r02-compensation\nneed \"vwlb_page_map_persist_failed\" \"$P/includes/class-vwlb-activator.php\" r02-page-map\n"""
+checks = """\n# R03 — migration lock takeover and release are owner-token/compare-and-delete bound.\nneed \"delete_migration_lock_if_matches\" \"$P/includes/class-vwlb-activator.php\" r03-lock-helper\nneed \"option_name=%s AND option_value=%s\" \"$P/includes/class-vwlb-activator.php\" r03-lock-cas\nneed 'self::delete_migration_lock_if_matches( $token )' \"$P/includes/class-vwlb-activator.php\" r03-owner-release\n"""
 ts = TEST.read_text()
-if 'r02-page-map' not in ts:
+if 'r03-owner-release' not in ts:
     TEST.write_text(ts + checks)
 
 ls = LEDGER.read_text()
-entry = '''## R02 — DEFECT FIXED\nActivation ignored rollback-snapshot failure, tolerated individual page-creation failures, and did not verify page-map persistence. Page setup now requires a durable pre-mutation snapshot, fails closed on page or mapping persistence failure, compensates pages created by the failed activation attempt, and propagates the error to activation before scheduling/version success. The first R02 regression-gate draft itself expanded a shell variable inside the grep pattern; that QA-only defect was corrected within R02 before product changes were accepted.\n\n'''
-if '## R02 ' not in ls:
+entry = '''## R03 — DEFECT FIXED\nThe migration lock stored only a timestamp. After TTL expiry a second upgrader could take over, while the first upgrader's unconditional `finally` deletion could then remove the new owner's lock and permit overlapping schema work. The lock now carries a unique owner token, stale takeover uses an exact value compare-and-delete, and release removes only the lock owned by the current upgrader.\n\n'''
+if '## R03 ' not in ls:
     LEDGER.write_text(ls + entry)
 
-print('R02 correction prepared')
+print('R03 correction prepared')
