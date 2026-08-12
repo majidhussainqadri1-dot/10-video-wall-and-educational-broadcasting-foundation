@@ -59,3 +59,6 @@ Forensic watermark grants mint a fresh token and audit evidence, but the route e
 ## R17 — DEFECT FIXED
 Live viewer state now includes adapter-resolved auxiliary-track references, which may be viewer/session-specific. The endpoint lacked an explicit no-store policy, so signed delivery data could be reused as shared cache content. Live state now returns `Cache-Control: private, no-store`.
 
+## R18 — DEFECT FIXED
+Scheduled cleanup expired guest/co-host delegations with one bulk SQL update that neither advanced optimistic versions nor emitted audit/outbox evidence. Stale studio views and downstream realtime/provider bridges could miss the revocation boundary. Expiry is now per-row CAS/versioned, audited and emits `BroadcastGuestExpired`.
+

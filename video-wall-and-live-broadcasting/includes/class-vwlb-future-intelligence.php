@@ -586,6 +586,6 @@ final class VWLB_Future_Intelligence {
 	}
 
 	public static function cleanup() {
-		global $wpdb;$health=VWLB_Helpers::table('broadcast_health_samples');$wpdb->query($wpdb->prepare("DELETE FROM $health WHERE captured_at<%s LIMIT 5000",gmdate('Y-m-d H:i:s',time()-7*DAY_IN_SECONDS)));$guests=VWLB_Helpers::table('broadcast_guests');$wpdb->query($wpdb->prepare("UPDATE $guests SET status='expired',updated_at=%s WHERE status IN ('invited','accepted') AND expires_at<=%s",VWLB_Helpers::now(),VWLB_Helpers::now()));
+		global $wpdb;$health=VWLB_Helpers::table('broadcast_health_samples');$wpdb->query($wpdb->prepare("DELETE FROM $health WHERE captured_at<%s LIMIT 5000",gmdate('Y-m-d H:i:s',time()-7*DAY_IN_SECONDS)));$guests=VWLB_Helpers::table('broadcast_guests');$expired=$wpdb->get_results($wpdb->prepare("SELECT * FROM $guests WHERE status IN ('invited','accepted') AND expires_at<=%s ORDER BY id ASC LIMIT 500",VWLB_Helpers::now()),ARRAY_A);foreach($expired as $guest){$changed=$wpdb->update($guests,array('status'=>'expired','version'=>(int)$guest['version']+1,'updated_at'=>VWLB_Helpers::now()),array('id'=>$guest['id'],'version'=>$guest['version'],'status'=>$guest['status']));if(1===$changed){VWLB_Helpers::audit('broadcast_guest',$guest['id'],'expire',$guest['status'],'expired','delegation_ttl',array('live_event_id'=>$guest['live_event_id'],'guest_user_id'=>$guest['user_id']));VWLB_Helpers::outbox('BroadcastGuestExpired','live',$guest['live_event_id'],array('guest_user_id'=>(int)$guest['user_id'],'guest_public_id'=>$guest['public_id']));}}
 	}
 }

@@ -73,3 +73,7 @@ need "private, no-store" "$P/includes/class-vwlb-future-rest.php" r16-watermark-
 # R17 — live viewer state containing delivery refs is private/no-store.
 need "media_tracks" "$P/includes/class-vwlb-rest.php" r17-live-track-state
 need "Cache-Control','private, no-store" "$P/includes/class-vwlb-rest.php" r17-live-no-store
+
+# R18 — automatic guest expiry is versioned, audited and emitted as a lifecycle fact.
+need "BroadcastGuestExpired" "$P/includes/class-vwlb-future-intelligence.php" r18-guest-expired-event
+need "delegation_ttl" "$P/includes/class-vwlb-future-intelligence.php" r18-guest-expiry-audit
