@@ -16,10 +16,12 @@ if new2 not in s:
     if old2 not in s: raise SystemExit('R04 scene anchor missing')
     s=s.replace(old2,new2,1)
 F.write_text(s)
-checks="""\n# R04 — source/scene edits require the caller's current optimistic version.\nneed "Production source changed. Refresh and submit its current version." "$P/includes/class-vwlb-future-intelligence.php" r04-source-client-version\nneed "Scene changed. Refresh and submit its current version." "$P/includes/class-vwlb-future-intelligence.php" r04-scene-client-version\nneed "'version'=>$expected_version" "$P/includes/class-vwlb-future-intelligence.php" r04-cas-version\n"""
+checks="""\n# R04 — source/scene edits require the caller's current optimistic version.\nneed "Production source changed. Refresh and submit its current version." "$P/includes/class-vwlb-future-intelligence.php" r04-source-client-version\nneed "Scene changed. Refresh and submit its current version." "$P/includes/class-vwlb-future-intelligence.php" r04-scene-client-version\nneed 'version'=>$'expected_version' "$P/includes/class-vwlb-future-intelligence.php" r04-cas-version\n"""
+# Build the literal PHP token without a shell-expanding $ in the generated test.
+checks=checks.replace("'version'=>$'expected_version'", "'version'=>\\$expected_version")
 ts=TEST.read_text()
 if 'r04-cas-version' not in ts: TEST.write_text(ts+checks)
 ls=LEDGER.read_text()
-entry="""## R04 — DEFECT FIXED\nMulti-camera production source and scene edit APIs performed a server-side CAS, but they re-read the newest row and applied the caller's stale payload without requiring the caller's expected version. A stale operator screen could therefore overwrite a newer operator change. Existing-row edits now require the caller's current version and use that exact version in the conditional update; missing/stale versions fail with 409 before mutation.\n\n"""
+entry="""## R04 — DEFECT FIXED\nMulti-camera production source and scene edit APIs performed a server-side CAS, but they re-read the newest row and applied the caller's stale payload without requiring the caller's expected version. A stale operator screen could therefore overwrite a newer operator change. Existing-row edits now require the caller's current version and use that exact version in the conditional update; missing/stale versions fail with 409 before mutation. The first R04 static assertion accidentally expanded a shell variable under `set -u`; that QA-only defect was corrected within R04 before accepting the product change.\n\n"""
 if '## R04 ' not in ls: LEDGER.write_text(ls+entry)
 print('R04 correction prepared')
