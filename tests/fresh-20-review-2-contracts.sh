@@ -27,3 +27,8 @@ need 'version'=>\$expected_version "$P/includes/class-vwlb-future-intelligence.p
 # R05 — simulcast target edits require the caller current version.
 need "Simulcast target changed. Refresh and submit its current version." "$P/includes/class-vwlb-future-intelligence.php" r05-target-client-version
 need "expected_version=absint" "$P/includes/class-vwlb-future-intelligence.php" r05-target-version-parse
+
+# R06 — provider failure paths must durably leave simulcast transitioning state or demand reconciliation.
+need "provider failed and local failure state could not be finalized" "$P/includes/class-vwlb-future-adapters.php" r06-provider-failure-persist
+need "provider was unavailable and local failure state could not be finalized" "$P/includes/class-vwlb-future-adapters.php" r06-unavailable-persist
+need "'status'=>'transitioning'" "$P/includes/class-vwlb-future-adapters.php" r06-failure-lease-bound

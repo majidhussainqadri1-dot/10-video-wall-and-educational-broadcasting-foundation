@@ -23,3 +23,6 @@ Multi-camera production source and scene edit APIs performed a server-side CAS, 
 ## R05 — DEFECT FIXED
 Simulcast target edits had the same stale-client overwrite class as production source/scene edits: the server refreshed the latest row and then applied the caller payload without proving the caller had edited that version. Existing target edits now require the submitted current version and use it as the conditional update token; stale/missing versions fail before mutation.
 
+## R06 — DEFECT FIXED
+The simulcast transition reserved local state as `transitioning`, but both provider-error branches ignored whether the subsequent local `failed` state write succeeded. A database/CAS race could therefore strand the target in `transitioning` while the caller saw only the provider error. Failure-state writes are now version/status-bound and verified; if File 10 cannot persist the provider failure truth, the API returns an explicit reconciliation-required error instead of masking local divergence.
+
