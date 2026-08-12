@@ -23,3 +23,7 @@ need 'self::delete_migration_lock_if_matches( $token )' "$P/includes/class-vwlb-
 need "Production source changed. Refresh and submit its current version." "$P/includes/class-vwlb-future-intelligence.php" r04-source-client-version
 need "Scene changed. Refresh and submit its current version." "$P/includes/class-vwlb-future-intelligence.php" r04-scene-client-version
 need 'version'=>\$expected_version "$P/includes/class-vwlb-future-intelligence.php" r04-cas-version
+
+# R05 — simulcast target edits require the caller current version.
+need "Simulcast target changed. Refresh and submit its current version." "$P/includes/class-vwlb-future-intelligence.php" r05-target-client-version
+need "expected_version=absint" "$P/includes/class-vwlb-future-intelligence.php" r05-target-version-parse

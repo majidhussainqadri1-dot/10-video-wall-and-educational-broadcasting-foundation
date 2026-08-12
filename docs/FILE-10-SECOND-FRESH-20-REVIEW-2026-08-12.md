@@ -20,3 +20,6 @@ The migration lock stored only a timestamp. After TTL expiry a second upgrader c
 ## R04 — DEFECT FIXED
 Multi-camera production source and scene edit APIs performed a server-side CAS, but they re-read the newest row and applied the caller's stale payload without requiring the caller's expected version. A stale operator screen could therefore overwrite a newer operator change. Existing-row edits now require the caller's current version and use that exact version in the conditional update; missing/stale versions fail with 409 before mutation. The first R04 static assertion accidentally expanded a shell variable under `set -u`; that QA-only defect was corrected within R04 before accepting the product change.
 
+## R05 — DEFECT FIXED
+Simulcast target edits had the same stale-client overwrite class as production source/scene edits: the server refreshed the latest row and then applied the caller payload without proving the caller had edited that version. Existing target edits now require the submitted current version and use it as the conditional update token; stale/missing versions fail before mutation.
+
