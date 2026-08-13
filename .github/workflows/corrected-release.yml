@@ -1,52 +1,16 @@
-name: Corrected Release QA
+name: Legacy Corrected Release QA (Archived)
 
 on:
-  push:
-    branches:
-      - 'fix/**'
-      - 'baseline/**'
-  pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  corrected-release:
-    if: ${{ !startsWith(github.head_ref, 'codex/') && !startsWith(github.ref_name, 'codex/') }}
+  archival-note:
     runs-on: ubuntu-latest
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-
-      - name: Install PHP, zip, and unzip
+      - name: Explain canonical release gate
         run: |
-          sudo apt-get update
-          sudo apt-get install -y php-cli zip unzip
-
-      - name: PHP syntax lint
-        run: find video-wall -type f -name '*.php' -print0 | sort -z | xargs -0 -n1 php -l
-
-      - name: JavaScript syntax check
-        run: node --check video-wall/assets/js/video-wall.js
-
-      - name: Helper and static contract tests
-        run: ./tests/static-contracts.sh
-
-      - name: Build corrected package deterministically
-        run: ./tools/build-package.sh /tmp/file10-0.2.0.zip
-
-      - name: Verify committed corrected package
-        shell: bash
-        run: |
-          grep 'packages/10-video-wall-and-educational-broadcasting-foundation-0.2.0.zip' CHECKSUMS-0.2.0.sha256 | sha256sum --check --strict
-          test "$(sha256sum /tmp/file10-0.2.0.zip | cut -d' ' -f1)" = "$(sha256sum packages/10-video-wall-and-educational-broadcasting-foundation-0.2.0.zip | cut -d' ' -f1)"
-          unzip -t packages/10-video-wall-and-educational-broadcasting-foundation-0.2.0.zip
-
-      - name: Verify corrected source checksums
-        run: grep '  video-wall/' CHECKSUMS-0.2.0.sha256 | sha256sum --check --strict
-
-      - name: Confirm release metadata
-        run: |
-          grep -F 'Version: 0.2.0' video-wall/video-wall.php
-          grep -F "define( 'SVW_VERSION', '0.2.0' );" video-wall/video-wall.php
-          grep -F 'Stable tag: 0.2.0' video-wall/readme.txt
+          echo 'This workflow is retained only as historical File 10 provenance for the retired video-wall 0.2.0 package.'
+          echo 'The canonical video-wall-and-live-broadcasting source is validated by .github/workflows/file10-release.yml.'
