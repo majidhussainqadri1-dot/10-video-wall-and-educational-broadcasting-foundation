@@ -56,4 +56,4 @@ need "reconcile_inbox_retries" "$P/includes/class-vwlb-review-hardening.php" r02
 need "vwlb_cleanup_delete_failed" "$P/includes/class-vwlb-review-hardening.php" r02-cleanup-observable
 need "VWLB_Repository::find('videos',\$r['id'])" "$P/includes/class-vwlb-review-hardening.php" r02-playback-canonical-row
 forbid "'channel_id'=>\$r['channel_id']" "$P/includes/class-vwlb-review-hardening.php" r02-no-public-channel-pk
-forbid "'credential_id'" "$P/includes/class-vwlb-review-hardening.php" r02-no-credential-pk
+need "unset(\$v['credential_id'])" "$P/includes/class-vwlb-review-hardening.php" r02-credential-pk-redacted
