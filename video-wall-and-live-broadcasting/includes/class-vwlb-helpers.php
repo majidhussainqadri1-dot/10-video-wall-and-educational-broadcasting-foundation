@@ -32,13 +32,40 @@ final class VWLB_Helpers {
 	public static function ua_hash() { $ua = isset( $_SERVER['HTTP_USER_AGENT'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) ) : ''; return $ua ? hash_hmac( 'sha256', $ua, wp_salt( 'secure_auth' ) ) : ''; }
 	public static function no_cache_private() { if ( ! headers_sent() ) { nocache_headers(); header( 'Cache-Control: private, no-store, no-cache, must-revalidate, max-age=0', true ); header( 'X-Robots-Tag: noindex, nofollow, noarchive', true ); } }
 	public static function error( $code, $message, $status = 400, $extra = array() ) { return new WP_Error( $code, $message, array_merge( array( 'status' => $status, 'trace_id' => self::trace_id() ), $extra ) ); }
+	private static function durable_fallback( $prefix, $public_id, $row ) {
+		$key = sanitize_key( $prefix ) . substr( hash( 'sha256', (string) $public_id ), 0, 40 );
+		$saved = add_option( $key, $row, '', false );
+		if ( ! $saved ) {
+			$existing = get_option( $key, null );
+			if ( $existing !== $row ) {
+				error_log( 'VWLB durable evidence fallback could not be persisted: ' . sanitize_key( $prefix ) );
+				do_action( 'vwlb_operational_failure', 'evidence', 'vwlb_evidence_fallback_failed', array( 'kind'=>sanitize_key($prefix) ) );
+				return false;
+			}
+		}
+		return true;
+	}
 	public static function audit( $object_type, $object_id, $action, $before = '', $after = '', $note = '', $meta = array() ) {
 		global $wpdb;
-		$wpdb->insert( self::table( 'audit' ), array( 'public_id'=>self::public_id('aud'),'object_type'=>sanitize_key($object_type),'object_id'=>(string)$object_id,'action'=>sanitize_key($action),'previous_state'=>sanitize_key($before),'new_state'=>sanitize_key($after),'actor_id'=>get_current_user_id(),'purpose'=>self::text($meta['purpose'] ?? 'platform_operation',64),'trace_id'=>self::text($meta['trace_id'] ?? self::trace_id(),80),'note'=>self::textarea($note,10000),'meta_json'=>self::json_encode($meta),'created_at'=>self::now() ) );
+		$public = self::public_id('aud');
+		$row = array( 'public_id'=>$public,'object_type'=>sanitize_key($object_type),'object_id'=>(string)$object_id,'action'=>sanitize_key($action),'previous_state'=>sanitize_key($before),'new_state'=>sanitize_key($after),'actor_id'=>get_current_user_id(),'purpose'=>self::text($meta['purpose'] ?? 'platform_operation',64),'trace_id'=>self::text($meta['trace_id'] ?? self::trace_id(),80),'note'=>self::textarea($note,10000),'meta_json'=>self::json_encode($meta),'created_at'=>self::now() );
+		$saved = $wpdb->insert( self::table( 'audit' ), $row );
+		if ( false === $saved ) {
+			if ( ! self::durable_fallback( 'vwlb_audit_fallback_', $public, $row ) ) throw new RuntimeException( 'VWLB required audit evidence could not be persisted.' );
+			do_action( 'vwlb_operational_failure', 'audit', 'vwlb_audit_fallback_queued', array( 'audit_public_id'=>$public ) );
+		}
+		return $public;
 	}
 	public static function outbox( $event_name, $object_type, $object_id, $payload = array() ) {
 		global $wpdb;
-		$wpdb->insert( self::table( 'outbox' ), array( 'public_id'=>self::public_id('evt'),'event_name'=>VWLB_Contracts::event($event_name),'object_type'=>sanitize_key($object_type),'object_id'=>(string)$object_id,'payload_json'=>self::json_encode($payload),'status'=>'pending','attempts'=>0,'available_at'=>self::now(),'created_at'=>self::now(),'updated_at'=>self::now() ) );
+		$public = self::public_id('evt'); $now = self::now();
+		$row = array( 'public_id'=>$public,'event_name'=>VWLB_Contracts::event($event_name),'object_type'=>sanitize_key($object_type),'object_id'=>(string)$object_id,'payload_json'=>self::json_encode($payload),'status'=>'pending','attempts'=>0,'available_at'=>$now,'created_at'=>$now,'updated_at'=>$now );
+		$saved = $wpdb->insert( self::table( 'outbox' ), $row );
+		if ( false === $saved ) {
+			if ( ! self::durable_fallback( 'vwlb_outbox_fallback_', $public, $row ) ) throw new RuntimeException( 'VWLB required event delivery evidence could not be persisted.' );
+			do_action( 'vwlb_operational_failure', 'outbox', 'vwlb_outbox_fallback_queued', array( 'event_public_id'=>$public, 'event_name'=>$row['event_name'] ) );
+		}
+		return $public;
 	}
 	public static function option_bool( $name, $default = false ) { return (bool) get_option( 'vwlb_' . sanitize_key( $name ), $default ); }
 	public static function safe_url( $url, $allowed_hosts = array() ) {
@@ -58,5 +85,5 @@ final class VWLB_Helpers {
 	public static function datetime_in_timezone($value,$timezone='UTC') {
 		if(empty($value))return null; try{$tz=new DateTimeZone($timezone?:'UTC');$dt=new DateTimeImmutable((string)$value,$tz);return $dt->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d H:i:s');}catch(Throwable $e){return null;}
 	}
-	public static function iso_utc($value){$time=$value?strtotime((string)$value.' UTC'):false;return $time?gmdate('Y-m-d\\TH:i:s\\Z',$time):null;}
+	public static function iso_utc($value){$time=$value?strtotime((string)$value.' UTC'):false;return $time?gmdate('Y-m-d\TH:i:s\Z',$time):null;}
 }

@@ -16,6 +16,7 @@ final class VWLB_Plugin {
 		VWLB_Observability::register();
 		VWLB_Future_Intelligence::register();
 		VWLB_Future_Safety::register();
+		VWLB_Review_Hardening::register();
 		add_filter('rest_request_before_callbacks',array('VWLB_Security','rest_mutation_before'),10,3);
 		add_filter('rest_request_after_callbacks',array('VWLB_Security','rest_mutation_after'),10,3);
 
