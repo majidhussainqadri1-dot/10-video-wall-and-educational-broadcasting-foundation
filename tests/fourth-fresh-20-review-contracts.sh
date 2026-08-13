@@ -4,7 +4,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 P="$ROOT/video-wall-and-live-broadcasting"
 need(){ grep -R -F -- "$1" "$2" >/dev/null || { echo "FAIL fourth-fresh-20: $3" >&2; exit 1; }; }
 forbid(){ ! grep -R -F -- "$1" "$2" >/dev/null || { echo "FAIL fourth-fresh-20: $3" >&2; exit 1; }; }
-# R01 batch — completed review first, then all findings corrected.
+# R01 batch
 need "Version: 1.2.5-rc1" "$P/video-wall-and-live-broadcasting.php" r01-version
 need "Stable tag: 1.2.5-rc1" "$P/readme.txt" r01-readme-version
 need "vwlb_internal_identifier_forbidden" "$P/includes/class-vwlb-future-rest.php" r01-no-internal-api-ids
@@ -31,7 +31,7 @@ need "VWLB_Future_Safety::annotations" "$P/includes/class-vwlb-future-frontend.p
 need "class-vwlb-future-safety.php" "$P/video-wall-and-live-broadcasting.php" r01-safety-autoload
 need "VWLB_Future_Safety::register" "$P/includes/class-vwlb-plugin.php" r01-safety-register
 
-# R02 batch — full review frozen before correction; public boundaries, privacy and reliability hardened together.
+# R02 batch
 need "class-vwlb-review-hardening.php" "$P/video-wall-and-live-broadcasting.php" r02-hardening-autoload
 need "VWLB_Review_Hardening::register" "$P/includes/class-vwlb-plugin.php" r02-hardening-register
 need "vwlb_public_identifier_required" "$P/includes/class-vwlb-review-hardening.php" r02-route-public-id
@@ -58,7 +58,7 @@ need "VWLB_Repository::find('videos',\$r['id'])" "$P/includes/class-vwlb-review-
 forbid "'channel_id'=>\$r['channel_id']" "$P/includes/class-vwlb-review-hardening.php" r02-no-public-channel-pk
 need "unset(\$v['credential_id'])" "$P/includes/class-vwlb-review-hardening.php" r02-credential-pk-redacted
 
-# R03 batch — full review frozen before correction; secure delivery, rights freshness and anonymous-session isolation.
+# R03 batch
 need "class-vwlb-r3-playback.php" "$P/video-wall-and-live-broadcasting.php" r03-playback-autoload
 need "VWLB_R3_Playback::register" "$P/includes/class-vwlb-plugin.php" r03-playback-register
 need "anonymous_session_surrogate" "$P/includes/class-vwlb-r3-playback.php" r03-anon-isolation
@@ -74,3 +74,20 @@ need "visibility=%s" "$P/includes/class-vwlb-review-hardening.php" r03-podcast-p
 need "'ready'!==" "$P/includes/class-vwlb-review-hardening.php" r03-ready-asset
 need "'passed'!==" "$P/includes/class-vwlb-review-hardening.php" r03-scanned-asset
 need "register_rest_overrides'),40" "$P/includes/class-vwlb-r3-playback.php" r03-late-playback-override
+
+# R04 batch — release migration/schema and private-storage verification.
+need "class-vwlb-r4-migration-guard.php" "$P/video-wall-and-live-broadcasting.php" r04-guard-autoload
+need "VWLB_R4_Migration_Guard::verify_release" "$P/includes/class-vwlb-plugin.php" r04-runtime-gate
+need "if(is_wp_error(\$verified))" "$P/includes/class-vwlb-plugin.php" r04-fail-closed
+need "vwlb_schema_verified_release" "$P/includes/class-vwlb-r4-migration-guard.php" r04-release-marker
+need "vwlb_schema_verification_lock" "$P/includes/class-vwlb-r4-migration-guard.php" r04-lock
+need "SHOW COLUMNS FROM" "$P/includes/class-vwlb-r4-migration-guard.php" r04-columns
+need "SHOW INDEX FROM" "$P/includes/class-vwlb-r4-migration-guard.php" r04-indexes
+need "series_slug" "$P/includes/class-vwlb-r4-migration-guard.php" r04-podcast-index
+need "VWLB_DB::install_schema" "$P/includes/class-vwlb-r4-migration-guard.php" r04-base-reconcile
+need "VWLB_Extensions::install_schema" "$P/includes/class-vwlb-r4-migration-guard.php" r04-extension-reconcile
+need "VWLB_Future_Intelligence::install_schema" "$P/includes/class-vwlb-r4-migration-guard.php" r04-future-reconcile
+need "file_put_contents(\$path,\$content,LOCK_EX)" "$P/includes/class-vwlb-r4-migration-guard.php" r04-storage-write
+need "hash_equals(hash('sha256',\$content),hash('sha256',\$actual))" "$P/includes/class-vwlb-r4-migration-guard.php" r04-storage-verify
+need "vwlb_schema_verified_release" "$P/uninstall.php" r04-uninstall-marker
+need "vwlb_schema_verification_lock" "$P/uninstall.php" r04-uninstall-lock

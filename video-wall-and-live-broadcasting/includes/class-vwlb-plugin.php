@@ -12,6 +12,11 @@ final class VWLB_Plugin {
 			add_action('admin_notices',function()use($migration){if(current_user_can('manage_options'))echo '<div class="notice notice-error"><p>'.esc_html($migration->get_error_message()).'</p></div>';});
 			return;
 		}
+		$verified=VWLB_R4_Migration_Guard::verify_release();
+		if(is_wp_error($verified)){
+			add_action('admin_notices',function()use($verified){if(current_user_can('manage_options'))echo '<div class="notice notice-error"><p>'.esc_html($verified->get_error_message()).'</p></div>';});
+			return;
+		}
 		VWLB_Extensions::register();
 		VWLB_Observability::register();
 		VWLB_Future_Intelligence::register();
