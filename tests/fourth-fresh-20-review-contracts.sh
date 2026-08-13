@@ -57,3 +57,20 @@ need "vwlb_cleanup_delete_failed" "$P/includes/class-vwlb-review-hardening.php" 
 need "VWLB_Repository::find('videos',\$r['id'])" "$P/includes/class-vwlb-review-hardening.php" r02-playback-canonical-row
 forbid "'channel_id'=>\$r['channel_id']" "$P/includes/class-vwlb-review-hardening.php" r02-no-public-channel-pk
 need "unset(\$v['credential_id'])" "$P/includes/class-vwlb-review-hardening.php" r02-credential-pk-redacted
+
+# R03 batch — full review frozen before correction; secure delivery, rights freshness and anonymous-session isolation.
+need "class-vwlb-r3-playback.php" "$P/video-wall-and-live-broadcasting.php" r03-playback-autoload
+need "VWLB_R3_Playback::register" "$P/includes/class-vwlb-plugin.php" r03-playback-register
+need "anonymous_session_surrogate" "$P/includes/class-vwlb-r3-playback.php" r03-anon-isolation
+need "4611686018427387904" "$P/includes/class-vwlb-r3-playback.php" r03-anon-high-range
+need "vwlb_secure_playback_grant" "$P/includes/class-vwlb-r3-playback.php" r03-secure-playback
+need "vwlb_view_counter_failed" "$P/includes/class-vwlb-r3-playback.php" r03-view-observable
+need "private, no-store" "$P/includes/class-vwlb-r3-playback.php" r03-playback-no-store
+forbid "'user_id'=>0" "$P/includes/class-vwlb-r3-playback.php" r03-no-shared-anon-zero
+need "vwlb_secure_media_contract_grant" "$P/includes/class-vwlb-review-hardening.php" r03-secure-media-contract
+need "vwlb_download_rights_changed" "$P/includes/class-vwlb-review-hardening.php" r03-download-rights-fresh
+need "vwlb_private_download_grant" "$P/includes/class-vwlb-review-hardening.php" r03-private-download-grant
+need "visibility=%s" "$P/includes/class-vwlb-review-hardening.php" r03-podcast-public-only
+need "'ready'!==" "$P/includes/class-vwlb-review-hardening.php" r03-ready-asset
+need "'passed'!==" "$P/includes/class-vwlb-review-hardening.php" r03-scanned-asset
+need "register_rest_overrides'),40" "$P/includes/class-vwlb-r3-playback.php" r03-late-playback-override
