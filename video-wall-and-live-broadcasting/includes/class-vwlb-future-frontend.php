@@ -18,7 +18,7 @@ final class VWLB_Future_Frontend {
 	private function live_id(){ $id=get_query_var('vwlb_live_id'); return $id?:sanitize_text_field(wp_unslash($_GET['live']??'')); }
 	public function video_tools(){
 		$this->enqueue();$id=$this->video_id(); if(!$id)return '';$video=VWLB_Repository::find('videos',$id);if(!$video||!VWLB_Security::can_view($video))return '';
-		$annotations=VWLB_Future_Intelligence::annotations($id,false);$items=is_wp_error($annotations)?array():($annotations['items']??array());
+		$annotations=VWLB_Future_Safety::annotations($id,false);$items=is_wp_error($annotations)?array():($annotations['items']??array());
 		ob_start();?><section class="vwlb-future-tools" data-vwlb-future-video="<?php echo esc_attr($video['public_id']);?>" aria-labelledby="vwlb-future-video-tools-title">
 		<h2 id="vwlb-future-video-tools-title"><?php esc_html_e('Video knowledge tools',VWLB_TEXT_DOMAIN);?></h2>
 		<form data-vwlb-search-inside><label><?php esc_html_e('Search inside this video',VWLB_TEXT_DOMAIN);?><input type="search" name="q" minlength="2" maxlength="120" autocomplete="off"></label><button type="submit"><?php esc_html_e('Search',VWLB_TEXT_DOMAIN);?></button></form>

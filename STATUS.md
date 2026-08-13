@@ -1,13 +1,13 @@
-# File 10 Status — 1.1.0-rc1
+# File 10 Status — 1.2.5-rc1
 
-**Classification:** governing-plan-aligned source completion candidate; automated CI/package evidence must be green; staging/live/operational evidence remains separate.
+**Classification:** repository/source correction candidate under the fourth fresh 20-review sequence.
 
-- Specified: complete by governing documents.
-- Coded: candidate after this completion branch review.
-- Packaged: only after deterministic CI artifact/checksum succeeds.
-- Automated-QA Green: only after exact-head Actions succeeds.
-- Staging-Accepted: pending real Hostinger-equivalent evidence.
-- Live-Deployed: not claimed.
-- Operational: not claimed.
+- Specified: complete by governing plans.
+- Coded: candidate; sequential review/fix work in progress until R20 closes.
+- Packaged: pending exact-head deterministic CI artifact for the final R20 head.
+- Automated-QA Green: pending exact-head final workflow result after R20.
+- Staging-Accepted: not established.
+- Live-Deployed: not established.
+- Operational: not established.
 
-The repository name is historical. The canonical runtime plugin/package namespace follows the new File 10 plan; repository renaming, if desired, is a governance/transport action and must preserve history and deployment parity.
+Live/staging state is not inferred from GitHub. Exact deployed code, live DB/schema and migration state remain unverified until separately frozen from the environment.

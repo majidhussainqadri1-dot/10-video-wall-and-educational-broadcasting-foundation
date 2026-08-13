@@ -16,7 +16,9 @@ final class VWLB_Activator {
 			wp_die( esc_html( $pages->get_error_message() ) );
 		}
 		$scheduled=self::schedules();if(is_wp_error($scheduled)){deactivate_plugins(plugin_basename(VWLB_FILE));wp_die(esc_html($scheduled->get_error_message()));}$legacy=VWLB_Compatibility::migrate_legacy();if(is_wp_error($legacy)){deactivate_plugins(plugin_basename(VWLB_FILE));wp_die(esc_html($legacy->get_error_message()));}
-		update_option('vwlb_version',VWLB_VERSION,false); update_option('vwlb_safe_mode',0,false); flush_rewrite_rules(false);
+		$version_saved=update_option('vwlb_version',VWLB_VERSION,false);if(!$version_saved&&get_option('vwlb_version')!==VWLB_VERSION){deactivate_plugins(plugin_basename(VWLB_FILE));wp_die(esc_html__('File 10 version state could not be recorded durably.',VWLB_TEXT_DOMAIN));}
+		$safe_saved=update_option('vwlb_safe_mode',0,false);if(!$safe_saved&&(int)get_option('vwlb_safe_mode',1)!==0){deactivate_plugins(plugin_basename(VWLB_FILE));wp_die(esc_html__('File 10 Safe Mode state could not be initialized durably.',VWLB_TEXT_DOMAIN));}
+		flush_rewrite_rules(false);
 	}
 
 	/**

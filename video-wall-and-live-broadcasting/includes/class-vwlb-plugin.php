@@ -15,6 +15,7 @@ final class VWLB_Plugin {
 		VWLB_Extensions::register();
 		VWLB_Observability::register();
 		VWLB_Future_Intelligence::register();
+		VWLB_Future_Safety::register();
 		add_filter('rest_request_before_callbacks',array('VWLB_Security','rest_mutation_before'),10,3);
 		add_filter('rest_request_after_callbacks',array('VWLB_Security','rest_mutation_after'),10,3);
 
@@ -47,5 +48,12 @@ final class VWLB_Plugin {
 		if($matches&&$result instanceof WP_REST_Response&&!is_array($result->get_data())){echo (string)$result->get_data();return true;}return $served;
 	}
 	public function enqueue_route_assets(){if(get_query_var('vwlb_video_id')||get_query_var('vwlb_live_id')||get_query_var('vwlb_channel_slug')||get_query_var('vwlb_podcast_id')||get_query_var('vwlb_route')){wp_enqueue_style('vwlb');wp_enqueue_script('vwlb');}}
-	public function route_template($template){if(get_query_var('vwlb_video_id')||get_query_var('vwlb_live_id')||get_query_var('vwlb_channel_slug')||get_query_var('vwlb_podcast_id')||get_query_var('vwlb_route')){status_header(200);return VWLB_DIR.'templates/route.php';}return $template;}
+	private function route_visible(){
+		if($id=get_query_var('vwlb_video_id')){$row=VWLB_Repository::find('videos',$id);return $row&&VWLB_Security::can_view($row);}
+		if($id=get_query_var('vwlb_live_id')){$row=VWLB_Repository::find('live_events',$id);return $row&&VWLB_Security::can_view($row);}
+		if($slug=get_query_var('vwlb_channel_slug')){global $wpdb;$row=$wpdb->get_row($wpdb->prepare('SELECT * FROM '.VWLB_Helpers::table('channels').' WHERE slug=%s LIMIT 1',VWLB_Helpers::text($slug,191)),ARRAY_A);return $row&&'active'===($row['status']??'')&&('public'===($row['visibility']??'')||VWLB_Security::can(VWLB_Contracts::CAP_PUBLISH,$row,'channel_route'));}
+		if($id=get_query_var('vwlb_podcast_id'))return (bool)VWLB_Podcasts::public_episode_dto($id);
+		return true;
+	}
+	public function route_template($template){if(get_query_var('vwlb_video_id')||get_query_var('vwlb_live_id')||get_query_var('vwlb_channel_slug')||get_query_var('vwlb_podcast_id')||get_query_var('vwlb_route')){if(!$this->route_visible()){status_header(404);nocache_headers();}else{status_header(200);}return VWLB_DIR.'templates/route.php';}return $template;}
 }
