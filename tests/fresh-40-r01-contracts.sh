@@ -12,7 +12,5 @@ need "vwlb_provider_revoke_ingest" credential-compensation
 need "vwlb_stream_credential_reconcile_required" credential-reconcile
 need "credential_public_id" public-credential-audit-id
 forbid "return array('credential_id'=>" numeric-credential-response
-need "VWLB_DB::transaction(function()use(\$wpdb,\$event,\$event" schedule-transaction-placeholder || true
-# The exact schedule transaction contract is asserted independently of formatting.
 need "\$result=VWLB_DB::transaction(function()use(\$wpdb,\$event,\$public,\$start,\$idempotency_key)" schedule-transaction
 printf '%s\n' 'fresh40 R01 contracts PASS'
