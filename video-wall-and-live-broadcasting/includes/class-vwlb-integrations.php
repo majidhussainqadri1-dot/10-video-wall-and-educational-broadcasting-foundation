@@ -55,10 +55,15 @@ final class VWLB_Integrations {
 		) as $entity){$owners[$entity]='File 10';}
 		return $owners;
 	}
+	private function public_event_payload($payload){
+		$safe=array();foreach((array)$payload as $key=>$value){$key=sanitize_key((string)$key);if((str_ends_with($key,'_public_id')||in_array($key,array('public_id','status','reason','scheduled','language','consented','minutes','capacity','waiting_room'),true))&&is_scalar($value))$safe[$key]=VWLB_Helpers::text($value,191);}return $safe;
+	}
 	public function publish_event($name,$payload,$event){
 		if(!in_array($name,VWLB_Contracts::PUBLISHED_EVENTS,true))return;
-		$safe=array();foreach((array)$payload as $key=>$value){$key=sanitize_key((string)$key);if((str_ends_with($key,'_public_id')||in_array($key,array('public_id','status','reason','scheduled','language','consented','minutes','capacity','waiting_room'),true))&&is_scalar($value))$safe[$key]=VWLB_Helpers::text($value,191);}
+		$safe=$this->public_event_payload($payload);
 		$safe=(array)apply_filters('vwlb_cross_file_event_payload',$safe,$name,$event);
+		// R13: a third-party/companion filter may propose additions, but File 10 re-applies its public DTO allowlist after every extension point.
+		$safe=$this->public_event_payload($safe);
 		do_action('sabri_event_bus_publish',$name,$safe,array('owner'=>'File 10','event_id'=>$event['public_id'],'contract_version'=>1,'privacy'=>'public-safe-event-projection'));
 	}
 	public function process_webhook($provider,$data,$webhook_id){do_action('vwlb_provider_webhook_'.$provider,$data,$webhook_id);}
