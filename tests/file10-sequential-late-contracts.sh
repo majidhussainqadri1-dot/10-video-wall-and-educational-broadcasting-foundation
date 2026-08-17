@@ -16,4 +16,8 @@ need "private function public_event_payload" "$P/includes/class-vwlb-integration
 count=$(grep -F -c '$safe=$this->public_event_payload(' "$P/includes/class-vwlb-integrations.php" || true)
 [[ "$count" -ge 2 ]] || fail r13-resanitize-after-filter
 need "public-safe-event-projection" "$P/includes/class-vwlb-integrations.php" r13-public-projection
+# R14 — every Future UI mutation carries the required idempotency key.
+need "const idempotencyKey" "$P/assets/js/vwlb-future.js" r14-idem-generator
+need "headers['Idempotency-Key']" "$P/assets/js/vwlb-future.js" r14-idem-header
+need "!['GET','HEAD','OPTIONS'].includes(method)" "$P/assets/js/vwlb-future.js" r14-idem-mutations
 printf '%s\n' 'File 10 sequential late-round contracts PASS'
