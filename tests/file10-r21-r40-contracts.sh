@@ -11,4 +11,8 @@ need "return true;" "$P/includes/class-vwlb-plugin.php" r21-success-result
 # R22 — public video-wall browse DTO must not expose database owner IDs or WordPress attachment IDs.
 need "unset(\$r['id'],\$r['channel_id'],\$r['owner_id'],\$r['thumbnail_id'])" "$P/includes/class-vwlb-repository.php" r22-strip-internal-ids
 need "\$r['thumbnail_url']" "$P/includes/class-vwlb-repository.php" r22-public-thumbnail-url
+# R25 — legacy/direct completion must atomically persist both uploaded state and its required processing job.
+need "R25: state transition and processing-queue persistence are one transaction" "$P/includes/class-vwlb-media.php" r25-atomic-intent
+need "VWLB_DB::transaction(function()use(\$asset" "$P/includes/class-vwlb-media.php" r25-transaction
+need "Media completion was rolled back because processing could not be queued" "$P/includes/class-vwlb-media.php" r25-queue-rollback
 printf '%s\n' 'File 10 R21-R40 sequential contracts PASS'
