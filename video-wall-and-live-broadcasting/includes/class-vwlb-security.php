@@ -27,7 +27,8 @@ final class VWLB_Security {
 			$owner=isset($object['owner_id'])?absint($object['owner_id']):0;
 			if($owner&&$owner!==get_current_user_id()){$scoped=(bool)apply_filters('vwlb_object_scope_authorized',false,$capability,$object,$purpose,$claims);$allowed=$allowed&&$scoped;}
 		}
-		return (bool)apply_filters('vwlb_authorize',$allowed,$capability,$object,$purpose,$claims);
+		$policy=(bool)apply_filters('vwlb_authorize',$allowed,$capability,$object,$purpose,$claims);
+		return $allowed&&$policy; // R16: authorization filters may restrict native authority, never broaden it.
 	}
 	public static function can_view($object,$purpose='playback'){
 		if(!is_array($object)||in_array($object['status']??'',array('removed','restricted','failed','deleted'),true))return false;
