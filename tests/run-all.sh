@@ -14,6 +14,7 @@ run_rebased_124 "$ROOT/tests/fresh-20-review-contracts.sh"
 bash "$ROOT/tests/fresh-20-review-2-contracts.sh"
 bash "$ROOT/tests/third-fresh-20-review-contracts.sh"
 bash "$ROOT/tests/fourth-fresh-20-review-contracts.sh"
+bash "$ROOT/tests/file10-sequential-20-contracts.sh"
 bash "$ROOT/tools/build-package.sh" /tmp/vwlb-build-a.zip >/dev/null
 bash "$ROOT/tools/build-package.sh" /tmp/vwlb-build-b.zip >/dev/null
 cmp /tmp/vwlb-build-a.zip /tmp/vwlb-build-b.zip
