@@ -32,4 +32,15 @@ need "publication_event_deferred" "$P/includes/class-vwlb-sequential-review-hard
 ! sed -n '/public static function create_annotation/,/private static function annotation_dto/p' "$P/includes/class-vwlb-sequential-review-hardening.php" | grep -F "VideoTimestampCorrectionPublished" >/dev/null || fail r09-no-premature-published-event
 need "'published'===\$to" "$P/includes/class-vwlb-future-intelligence.php" r09-publish-transition
 need "VideoTimestampCorrectionPublished" "$P/includes/class-vwlb-future-intelligence.php" r09-publish-event
+# R10 — migration completion proves columns/indexes and resumable storage revalidates protection/symlink safety.
+need "class-vwlb-r10-integrity.php" "$P/video-wall-and-live-broadcasting.php" r10-autoload
+need "VWLB_R10_Integrity::register" "$P/video-wall-and-live-broadcasting.php" r10-register
+need "r10_contract_from_create_sql" "$P/includes/class-vwlb-r10-integrity.php" r10-base-contract-parser
+need "vwlb_schema_column_missing" "$P/includes/class-vwlb-r10-integrity.php" r10-column-proof
+need "vwlb_schema_index_mismatch" "$P/includes/class-vwlb-r10-integrity.php" r10-index-proof
+need "segment_search" "$P/includes/class-vwlb-r10-integrity.php" r10-fulltext-proof
+need "vwlb_private_storage_symlink_forbidden" "$P/includes/class-vwlb-r10-integrity.php" r10-dir-symlink
+need "vwlb_private_storage_protection_symlink_forbidden" "$P/includes/class-vwlb-r10-integrity.php" r10-protection-symlink
+need "guard_private_storage_before" "$P/includes/class-vwlb-r10-integrity.php" r10-runtime-storage-recheck
+need "rest_pre_dispatch" "$P/includes/class-vwlb-r10-integrity.php" r10-fail-closed-rest
 printf '%s\n' 'File 10 current sequential-20 regression contracts PASS'
