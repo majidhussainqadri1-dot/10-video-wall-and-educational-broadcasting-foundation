@@ -7,19 +7,25 @@ final class VWLB_Diagnostics {
 		return array('module'=>'File 10','status'=>get_option('vwlb_safe_mode')?'degraded':'ok','version'=>VWLB_VERSION,'schema'=>get_option('vwlb_schema_version','missing'),'extension_schema'=>get_option(VWLB_Extensions::OPTION,'missing'),'future_schema'=>get_option(VWLB_Future_Intelligence::OPTION,'missing'),'canonical_api'=>VWLB_Contracts::CANONICAL_API_NAMESPACE,'providers'=>$providers);
 	}
 	public static function full(){
-		global $wpdb;$tables=array();$names=array(
+		global $wpdb;$tables=array();$database_errors=array();$names=array(
 			'channels','channel_members','playlists','playlist_items','media_assets','processing_jobs','videos','captions','live_events','stream_credentials',
 			'playback_sessions','interactions','moderation','takedowns','audit','outbox','inbox','webhooks','idempotency','rate_limits','rollback_snapshots',
 			'upload_sessions','chapters','podcast_series','podcast_episodes','live_attendees','live_questions','live_resources','download_tokens','creator_metrics_daily','provider_health','premieres',
 			'production_sources','production_scenes','broadcast_guests','future_live_config','simulcast_targets','broadcast_health_samples','media_tracks','transcript_segments','video_annotations','live_polls','live_poll_options','live_poll_responses','consent_links','watermark_policies'
 		);
-		foreach($names as $name){$table=VWLB_Helpers::table($name);$exists=$wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s',$table));$tables[$name]=array('exists'=>(bool)$exists,'rows'=>$exists?(int)$wpdb->get_var("SELECT COUNT(*) FROM $table"):null);}
-		$dead=!empty($tables['processing_jobs']['exists'])?(int)$wpdb->get_var("SELECT COUNT(*) FROM ".VWLB_Helpers::table('processing_jobs')." WHERE status='dead'"):0;
-		$outbox_dead=!empty($tables['outbox']['exists'])?(int)$wpdb->get_var("SELECT COUNT(*) FROM ".VWLB_Helpers::table('outbox')." WHERE status='dead'"):0;
-		$required_missing=array();foreach($tables as $name=>$row)if(!$row['exists'])$required_missing[]=$name;
+		foreach($names as $name){
+			$table=VWLB_Helpers::table($name);$wpdb->last_error='';$exists=$wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s',$table));
+			if(''!==(string)$wpdb->last_error){$database_errors[]='table_probe:'.$name;$tables[$name]=array('exists'=>null,'rows'=>null,'verified'=>false);continue;}
+			$rows=null;$verified=true;if($exists){$wpdb->last_error='';$count=$wpdb->get_var("SELECT COUNT(*) FROM $table");if(''!==(string)$wpdb->last_error){$database_errors[]='row_count:'.$name;$verified=false;}else{$rows=(int)$count;}}
+			$tables[$name]=array('exists'=>(bool)$exists,'rows'=>$rows,'verified'=>$verified);
+		}
+		$dead=0;$outbox_dead=0;
+		if(!empty($tables['processing_jobs']['exists'])&&!empty($tables['processing_jobs']['verified'])){$wpdb->last_error='';$value=$wpdb->get_var("SELECT COUNT(*) FROM ".VWLB_Helpers::table('processing_jobs')." WHERE status='dead'");if(''!==(string)$wpdb->last_error)$database_errors[]='queue_count:processing_jobs';else$dead=(int)$value;}
+		if(!empty($tables['outbox']['exists'])&&!empty($tables['outbox']['verified'])){$wpdb->last_error='';$value=$wpdb->get_var("SELECT COUNT(*) FROM ".VWLB_Helpers::table('outbox')." WHERE status='dead'");if(''!==(string)$wpdb->last_error)$database_errors[]='queue_count:outbox';else$outbox_dead=(int)$value;}
+		$required_missing=array();foreach($tables as $name=>$row)if(false===($row['exists']??null))$required_missing[]=$name;
 		return array_merge(self::public_health(),array(
 			'environment'=>array('wordpress'=>get_bloginfo('version'),'php'=>PHP_VERSION,'multisite'=>is_multisite(),'timezone'=>wp_timezone_string(),'wp_ok'=>version_compare(get_bloginfo('version'),'7.0','>='),'php_ok'=>version_compare(PHP_VERSION,'8.3','>=')),
-			'tables'=>$tables,'missing_tables'=>$required_missing,
+			'tables'=>$tables,'missing_tables'=>$required_missing,'database_verified'=>empty($database_errors),'database_errors'=>$database_errors,
 			'queues'=>array('processing_dead'=>$dead,'outbox_dead'=>$outbox_dead),
 			'cron'=>array('jobs'=>wp_next_scheduled('vwlb_process_jobs'),'outbox'=>wp_next_scheduled('vwlb_publish_outbox'),'reconcile'=>wp_next_scheduled('vwlb_reconcile_states'),'cleanup'=>wp_next_scheduled('vwlb_cleanup')),
 			'dependencies'=>apply_filters('vwlb_dependency_health',array()),
@@ -46,7 +52,9 @@ final class VWLB_Diagnostics {
 		$action=VWLB_Helpers::enum($data['action']??'',array('install_schema','install_extension_schema','reschedule_cron','retry_dead_jobs','retry_dead_outbox','enable_safe_mode','disable_safe_mode','recount_interactions','expire_ephemeral','reset_provider_circuit'),'');
 		if(!$action)return VWLB_Helpers::error('vwlb_repair_invalid',__('Unknown repair action.',VWLB_TEXT_DOMAIN));
 		$step=VWLB_Security::require_step_up('repair_'.$action);if(is_wp_error($step))return $step;
-		$snapshot=VWLB_DB::snapshot('repair_before',self::full());if(is_wp_error($snapshot))return $snapshot;global $wpdb;
+		// R37: never mutate from a rollback snapshot whose database observations could not be verified.
+		$preflight=self::full();if(empty($preflight['database_verified']))return VWLB_Helpers::error('vwlb_repair_preflight_unverified',__('Repair was blocked because the database preflight could not be verified safely.',VWLB_TEXT_DOMAIN),503,array('checks'=>(array)($preflight['database_errors']??array())));
+		$snapshot=VWLB_DB::snapshot('repair_before',$preflight);if(is_wp_error($snapshot))return $snapshot;global $wpdb;
 		$batch=max(1,min(500,absint($data['batch_size']??100)));$completed=true;$details=array('batch_size'=>$batch);
 		switch($action){
 			case'install_schema':$m=VWLB_Activator::reconcile_schema();if(is_wp_error($m))return $m;break;
