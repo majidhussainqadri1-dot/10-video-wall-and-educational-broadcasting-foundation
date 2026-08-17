@@ -24,4 +24,12 @@ need "enforce_command_idempotency_after" "$P/includes/class-vwlb-sequential-revi
 need "create_video' === \$name" "$P/includes/class-vwlb-sequential-review-hardening.php" r07-video-scope
 need "schedule_live','premiere_create" "$P/includes/class-vwlb-sequential-review-hardening.php" r07-live-scope
 need "vwlb_idempotency_persist_failed" "$P/includes/class-vwlb-sequential-review-hardening.php" r07-fail-closed
+# R09 — caption delivery honors stored format and correction publication is deferred until publish transition.
+need "application/x-subrip; charset=UTF-8" "$P/includes/class-vwlb-sequential-review-hardening.php" r09-srt-content-type
+need "application/ttml+xml; charset=UTF-8" "$P/includes/class-vwlb-sequential-review-hardening.php" r09-ttml-content-type
+need "X-VWLB-Caption-Format" "$P/includes/class-vwlb-sequential-review-hardening.php" r09-caption-format-header
+need "publication_event_deferred" "$P/includes/class-vwlb-sequential-review-hardening.php" r09-correction-deferred
+! sed -n '/public static function create_annotation/,/private static function annotation_dto/p' "$P/includes/class-vwlb-sequential-review-hardening.php" | grep -F "VideoTimestampCorrectionPublished" >/dev/null || fail r09-no-premature-published-event
+need "'published'===\$to" "$P/includes/class-vwlb-future-intelligence.php" r09-publish-transition
+need "VideoTimestampCorrectionPublished" "$P/includes/class-vwlb-future-intelligence.php" r09-publish-event
 printf '%s\n' 'File 10 current sequential-20 regression contracts PASS'
