@@ -24,4 +24,11 @@ need "!['GET','HEAD','OPTIONS'].includes(method)" "$P/assets/js/vwlb-future.js" 
 need "\$policy=(bool)apply_filters('vwlb_authorize',\$allowed" "$P/includes/class-vwlb-security.php" r16-policy-hook
 need "return \$allowed&&\$policy" "$P/includes/class-vwlb-security.php" r16-no-authority-broadening
 ! grep -F "return (bool)apply_filters('vwlb_authorize'" "$P/includes/class-vwlb-security.php" >/dev/null || fail r16-old-bypass
+# R17 — repairs are bounded, Future ephemeral cleanup is included, and partial batches are reported as incomplete.
+need "\$batch=max(1,min(500" "$P/includes/class-vwlb-diagnostics.php" r17-batch-bound
+need "VWLB_Future_Safety::cleanup" "$P/includes/class-vwlb-diagnostics.php" r17-future-cleanup
+need "expired_ephemeral_count" "$P/includes/class-vwlb-diagnostics.php" r17-cleanup-verification
+need "LIMIT %d" "$P/includes/class-vwlb-diagnostics.php" r17-bounded-repair
+need "'completed'=>\$completed" "$P/includes/class-vwlb-diagnostics.php" r17-truthful-completion
+need "next_after_id" "$P/includes/class-vwlb-diagnostics.php" r17-recount-cursor
 printf '%s\n' 'File 10 sequential late-round contracts PASS'
