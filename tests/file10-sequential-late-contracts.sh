@@ -20,4 +20,8 @@ need "public-safe-event-projection" "$P/includes/class-vwlb-integrations.php" r1
 need "const idempotencyKey" "$P/assets/js/vwlb-future.js" r14-idem-generator
 need "headers['Idempotency-Key']" "$P/assets/js/vwlb-future.js" r14-idem-header
 need "!['GET','HEAD','OPTIONS'].includes(method)" "$P/assets/js/vwlb-future.js" r14-idem-mutations
+# R16 — authorization filters may narrow native permission, never turn a native denial into a grant.
+need "\$policy=(bool)apply_filters('vwlb_authorize',\$allowed" "$P/includes/class-vwlb-security.php" r16-policy-hook
+need "return \$allowed&&\$policy" "$P/includes/class-vwlb-security.php" r16-no-authority-broadening
+! grep -F "return (bool)apply_filters('vwlb_authorize'" "$P/includes/class-vwlb-security.php" >/dev/null || fail r16-old-bypass
 printf '%s\n' 'File 10 sequential late-round contracts PASS'
