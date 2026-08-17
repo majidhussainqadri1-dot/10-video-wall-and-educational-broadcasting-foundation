@@ -27,7 +27,12 @@ final class VWLB_Observability {
 		$saved=$wpdb->replace($table,array('id'=>(int)($row['id']??0),'provider'=>$provider,'capability'=>$capability,'state'=>$state,'failures'=>$failures,'last_latency_ms'=>max(0,min(600000,(int)$latency_ms)),'circuit_open_until'=>$open,'last_error_code'=>VWLB_Helpers::text($error_code,128),'checked_at'=>$now,'updated_at'=>$now));
 		if(false===$saved)do_action('vwlb_operational_failure','provider_health','vwlb_provider_health_persist_failed',array('provider'=>$provider,'capability'=>$capability));return false!==$saved;
 	}
-	public static function provider_available($provider,$capability){global $wpdb;$row=$wpdb->get_row($wpdb->prepare('SELECT * FROM '.VWLB_Helpers::table('provider_health').' WHERE provider=%s AND capability=%s',sanitize_key($provider),sanitize_key($capability)),ARRAY_A);if(!$row)return true;if('down'===$row['state'])return false;if($row['circuit_open_until']&&strtotime($row['circuit_open_until'].' UTC')>time())return false;return true;}
+	public static function provider_available($provider,$capability){
+		global $wpdb;$provider=sanitize_key($provider);$capability=sanitize_key($capability);$row=$wpdb->get_row($wpdb->prepare('SELECT * FROM '.VWLB_Helpers::table('provider_health').' WHERE provider=%s AND capability=%s',$provider,$capability),ARRAY_A);
+		// R35: absence of a health row is an allowed first-use state, but a failed health query must not be interpreted as healthy.
+		if(''!==(string)$wpdb->last_error){do_action('vwlb_operational_failure','provider_health','vwlb_provider_health_read_failed',array('provider'=>$provider,'capability'=>$capability));return false;}
+		if(!$row)return true;if('down'===$row['state'])return false;if($row['circuit_open_until']&&strtotime($row['circuit_open_until'].' UTC')>time())return false;return true;
+	}
 	public static function snapshot(){
 		global $wpdb;$jobs=(int)$wpdb->get_var("SELECT COUNT(*) FROM ".VWLB_Helpers::table('processing_jobs')." WHERE status='dead'");$outbox=(int)$wpdb->get_var("SELECT COUNT(*) FROM ".VWLB_Helpers::table('outbox')." WHERE status='dead'");
 		$providers=$wpdb->get_results('SELECT provider,capability,state,failures,last_latency_ms,circuit_open_until,last_error_code,checked_at FROM '.VWLB_Helpers::table('provider_health').' ORDER BY provider,capability LIMIT 200',ARRAY_A);
