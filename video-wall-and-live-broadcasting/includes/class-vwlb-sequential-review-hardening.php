@@ -24,6 +24,26 @@ final class VWLB_Sequential_Review_Hardening {
 			);
 			register_rest_route(
 				$namespace,
+				'/captions/(?P<id>[A-Za-z0-9_-]+)',
+				array(
+					'methods' => 'GET',
+					'callback' => array( __CLASS__, 'caption_delivery' ),
+					'permission_callback' => '__return_true',
+				),
+				true
+			);
+			register_rest_route(
+				$namespace,
+				'/videos/(?P<id>[A-Za-z0-9_-]+)/annotations',
+				array(
+					'methods' => 'POST',
+					'callback' => array( __CLASS__, 'create_annotation' ),
+					'permission_callback' => function() { return VWLB_Security::can( VWLB_Contracts::CAP_PUBLISH ); },
+				),
+				true
+			);
+			register_rest_route(
+				$namespace,
 				'/live-events/(?P<id>[A-Za-z0-9_-]+)/kill',
 				array(
 					'methods' => 'POST',
@@ -45,13 +65,72 @@ final class VWLB_Sequential_Review_Hardening {
 		return VWLB_Helpers::text( $request->get_header( 'X-VWLB-Upload-Token' ) ?: ( $body['upload_token'] ?? '' ), 200 );
 	}
 
-	private static function response( $value ) {
+	private static function response( $value, $status = null ) {
 		if ( is_wp_error( $value ) ) return $value;
 		$response = rest_ensure_response( $value );
+		if ( null !== $status ) $response->set_status( (int) $status );
 		$response->header( 'X-Sabri-File', '10' );
 		$response->header( 'X-VWLB-Version', VWLB_VERSION );
 		$response->header( 'X-VWLB-Canonical-API', VWLB_Contracts::CANONICAL_API_NAMESPACE );
 		return $response;
+	}
+
+	/** R09: deliver each reviewed caption using its actual stored format. */
+	public static function caption_delivery( WP_REST_Request $request ) {
+		global $wpdb;
+		$caption = $wpdb->get_row( $wpdb->prepare( 'SELECT * FROM ' . VWLB_Helpers::table('captions') . ' WHERE public_id=%s LIMIT 1', VWLB_Helpers::text( $request['id'], 80 ) ), ARRAY_A );
+		if ( ! $caption || 'published' !== ( $caption['status'] ?? '' ) ) return VWLB_Helpers::error( 'vwlb_not_found', __( 'Caption not found.', VWLB_TEXT_DOMAIN ), 404 );
+		$video = VWLB_Repository::find( 'videos', (int) $caption['video_id'] );
+		if ( ! $video || ! VWLB_Security::can_view( $video, 'caption' ) ) return VWLB_Helpers::error( 'vwlb_not_found', __( 'Caption not found.', VWLB_TEXT_DOMAIN ), 404 );
+		$type = array( 'vtt'=>'text/vtt; charset=UTF-8', 'srt'=>'application/x-subrip; charset=UTF-8', 'ttml'=>'application/ttml+xml; charset=UTF-8' );
+		$format = VWLB_Helpers::enum( $caption['format'] ?? 'vtt', array_keys( $type ), 'vtt' );
+		$response = new WP_REST_Response( (string) $caption['content'], 200 );
+		$response->header( 'Content-Type', $type[$format] );
+		$response->header( 'X-VWLB-Caption-Format', $format );
+		if ( in_array( $video['visibility'], array( 'public','unlisted' ), true ) ) $response->header( 'Cache-Control', 'public, max-age=300' );
+		else { $response->header( 'Cache-Control', 'private, no-store' ); $response->header( 'X-Robots-Tag', 'noindex, nofollow, noarchive' ); }
+		return $response;
+	}
+
+	private static function contains_raw_secret( $value ) {
+		if ( ! is_array( $value ) ) return false;
+		foreach ( $value as $key => $child ) {
+			$key = sanitize_key( (string) $key );
+			if ( ! str_ends_with( $key, '_ref' ) && in_array( $key, array( 'secret','password','api_key','access_token','refresh_token','private_key','token','stream_key' ), true ) ) return true;
+			if ( is_array( $child ) && self::contains_raw_secret( $child ) ) return true;
+		}
+		return false;
+	}
+
+	/** R09: a timestamp correction is reviewed at creation, but publication fact is emitted only by the later publish transition. */
+	public static function create_annotation( WP_REST_Request $request ) {
+		$data = self::body( $request );
+		if ( 'correction' !== sanitize_key( (string) ( $data['kind'] ?? '' ) ) ) {
+			$row = VWLB_Future_Intelligence::create_annotation( $request['id'], $data );
+			return self::response( is_wp_error($row) ? $row : self::annotation_dto($row), 201 );
+		}
+		$video = VWLB_Repository::find( 'videos', $request['id'] );
+		if ( ! $video || ! VWLB_Security::can( VWLB_Contracts::CAP_PUBLISH, $video, 'future_annotation' ) || ! VWLB_Security::can( VWLB_Contracts::CAP_REVIEW, $video, 'future_annotation_review' ) ) return VWLB_Helpers::error( 'vwlb_review_required', __( 'Timestamp corrections require independent review permission.', VWLB_TEXT_DOMAIN ), 403 );
+		$source = VWLB_Helpers::enum( $data['source'] ?? 'manual', array( 'manual','ai_assisted','imported' ), 'manual' );
+		$start = max( 0, (int) ( $data['start_ms'] ?? 0 ) );
+		$end = max( 0, (int) ( $data['end_ms'] ?? 0 ) );
+		if ( $end && $end < $start ) return VWLB_Helpers::error( 'vwlb_annotation_time_invalid', __( 'Annotation end time cannot precede its start time.', VWLB_TEXT_DOMAIN ), 422 );
+		$duration = max( 0, (int) ( $video['duration_seconds'] ?? 0 ) ) * 1000;
+		if ( $duration && ( $start > $duration || ( $end && $end > $duration ) ) ) return VWLB_Helpers::error( 'vwlb_annotation_time_invalid', __( 'Annotation time must remain within the verified video duration.', VWLB_TEXT_DOMAIN ), 422 );
+		$metadata = (array) ( $data['metadata'] ?? array() );
+		if ( self::contains_raw_secret( $metadata ) ) return VWLB_Helpers::error( 'vwlb_annotation_secret_forbidden', __( 'Raw credentials cannot be stored in annotation metadata.', VWLB_TEXT_DOMAIN ), 422 );
+		global $wpdb; $now = VWLB_Helpers::now(); $public = VWLB_Helpers::public_id('ann');
+		$row = array( 'public_id'=>$public,'video_id'=>(int)$video['id'],'kind'=>'correction','start_ms'=>$start,'end_ms'=>$end,'title'=>VWLB_Helpers::text($data['title']??'',255),'body'=>VWLB_Helpers::textarea($data['body']??''),'source_owner'=>VWLB_Helpers::text($data['source_owner']??'',64),'source_ref'=>VWLB_Helpers::text($data['source_ref']??'',191),'status'=>'reviewed','metadata_json'=>VWLB_Helpers::json_encode(array_merge($metadata,array('source_mode'=>$source))),'version'=>1,'created_by'=>get_current_user_id(),'reviewed_by'=>get_current_user_id(),'created_at'=>$now,'updated_at'=>$now );
+		if ( ! $wpdb->insert( VWLB_Helpers::table('video_annotations'), $row ) || ! (int) $wpdb->insert_id ) return VWLB_Helpers::error( 'vwlb_database_error', __( 'Annotation could not be saved.', VWLB_TEXT_DOMAIN ), 500 );
+		$id = (int) $wpdb->insert_id;
+		VWLB_Helpers::audit( 'annotation', $id, 'create', '', 'reviewed', '', array( 'video_id'=>$video['id'], 'kind'=>'correction', 'publication_event_deferred'=>true ) );
+		return self::response( self::annotation_dto( array_merge( $row, array('id'=>$id) ) ), 201 );
+	}
+
+	private static function annotation_dto( $row ) {
+		if ( ! is_array( $row ) ) return $row;
+		$out = array(); foreach ( array('public_id','kind','start_ms','end_ms','title','body','source_owner','source_ref','status','version') as $field ) if ( array_key_exists( $field, $row ) ) $out[$field] = $row[$field];
+		return $out;
 	}
 
 	/** R03: refuse completion when signature validation is unavailable, unknown or disallowed. */
@@ -164,7 +243,6 @@ final class VWLB_Sequential_Review_Hardening {
 			return $changed;
 		} );
 		if ( is_wp_error( $updated ) ) return $updated;
-
 		try {
 			do_action( 'vwlb_provider_emergency_end', $event, $reason );
 			$provider_result = apply_filters( 'vwlb_provider_emergency_end_result', null, $event, $reason );
