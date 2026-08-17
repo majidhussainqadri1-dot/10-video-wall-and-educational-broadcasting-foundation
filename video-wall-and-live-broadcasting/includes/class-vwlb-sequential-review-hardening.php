@@ -7,6 +7,7 @@ final class VWLB_Sequential_Review_Hardening {
 		add_action( 'rest_api_init', array( __CLASS__, 'register_rest_overrides' ), 100 );
 		add_filter( 'vwlb_asset_technical_validation', array( __CLASS__, 'enforce_private_signature_validation' ), 100, 2 );
 		add_filter( 'vwlb_remote_url_allowed', array( __CLASS__, 'validate_remote_url_dns' ), PHP_INT_MAX, 2 );
+		add_filter( 'rest_request_after_callbacks', array( __CLASS__, 'enforce_command_idempotency_after' ), 9, 3 );
 	}
 
 	public static function register_rest_overrides() {
@@ -97,6 +98,37 @@ final class VWLB_Sequential_Review_Hardening {
 		if ( ! function_exists( 'wp_http_validate_url' ) ) return '';
 		$validated = wp_http_validate_url( $url );
 		return is_string( $validated ) && '' !== $validated ? $url : '';
+	}
+
+	/** R07: callers that historically ignored command-level replay persistence cannot return a false durable success. */
+	public static function enforce_command_idempotency_after( $response, $handler, $request ) {
+		if ( ! $request instanceof WP_REST_Request || in_array( strtoupper( (string) $request->get_method() ), array( 'GET','HEAD','OPTIONS' ), true ) ) return $response;
+		$callback = $handler['callback'] ?? null;
+		$name = is_array( $callback ) && isset( $callback[1] ) ? sanitize_key( (string) $callback[1] ) : '';
+		$scope = '';
+		if ( 'create_video' === $name ) $scope = 'create_video';
+		elseif ( in_array( $name, array( 'schedule_live','premiere_create' ), true ) ) $scope = 'schedule_live';
+		if ( ! $scope ) return $response;
+		$key = VWLB_Helpers::text( $request->get_header( 'Idempotency-Key' ), 128 );
+		if ( ! $key ) return $response;
+		global $wpdb;
+		$actor = get_current_user_id() ? 'u' . get_current_user_id() : 'a' . substr( VWLB_Helpers::ip_hash(), 0, 32 );
+		$db_scope = substr( sanitize_key( $scope ) . ':' . $actor, 0, 100 );
+		$table = VWLB_Helpers::table( 'idempotency' );
+		$row = $wpdb->get_row( $wpdb->prepare( "SELECT status FROM $table WHERE idempotency_key=%s AND scope=%s LIMIT 1", $key, $db_scope ), ARRAY_A );
+		$wrapped = is_wp_error( $response ) ? null : rest_ensure_response( $response );
+		$failed = is_wp_error( $response ) || ( $wrapped && (int) $wrapped->get_status() >= 500 );
+		if ( $failed ) {
+			if ( $row && 'processing' === ( $row['status'] ?? '' ) ) {
+				$aborted = VWLB_Security::idempotency_abort( $key, $scope );
+				if ( is_wp_error( $aborted ) ) return $aborted;
+			}
+			return $response;
+		}
+		if ( ! $row || 'complete' !== ( $row['status'] ?? '' ) ) {
+			return VWLB_Helpers::error( 'vwlb_idempotency_persist_failed', __( 'The operation completed but its command replay state could not be verified safely.', VWLB_TEXT_DOMAIN ), 503 );
+		}
+		return $response;
 	}
 
 	/** R05: local emergency-end durability must not roll back after an irreversible provider termination attempt. */
