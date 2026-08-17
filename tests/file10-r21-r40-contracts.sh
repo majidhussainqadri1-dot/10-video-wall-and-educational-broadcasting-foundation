@@ -15,4 +15,8 @@ need "\$r['thumbnail_url']" "$P/includes/class-vwlb-repository.php" r22-public-t
 need "R25: state transition and processing-queue persistence are one transaction" "$P/includes/class-vwlb-media.php" r25-atomic-intent
 need "VWLB_DB::transaction(function()use(\$asset" "$P/includes/class-vwlb-media.php" r25-transaction
 need "Media completion was rolled back because processing could not be queued" "$P/includes/class-vwlb-media.php" r25-queue-rollback
+# R27 — live credential issuance must fail closed if a stored/configured provider is no longer registered.
+need "vwlb_provider_missing" "$P/includes/class-vwlb-live.php" r27-provider-missing
+need "The configured live provider is unavailable." "$P/includes/class-vwlb-live.php" r27-provider-message
+need "if(!\$provider)return VWLB_Helpers::error('vwlb_provider_missing'" "$P/includes/class-vwlb-live.php" r27-null-guard
 printf '%s\n' 'File 10 R21-R40 sequential contracts PASS'
