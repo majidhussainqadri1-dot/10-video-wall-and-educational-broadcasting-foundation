@@ -15,4 +15,8 @@ need "vwlb_provider_emergency_end_result" "$P/includes/class-vwlb-sequential-rev
 need "vwlb_provider_emergency_end_reconcile_required" "$P/includes/class-vwlb-sequential-review-hardening.php" r05-provider-reconcile
 need "local_state'=>'ended'" "$P/includes/class-vwlb-sequential-review-hardening.php" r05-local-ended-durable
 need "processing_jobs" "$P/includes/class-vwlb-sequential-review-hardening.php" r05-recording-durable
+# R06 — remote/custom URLs must pass DNS/private-address aware WordPress validation.
+need "vwlb_remote_url_allowed" "$P/includes/class-vwlb-sequential-review-hardening.php" r06-terminal-url-filter
+need "wp_http_validate_url" "$P/includes/class-vwlb-sequential-review-hardening.php" r06-dns-private-validation
+need "PHP_INT_MAX" "$P/includes/class-vwlb-sequential-review-hardening.php" r06-terminal-priority
 printf '%s\n' 'File 10 current sequential-20 regression contracts PASS'
