@@ -19,4 +19,9 @@ need "Media completion was rolled back because processing could not be queued" "
 need "vwlb_provider_missing" "$P/includes/class-vwlb-live.php" r27-provider-missing
 need "The configured live provider is unavailable." "$P/includes/class-vwlb-live.php" r27-provider-message
 need "if(!\$provider)return VWLB_Helpers::error('vwlb_provider_missing'" "$P/includes/class-vwlb-live.php" r27-null-guard
+# R28 — restoration blocker search must cover all historical cases, not only the newest 100.
+need "moderation_blocker_exists" "$P/includes/class-vwlb-r11-restore-guard.php" r28-moderation-pagination
+need "takedown_blocker_exists" "$P/includes/class-vwlb-r11-restore-guard.php" r28-takedown-pagination
+need "id<%d" "$P/includes/class-vwlb-r11-restore-guard.php" r28-cursor
+need "count(\$rows) < 100" "$P/includes/class-vwlb-r11-restore-guard.php" r28-bounded-pages
 printf '%s\n' 'File 10 R21-R40 sequential contracts PASS'
