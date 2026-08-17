@@ -11,4 +11,9 @@ need "vwlb_restore_blocked_by_takedown" "$P/includes/class-vwlb-r11-restore-guar
 need "target_previous_status" "$P/includes/class-vwlb-r11-restore-guard.php" r11-provenance
 need "class-vwlb-r11-restore-guard.php" "$P/video-wall-and-live-broadcasting.php" r11-autoload
 need "VWLB_R11_Restore_Guard::register" "$P/video-wall-and-live-broadcasting.php" r11-register
+# R13 — cross-file extension filters cannot widen the final public event DTO.
+need "private function public_event_payload" "$P/includes/class-vwlb-integrations.php" r13-event-allowlist-helper
+count=$(grep -F -c '$safe=$this->public_event_payload(' "$P/includes/class-vwlb-integrations.php" || true)
+[[ "$count" -ge 2 ]] || fail r13-resanitize-after-filter
+need "public-safe-event-projection" "$P/includes/class-vwlb-integrations.php" r13-public-projection
 printf '%s\n' 'File 10 sequential late-round contracts PASS'
