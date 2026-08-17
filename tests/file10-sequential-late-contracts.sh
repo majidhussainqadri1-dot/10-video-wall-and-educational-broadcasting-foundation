@@ -42,4 +42,13 @@ need "vwlb_idempotency_expiry_cleanup_failed" "$P/includes/class-vwlb-security.p
 need "\$expired_id=absint(\$row['id'])" "$P/includes/class-vwlb-security.php" r19-expired-row-identity
 need "\$row=\$wpdb->get_row" "$P/includes/class-vwlb-security.php" r19-post-delete-reread
 need "absint(\$row['id'])===\$expired_id" "$P/includes/class-vwlb-security.php" r19-stale-row-detection
+# R20 — retry payloads are encrypted at rest, bounded by TTL, reconciled only after authenticated decryption, and included in privacy erasure.
+need "class-vwlb-r20-retry-privacy.php" "$P/video-wall-and-live-broadcasting.php" r20-autoload
+need "VWLB_R20_Retry_Privacy::register" "$P/video-wall-and-live-broadcasting.php" r20-register
+need "aes-256-gcm" "$P/includes/class-vwlb-r20-retry-privacy.php" r20-aead
+need "payload_cipher" "$P/includes/class-vwlb-r20-retry-privacy.php" r20-no-plain-retry-record
+need "expires_at" "$P/includes/class-vwlb-r20-retry-privacy.php" r20-expiry
+need "wp_privacy_personal_data_erasers" "$P/includes/class-vwlb-r20-retry-privacy.php" r20-privacy-eraser
+need "payload_mentions_user" "$P/includes/class-vwlb-r20-retry-privacy.php" r20-user-match
+need "remove_action('sabri_event_bus_consume_file10',array('VWLB_Review_Hardening','capture_inbox_retry'),1)" "$P/includes/class-vwlb-r20-retry-privacy.php" r20-disable-plain-capture
 printf '%s\n' 'File 10 sequential late-round contracts PASS'
