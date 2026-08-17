@@ -28,4 +28,11 @@ need "count(\$rows) < 100" "$P/includes/class-vwlb-r11-restore-guard.php" r28-bo
 need "vwlb_retry_erasure_unverifiable" "$P/includes/class-vwlb-r20-retry-privacy.php" r29-unverifiable-signal
 need "privacy erasure was stopped and remains incomplete" "$P/includes/class-vwlb-r20-retry-privacy.php" r29-fail-closed-message
 need "'done'=>false" "$P/includes/class-vwlb-r20-retry-privacy.php" r29-incomplete
+# R30 — audit/outbox fallback evidence in wp_options must be encrypted, authenticated, migratable and reconciled through the encrypted reader.
+need "encrypt_evidence_fallback" "$P/includes/class-vwlb-helpers.php" r30-encrypt-helper
+need "aes-256-gcm" "$P/includes/class-vwlb-helpers.php" r30-aead
+need "class-vwlb-r30-evidence-privacy.php" "$P/video-wall-and-live-broadcasting.php" r30-autoload
+need "VWLB_R30_Evidence_Privacy::register" "$P/video-wall-and-live-broadcasting.php" r30-register
+need "remove_action('vwlb_reconcile_states',array('VWLB_Review_Hardening','reconcile_fallbacks'),60)" "$P/includes/class-vwlb-r30-evidence-privacy.php" r30-old-reconciler-disabled
+need "migrate_legacy" "$P/includes/class-vwlb-r30-evidence-privacy.php" r30-legacy-migration
 printf '%s\n' 'File 10 R21-R40 sequential contracts PASS'
