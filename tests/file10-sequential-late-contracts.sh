@@ -31,4 +31,10 @@ need "expired_ephemeral_count" "$P/includes/class-vwlb-diagnostics.php" r17-clea
 need "LIMIT %d" "$P/includes/class-vwlb-diagnostics.php" r17-bounded-repair
 need "'completed'=>\$completed" "$P/includes/class-vwlb-diagnostics.php" r17-truthful-completion
 need "next_after_id" "$P/includes/class-vwlb-diagnostics.php" r17-recount-cursor
+# R18 — inbound events cannot proceed if their retry evidence could not be durably captured.
+need "class-vwlb-r18-durability.php" "$P/video-wall-and-live-broadcasting.php" r18-autoload
+need "VWLB_R18_Durability::register" "$P/video-wall-and-live-broadcasting.php" r18-register
+need "vwlb_inbox_retry_persist_failed" "$P/includes/class-vwlb-r18-durability.php" r18-capture-failure
+need "throw new RuntimeException" "$P/includes/class-vwlb-r18-durability.php" r18-fail-closed
+need "vwlb_inbox_retry_release_failed" "$P/includes/class-vwlb-r18-durability.php" r18-release-observable
 printf '%s\n' 'File 10 sequential late-round contracts PASS'
