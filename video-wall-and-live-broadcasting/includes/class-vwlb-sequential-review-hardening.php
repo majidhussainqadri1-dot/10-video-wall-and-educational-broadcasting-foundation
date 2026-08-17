@@ -20,6 +20,16 @@ final class VWLB_Sequential_Review_Hardening {
 				),
 				true
 			);
+			register_rest_route(
+				$namespace,
+				'/live-events/(?P<id>[A-Za-z0-9_-]+)/kill',
+				array(
+					'methods' => 'POST',
+					'callback' => array( __CLASS__, 'kill_live' ),
+					'permission_callback' => function() { return VWLB_Security::can( VWLB_Contracts::CAP_MODERATE ); },
+				),
+				true
+			);
 		}
 	}
 
@@ -78,6 +88,54 @@ final class VWLB_Sequential_Review_Hardening {
 			return VWLB_Helpers::error( 'vwlb_file_signature_not_allowed', __( 'The detected file type is not allowed for media ingest.', VWLB_TEXT_DOMAIN ), 415 );
 		}
 		return self::response( VWLB_Extensions::complete_resumable( $public_id, $token ) );
+	}
+
+	/** R05: local emergency-end durability must not roll back after an irreversible provider termination attempt. */
+	public static function kill_live( WP_REST_Request $request ) {
+		$body = self::body( $request );
+		$event = VWLB_Repository::find( 'live_events', $request['id'] );
+		if ( ! $event ) return VWLB_Helpers::error( 'vwlb_live_missing', __( 'Live event not found.', VWLB_TEXT_DOMAIN ), 404 );
+		if ( ! in_array( $event['status'], array( 'rehearsal','ready','live','interrupted' ), true ) ) return VWLB_Helpers::error( 'vwlb_live_state_invalid', __( 'Emergency end is not available in this state.', VWLB_TEXT_DOMAIN ), 409 );
+		if ( ! VWLB_Security::can( VWLB_Contracts::CAP_MODERATE, $event, 'emergency_end' ) ) return VWLB_Helpers::error( 'vwlb_forbidden', __( 'You cannot end this broadcast.', VWLB_TEXT_DOMAIN ), 403 );
+		$step = VWLB_Security::require_step_up( 'emergency_end' );
+		if ( is_wp_error( $step ) ) return $step;
+		$expected = absint( $body['version'] ?? 0 );
+		$reason = VWLB_Helpers::text( $body['reason'] ?? 'emergency_end', 191 );
+		global $wpdb;
+		$updated = VWLB_DB::transaction( function() use ( $event, $expected, $reason, $wpdb ) {
+			$changed = VWLB_Repository::update_versioned( 'live_events', $event['id'], $expected, array( 'status'=>'ended','kill_switch'=>1,'actual_end'=>VWLB_Helpers::now() ) );
+			if ( is_wp_error( $changed ) ) return $changed;
+			$revoked = $wpdb->update( VWLB_Helpers::table( 'stream_credentials' ), array( 'status'=>'revoked','revoked_at'=>VWLB_Helpers::now() ), array( 'live_event_id'=>$event['id'],'status'=>'active' ) );
+			if ( false === $revoked ) return VWLB_Helpers::error( 'vwlb_database_error', __( 'Active stream credentials could not be revoked.', VWLB_TEXT_DOMAIN ), 500 );
+			$policy = VWLB_Helpers::json( $changed['recording_policy_json'] ?? '{}' );
+			if ( ! empty( $policy['record'] ) ) {
+				$saved = $wpdb->insert( VWLB_Helpers::table( 'processing_jobs' ), array(
+					'public_id'=>VWLB_Helpers::public_id('job'),'asset_id'=>(int)$changed['recording_asset_id'],
+					'job_type'=>'finalize_live_recording','provider'=>$changed['provider'],'status'=>'pending','priority'=>10,
+					'attempts'=>0,'max_attempts'=>8,'available_at'=>VWLB_Helpers::now(),
+					'input_json'=>VWLB_Helpers::json_encode(array('live_event_id'=>$changed['id'])),'output_json'=>'{}',
+					'created_at'=>VWLB_Helpers::now(),'updated_at'=>VWLB_Helpers::now(),
+				) );
+				if ( ! $saved || ! (int) $wpdb->insert_id ) return VWLB_Helpers::error( 'vwlb_recording_queue_failed', __( 'Recording finalization could not be queued durably.', VWLB_TEXT_DOMAIN ), 503 );
+			}
+			VWLB_Helpers::audit( 'live', $event['id'], 'emergency_end', $event['status'], 'ended', $reason );
+			VWLB_Helpers::outbox( 'LiveBroadcastEnded', 'live', $event['id'], array( 'emergency'=>true,'reason_category'=>sanitize_key($reason) ) );
+			return $changed;
+		} );
+		if ( is_wp_error( $updated ) ) return $updated;
+		try {
+			do_action( 'vwlb_provider_emergency_end', $event, $reason );
+			$provider_result = apply_filters( 'vwlb_provider_emergency_end_result', null, $event, $reason );
+		} catch ( Throwable $error ) {
+			do_action( 'vwlb_operational_failure', 'live', 'vwlb_provider_emergency_end_exception', array( 'live_public_id'=>$event['public_id'] ) );
+			return VWLB_Helpers::error( 'vwlb_provider_emergency_end_reconcile_required', __( 'The local broadcast was ended safely, but provider termination could not be confirmed. Reconciliation is required.', VWLB_TEXT_DOMAIN ), 503, array( 'local_state'=>'ended','reconcile_required'=>true,'live_public_id'=>$event['public_id'] ) );
+		}
+		$confirmed = true === $provider_result || ( is_array( $provider_result ) && in_array( $provider_result['status'] ?? '', array( 'ended','stopped','terminated' ), true ) );
+		if ( ! $confirmed ) {
+			do_action( 'vwlb_operational_failure', 'live', 'vwlb_provider_emergency_end_unconfirmed', array( 'live_public_id'=>$event['public_id'] ) );
+			return VWLB_Helpers::error( 'vwlb_provider_emergency_end_reconcile_required', __( 'The local broadcast was ended safely, but provider termination is unconfirmed. Reconciliation is required.', VWLB_TEXT_DOMAIN ), 503, array( 'local_state'=>'ended','reconcile_required'=>true,'live_public_id'=>$event['public_id'] ) );
+		}
+		return self::response( VWLB_Repository::live_mutation_dto( $updated ) );
 	}
 
 	/** R03: the asynchronous verification worker must not turn a clean malware result into a MIME/signature bypass. */
