@@ -46,4 +46,8 @@ need "class-vwlb-r34-frontend-contract.php" "$P/video-wall-and-live-broadcasting
 need "VWLB_R34_Frontend_Contract::register" "$P/video-wall-and-live-broadcasting.php" r34-register
 need "thumbnail_url" "$P/includes/class-vwlb-r34-frontend-contract.php" r34-public-thumbnail
 ! grep -F "item['thumbnail_id']" "$P/includes/class-vwlb-r34-frontend-contract.php" >/dev/null || fail r34-no-internal-thumbnail
+# R35
+need "vwlb_provider_health_read_failed" "$P/includes/class-vwlb-observability.php" r35-read-failure-signal
+need "if(''!==(string)\$wpdb->last_error)" "$P/includes/class-vwlb-observability.php" r35-query-error-check
+need "return false;" "$P/includes/class-vwlb-observability.php" r35-fail-closed
 printf '%s\n' 'File 10 R21-R40 sequential contracts PASS'
