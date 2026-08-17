@@ -10,4 +10,9 @@ need "vwlb_file_signature_unknown" "$P/includes/class-vwlb-sequential-review-har
 need "detected_mime_allowed" "$P/includes/class-vwlb-sequential-review-hardening.php" r03-detected-mime-allowlist
 need "enforce_private_signature_validation" "$P/includes/class-vwlb-sequential-review-hardening.php" r03-worker-fail-closed
 need "class-vwlb-sequential-review-hardening.php" "$P/video-wall-and-live-broadcasting.php" r03-autoload
+# R05 — emergency end commits local safety state/credential revocation/recording queue before irreversible provider termination.
+need "vwlb_provider_emergency_end_result" "$P/includes/class-vwlb-sequential-review-hardening.php" r05-provider-confirmation
+need "vwlb_provider_emergency_end_reconcile_required" "$P/includes/class-vwlb-sequential-review-hardening.php" r05-provider-reconcile
+need "local_state'=>'ended'" "$P/includes/class-vwlb-sequential-review-hardening.php" r05-local-ended-durable
+need "processing_jobs" "$P/includes/class-vwlb-sequential-review-hardening.php" r05-recording-durable
 printf '%s\n' 'File 10 current sequential-20 regression contracts PASS'
