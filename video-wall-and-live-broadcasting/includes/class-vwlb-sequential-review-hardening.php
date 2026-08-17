@@ -6,6 +6,7 @@ final class VWLB_Sequential_Review_Hardening {
 	public static function register() {
 		add_action( 'rest_api_init', array( __CLASS__, 'register_rest_overrides' ), 100 );
 		add_filter( 'vwlb_asset_technical_validation', array( __CLASS__, 'enforce_private_signature_validation' ), 100, 2 );
+		add_filter( 'vwlb_remote_url_allowed', array( __CLASS__, 'validate_remote_url_dns' ), PHP_INT_MAX, 2 );
 	}
 
 	public static function register_rest_overrides() {
@@ -90,6 +91,14 @@ final class VWLB_Sequential_Review_Hardening {
 		return self::response( VWLB_Extensions::complete_resumable( $public_id, $token ) );
 	}
 
+	/** R06: custom/server-fetched remote URLs must pass WordPress DNS/private-address validation too. */
+	public static function validate_remote_url_dns( $url, $host ) {
+		if ( ! is_string( $url ) || '' === $url ) return '';
+		if ( ! function_exists( 'wp_http_validate_url' ) ) return '';
+		$validated = wp_http_validate_url( $url );
+		return is_string( $validated ) && '' !== $validated ? $url : '';
+	}
+
 	/** R05: local emergency-end durability must not roll back after an irreversible provider termination attempt. */
 	public static function kill_live( WP_REST_Request $request ) {
 		$body = self::body( $request );
@@ -123,6 +132,7 @@ final class VWLB_Sequential_Review_Hardening {
 			return $changed;
 		} );
 		if ( is_wp_error( $updated ) ) return $updated;
+
 		try {
 			do_action( 'vwlb_provider_emergency_end', $event, $reason );
 			$provider_result = apply_filters( 'vwlb_provider_emergency_end_result', null, $event, $reason );
