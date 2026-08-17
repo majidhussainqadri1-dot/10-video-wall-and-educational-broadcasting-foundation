@@ -66,4 +66,13 @@ need "VERIFICATION_TTL" "$P/includes/class-vwlb-r4-migration-guard.php" r38-boun
 need "time()-\$verified_at" "$P/includes/class-vwlb-r4-migration-guard.php" r38-expiry-check
 need "vwlb_schema_verification_time_failed" "$P/includes/class-vwlb-r4-migration-guard.php" r38-time-persist-fail
 need "verification_ttl_seconds" "$P/includes/class-vwlb-r4-migration-guard.php" r38-audit-lease
+# R39 — materially different deployable packages must have a new immutable runtime/package identity.
+need "Version: 1.2.6-rc1" "$P/video-wall-and-live-broadcasting.php" r39-plugin-version
+need "define( 'VWLB_VERSION', '1.2.6-rc1' );" "$P/video-wall-and-live-broadcasting.php" r39-version-constant
+need "video-wall-and-live-broadcasting-1.2.6-rc1.zip" "$ROOT/.github/workflows/file10-release.yml" r39-workflow-package
+need "file10-video-wall-live-1.2.6-rc1" "$ROOT/.github/workflows/file10-release.yml" r39-artifact-name
+need "video-wall-and-live-broadcasting-1.2.6-rc1.zip" "$ROOT/tools/build-package.sh" r39-builder-default
+need "CURRENT_VERSION='1.2.6-rc1'" "$ROOT/tests/run-all.sh" r39-suite-version
+need '"version": "1.2.6-rc1"' "$ROOT/SBOM-1.2.6-rc1.json" r39-sbom
+need "Cycle baseline exact HEAD: `83558aea2e581e6f7b76084e21695989254704b7`" "$ROOT/STATUS.md" r39-status-baseline
 printf '%s\n' 'File 10 R21-R40 sequential contracts PASS'
