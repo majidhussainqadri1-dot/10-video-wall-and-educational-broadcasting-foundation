@@ -8,4 +8,7 @@ need(){ grep -R -F -- "$1" "$2" >/dev/null || fail "$3"; }
 need "true !== VWLB_Plugin::instance()->run()" "$P/video-wall-and-live-broadcasting.php" r21-core-boot-gate
 need "return false;" "$P/includes/class-vwlb-plugin.php" r21-failure-result
 need "return true;" "$P/includes/class-vwlb-plugin.php" r21-success-result
+# R22 — public video-wall browse DTO must not expose database owner IDs or WordPress attachment IDs.
+need "unset(\$r['id'],\$r['channel_id'],\$r['owner_id'],\$r['thumbnail_id'])" "$P/includes/class-vwlb-repository.php" r22-strip-internal-ids
+need "\$r['thumbnail_url']" "$P/includes/class-vwlb-repository.php" r22-public-thumbnail-url
 printf '%s\n' 'File 10 R21-R40 sequential contracts PASS'
