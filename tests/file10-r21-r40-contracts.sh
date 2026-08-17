@@ -41,4 +41,9 @@ need "VWLB_R31_Webhook_Integrity::register" "$P/video-wall-and-live-broadcasting
 need "vwlb_webhook_event_conflict" "$P/includes/class-vwlb-r31-webhook-integrity.php" r31-conflict
 need "hash_equals((string)\$existing['payload_hash'],\$payload_hash)" "$P/includes/class-vwlb-r31-webhook-integrity.php" r31-payload-bound
 need "(string)\$existing['event_type']!==\$event_type" "$P/includes/class-vwlb-r31-webhook-integrity.php" r31-type-bound
+# R34
+need "class-vwlb-r34-frontend-contract.php" "$P/video-wall-and-live-broadcasting.php" r34-autoload
+need "VWLB_R34_Frontend_Contract::register" "$P/video-wall-and-live-broadcasting.php" r34-register
+need "thumbnail_url" "$P/includes/class-vwlb-r34-frontend-contract.php" r34-public-thumbnail
+! grep -F "item['thumbnail_id']" "$P/includes/class-vwlb-r34-frontend-contract.php" >/dev/null || fail r34-no-internal-thumbnail
 printf '%s\n' 'File 10 R21-R40 sequential contracts PASS'
