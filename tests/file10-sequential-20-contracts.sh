@@ -19,4 +19,9 @@ need "processing_jobs" "$P/includes/class-vwlb-sequential-review-hardening.php" 
 need "vwlb_remote_url_allowed" "$P/includes/class-vwlb-sequential-review-hardening.php" r06-terminal-url-filter
 need "wp_http_validate_url" "$P/includes/class-vwlb-sequential-review-hardening.php" r06-dns-private-validation
 need "PHP_INT_MAX" "$P/includes/class-vwlb-sequential-review-hardening.php" r06-terminal-priority
+# R07 — command-level idempotency state is verified before affected REST mutations can return success.
+need "enforce_command_idempotency_after" "$P/includes/class-vwlb-sequential-review-hardening.php" r07-after-callback
+need "create_video' === \$name" "$P/includes/class-vwlb-sequential-review-hardening.php" r07-video-scope
+need "schedule_live','premiere_create" "$P/includes/class-vwlb-sequential-review-hardening.php" r07-live-scope
+need "vwlb_idempotency_persist_failed" "$P/includes/class-vwlb-sequential-review-hardening.php" r07-fail-closed
 printf '%s\n' 'File 10 current sequential-20 regression contracts PASS'
