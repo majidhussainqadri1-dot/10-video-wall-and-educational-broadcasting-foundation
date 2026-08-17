@@ -24,4 +24,8 @@ need "moderation_blocker_exists" "$P/includes/class-vwlb-r11-restore-guard.php" 
 need "takedown_blocker_exists" "$P/includes/class-vwlb-r11-restore-guard.php" r28-takedown-pagination
 need "id<%d" "$P/includes/class-vwlb-r11-restore-guard.php" r28-cursor
 need "count(\$rows) < 100" "$P/includes/class-vwlb-r11-restore-guard.php" r28-bounded-pages
+# R29 — privacy erasure must not report completion when encrypted retry evidence cannot be inspected/decrypted.
+need "vwlb_retry_erasure_unverifiable" "$P/includes/class-vwlb-r20-retry-privacy.php" r29-unverifiable-signal
+need "privacy erasure was stopped and remains incomplete" "$P/includes/class-vwlb-r20-retry-privacy.php" r29-fail-closed-message
+need "'done'=>false" "$P/includes/class-vwlb-r20-retry-privacy.php" r29-incomplete
 printf '%s\n' 'File 10 R21-R40 sequential contracts PASS'
