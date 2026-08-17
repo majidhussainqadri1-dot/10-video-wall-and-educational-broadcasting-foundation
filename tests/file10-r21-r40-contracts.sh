@@ -54,4 +54,10 @@ need "scheduled_publish" "$P/includes/class-vwlb-jobs.php" r36-audit-action
 need "Scheduled publication gate revalidated at execution time" "$P/includes/class-vwlb-jobs.php" r36-gate-revalidation
 need "VWLB_DB::transaction(function()use(\$candidate,\$now)" "$P/includes/class-vwlb-jobs.php" r36-atomic-transaction
 need "'public_id'=>\$current['public_id'],'scheduled'=>true" "$P/includes/class-vwlb-jobs.php" r36-public-event
+# R37
+need "database_verified" "$P/includes/class-vwlb-diagnostics.php" r37-database-verification
+need "database_errors" "$P/includes/class-vwlb-diagnostics.php" r37-error-ledger
+need "vwlb_repair_preflight_unverified" "$P/includes/class-vwlb-diagnostics.php" r37-repair-block
+need "Repair was blocked because the database preflight could not be verified safely" "$P/includes/class-vwlb-diagnostics.php" r37-fail-closed-message
+need "snapshot('repair_before',\$preflight)" "$P/includes/class-vwlb-diagnostics.php" r37-verified-snapshot
 printf '%s\n' 'File 10 R21-R40 sequential contracts PASS'
