@@ -60,4 +60,10 @@ need "database_errors" "$P/includes/class-vwlb-diagnostics.php" r37-error-ledger
 need "vwlb_repair_preflight_unverified" "$P/includes/class-vwlb-diagnostics.php" r37-repair-block
 need "Repair was blocked because the database preflight could not be verified safely" "$P/includes/class-vwlb-diagnostics.php" r37-fail-closed-message
 need "snapshot('repair_before',\$preflight)" "$P/includes/class-vwlb-diagnostics.php" r37-verified-snapshot
+# R38
+need "VERIFIED_AT_OPTION" "$P/includes/class-vwlb-r4-migration-guard.php" r38-time-marker
+need "VERIFICATION_TTL" "$P/includes/class-vwlb-r4-migration-guard.php" r38-bounded-trust
+need "time()-\$verified_at" "$P/includes/class-vwlb-r4-migration-guard.php" r38-expiry-check
+need "vwlb_schema_verification_time_failed" "$P/includes/class-vwlb-r4-migration-guard.php" r38-time-persist-fail
+need "verification_ttl_seconds" "$P/includes/class-vwlb-r4-migration-guard.php" r38-audit-lease
 printf '%s\n' 'File 10 R21-R40 sequential contracts PASS'
