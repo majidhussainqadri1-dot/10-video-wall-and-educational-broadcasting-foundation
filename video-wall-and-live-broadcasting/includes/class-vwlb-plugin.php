@@ -10,12 +10,12 @@ final class VWLB_Plugin {
 		$migration=VWLB_Activator::reconcile_schema();
 		if(is_wp_error($migration)){
 			add_action('admin_notices',function()use($migration){if(current_user_can('manage_options'))echo '<div class="notice notice-error"><p>'.esc_html($migration->get_error_message()).'</p></div>';});
-			return;
+			return false;
 		}
 		$verified=VWLB_R4_Migration_Guard::verify_release();
 		if(is_wp_error($verified)){
 			add_action('admin_notices',function()use($verified){if(current_user_can('manage_options'))echo '<div class="notice notice-error"><p>'.esc_html($verified->get_error_message()).'</p></div>';});
-			return;
+			return false;
 		}
 		VWLB_Extensions::register();
 		VWLB_Observability::register();
@@ -37,6 +37,7 @@ final class VWLB_Plugin {
 		add_filter('cron_schedules',array($this,'cron_schedules'));add_action('vwlb_process_jobs',array('VWLB_Jobs','process'));add_action('vwlb_publish_outbox',array('VWLB_Jobs','publish_outbox'));
 		add_action('vwlb_reconcile_states',array('VWLB_Jobs','reconcile'));add_action('vwlb_cleanup',array('VWLB_Jobs','cleanup'));
 		add_action('init',array($this,'rewrite'));add_filter('query_vars',array($this,'query_vars'));add_filter('template_include',array($this,'route_template'));add_action('wp_enqueue_scripts',array($this,'enqueue_route_assets'),20);
+		return true;
 	}
 	public function cron_schedules($s){$s['vwlb_five_minutes']=array('interval'=>300,'display'=>__('Every five minutes',VWLB_TEXT_DOMAIN));return $s;}
 	public function rewrite(){
