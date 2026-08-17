@@ -32,14 +32,35 @@ final class VWLB_Helpers {
 	public static function ua_hash() { $ua = isset( $_SERVER['HTTP_USER_AGENT'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) ) : ''; return $ua ? hash_hmac( 'sha256', $ua, wp_salt( 'secure_auth' ) ) : ''; }
 	public static function no_cache_private() { if ( ! headers_sent() ) { nocache_headers(); header( 'Cache-Control: private, no-store, no-cache, must-revalidate, max-age=0', true ); header( 'X-Robots-Tag: noindex, nofollow, noarchive', true ); } }
 	public static function error( $code, $message, $status = 400, $extra = array() ) { return new WP_Error( $code, $message, array_merge( array( 'status' => $status, 'trace_id' => self::trace_id() ), $extra ) ); }
+
+	/** R30: encrypt wp_options evidence fallbacks; audit notes/outbox payloads must never sit there as plaintext. */
+	private static function evidence_fallback_key() { return hash( 'sha256', wp_salt('auth') . '|' . wp_salt('secure_auth') . '|File10EvidenceFallback', true ); }
+	private static function evidence_fallback_key_id() { return substr( hash( 'sha256', self::evidence_fallback_key() ), 0, 16 ); }
+	public static function encrypt_evidence_fallback( $kind, $row ) {
+		if ( ! function_exists('openssl_encrypt') ) return self::error( 'vwlb_evidence_crypto_unavailable', __( 'Secure evidence fallback storage is unavailable.', VWLB_TEXT_DOMAIN ), 503 );
+		try { $iv = random_bytes(12); } catch ( Throwable $e ) { return self::error( 'vwlb_evidence_crypto_unavailable', __( 'Secure evidence fallback nonce generation failed.', VWLB_TEXT_DOMAIN ), 503 ); }
+		$kind = sanitize_key($kind); $aad = 'vwlb-evidence-fallback-v1|' . $kind; $tag = '';
+		$cipher = openssl_encrypt( self::json_encode($row), 'aes-256-gcm', self::evidence_fallback_key(), OPENSSL_RAW_DATA, $iv, $tag, $aad, 16 );
+		if ( false === $cipher || 16 !== strlen($tag) ) return self::error( 'vwlb_evidence_encrypt_failed', __( 'Evidence fallback could not be encrypted.', VWLB_TEXT_DOMAIN ), 503 );
+		return array( 'v'=>1, 'alg'=>'aes-256-gcm', 'kind'=>$kind, 'key_id'=>self::evidence_fallback_key_id(), 'iv'=>base64_encode($iv), 'tag'=>base64_encode($tag), 'ciphertext'=>base64_encode($cipher), 'created_at'=>self::now() );
+	}
+	public static function decrypt_evidence_fallback( $value, $expected_kind = '' ) {
+		if ( ! is_array($value) || empty($value['ciphertext']) ) return self::error( 'vwlb_evidence_legacy_plaintext', __( 'Legacy plaintext evidence requires migration before use.', VWLB_TEXT_DOMAIN ), 503 );
+		$kind = sanitize_key($value['kind'] ?? ''); $expected_kind = sanitize_key($expected_kind); if ( $expected_kind && $kind !== $expected_kind ) return self::error( 'vwlb_evidence_kind_mismatch', __( 'Evidence fallback kind does not match its storage namespace.', VWLB_TEXT_DOMAIN ), 503 );
+		if ( ($value['alg'] ?? '') !== 'aes-256-gcm' || ($value['key_id'] ?? '') !== self::evidence_fallback_key_id() || ! function_exists('openssl_decrypt') ) return self::error( 'vwlb_evidence_key_unavailable', __( 'Evidence fallback cannot be decrypted with the active key.', VWLB_TEXT_DOMAIN ), 503 );
+		$iv=base64_decode((string)($value['iv']??''),true);$tag=base64_decode((string)($value['tag']??''),true);$cipher=base64_decode((string)($value['ciphertext']??''),true);if(false===$iv||false===$tag||false===$cipher)return self::error('vwlb_evidence_cipher_invalid',__('Evidence fallback encoding is invalid.',VWLB_TEXT_DOMAIN),503);
+		$plain=openssl_decrypt($cipher,'aes-256-gcm',self::evidence_fallback_key(),OPENSSL_RAW_DATA,$iv,$tag,'vwlb-evidence-fallback-v1|'.$kind);if(false===$plain)return self::error('vwlb_evidence_decrypt_failed',__('Evidence fallback failed authentication.',VWLB_TEXT_DOMAIN),503);$row=json_decode($plain,true);return is_array($row)?$row:self::error('vwlb_evidence_payload_invalid',__('Evidence fallback payload is invalid.',VWLB_TEXT_DOMAIN),503);
+	}
 	private static function durable_fallback( $prefix, $public_id, $row ) {
 		$key = sanitize_key( $prefix ) . substr( hash( 'sha256', (string) $public_id ), 0, 40 );
-		$saved = add_option( $key, $row, '', false );
+		$kind = str_contains($prefix,'audit') ? 'audit' : (str_contains($prefix,'outbox') ? 'outbox' : sanitize_key($prefix));
+		$envelope = self::encrypt_evidence_fallback($kind,$row); if ( is_wp_error($envelope) ) { do_action('vwlb_operational_failure','evidence',$envelope->get_error_code(),array('kind'=>$kind)); return false; }
+		$saved = add_option( $key, $envelope, '', false );
 		if ( ! $saved ) {
-			$existing = get_option( $key, null );
-			if ( $existing !== $row ) {
-				error_log( 'VWLB durable evidence fallback could not be persisted: ' . sanitize_key( $prefix ) );
-				do_action( 'vwlb_operational_failure', 'evidence', 'vwlb_evidence_fallback_failed', array( 'kind'=>sanitize_key($prefix) ) );
+			$existing = get_option( $key, null ); $decoded = self::decrypt_evidence_fallback($existing,$kind);
+			if ( is_wp_error($decoded) || $decoded !== $row ) {
+				error_log( 'VWLB encrypted durable evidence fallback could not be persisted: ' . sanitize_key( $prefix ) );
+				do_action( 'vwlb_operational_failure', 'evidence', 'vwlb_evidence_fallback_failed', array( 'kind'=>$kind ) );
 				return false;
 			}
 		}
