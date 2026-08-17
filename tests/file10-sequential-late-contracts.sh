@@ -37,4 +37,9 @@ need "VWLB_R18_Durability::register" "$P/video-wall-and-live-broadcasting.php" r
 need "vwlb_inbox_retry_persist_failed" "$P/includes/class-vwlb-r18-durability.php" r18-capture-failure
 need "throw new RuntimeException" "$P/includes/class-vwlb-r18-durability.php" r18-fail-closed
 need "vwlb_inbox_retry_release_failed" "$P/includes/class-vwlb-r18-durability.php" r18-release-observable
+# R19 — an expired idempotency row must not be forgotten unless durable deletion/re-read proves it is gone or safely replaced.
+need "vwlb_idempotency_expiry_cleanup_failed" "$P/includes/class-vwlb-security.php" r19-expiry-fail-closed
+need "\$expired_id=absint(\$row['id'])" "$P/includes/class-vwlb-security.php" r19-expired-row-identity
+need "\$row=\$wpdb->get_row" "$P/includes/class-vwlb-security.php" r19-post-delete-reread
+need "absint(\$row['id'])===\$expired_id" "$P/includes/class-vwlb-security.php" r19-stale-row-detection
 printf '%s\n' 'File 10 sequential late-round contracts PASS'
