@@ -1,5 +1,5 @@
 <?php
-/** R20 sequential review: encrypted, expiring and erasable inbound retry evidence. */
+/** R20/R29 sequential review: encrypted, expiring and erasable inbound retry evidence. */
 defined( 'ABSPATH' ) || exit;
 final class VWLB_R20_Retry_Privacy {
 	const TTL = DAY_IN_SECONDS;
@@ -53,7 +53,7 @@ final class VWLB_R20_Retry_Privacy {
 	public static function erasers($erasers){$erasers['vwlb-retry-evidence']=array('eraser_friendly_name'=>__('Video Wall secure retry evidence',VWLB_TEXT_DOMAIN),'callback'=>array(__CLASS__,'erase_retry_evidence'));return $erasers;}
 	public static function erase_retry_evidence($email,$page=1){
 		$user=get_user_by('email',$email);if(!$user)return array('items_removed'=>false,'items_retained'=>false,'messages'=>array(),'done'=>true);$uid=(int)$user->ID;$cursor_key=self::ERASURE_CURSOR_PREFIX.hash('sha256',(string)$uid);$cursor=max(0,(int)get_option($cursor_key,0));$rows=self::records($cursor,200);$removed=false;$last=$cursor;
-		foreach($rows as $option){$last=max($last,(int)$option['option_id']);$record=maybe_unserialize($option['option_value']);if(!is_array($record))continue;$payload=self::decrypt_payload($record);if(is_wp_error($payload))continue;if(self::payload_mentions_user($payload,$uid)){$deleted=delete_option($option['option_name']);if(!$deleted&&false!==get_option($option['option_name'],false))return array('items_removed'=>$removed,'items_retained'=>true,'messages'=>array(__('Secure retry evidence could not be erased safely.',VWLB_TEXT_DOMAIN)),'done'=>false);$removed=true;}}
+		foreach($rows as $option){$last=max($last,(int)$option['option_id']);$record=maybe_unserialize($option['option_value']);if(!is_array($record))continue;$payload=self::decrypt_payload($record);if(is_wp_error($payload)){do_action('vwlb_operational_failure','privacy','vwlb_retry_erasure_unverifiable',array('option_hash'=>hash('sha256',$option['option_name']),'reason'=>$payload->get_error_code()));return array('items_removed'=>$removed,'items_retained'=>true,'messages'=>array(__('Encrypted retry evidence could not be inspected safely, so privacy erasure was stopped and remains incomplete.',VWLB_TEXT_DOMAIN)),'done'=>false);}if(self::payload_mentions_user($payload,$uid)){$deleted=delete_option($option['option_name']);if(!$deleted&&false!==get_option($option['option_name'],false))return array('items_removed'=>$removed,'items_retained'=>true,'messages'=>array(__('Secure retry evidence could not be erased safely.',VWLB_TEXT_DOMAIN)),'done'=>false);$removed=true;}}
 		$done=count($rows)<200;if($done){delete_option($cursor_key);}else{$saved=update_option($cursor_key,$last,false);if(!$saved&&(int)get_option($cursor_key,0)!==$last)return array('items_removed'=>$removed,'items_retained'=>true,'messages'=>array(__('Retry-evidence erasure cursor could not be saved safely.',VWLB_TEXT_DOMAIN)),'done'=>false);}return array('items_removed'=>$removed,'items_retained'=>!$done,'messages'=>array(),'done'=>$done);
 	}
 }
