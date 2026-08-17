@@ -1,0 +1,93 @@
+#!/usr/bin/env bash
+set -euo pipefail
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+P="$ROOT/video-wall-and-live-broadcasting"
+need(){ grep -R -F -- "$1" "$2" >/dev/null || { echo "FAIL fourth-fresh-20: $3" >&2; exit 1; }; }
+forbid(){ ! grep -R -F -- "$1" "$2" >/dev/null || { echo "FAIL fourth-fresh-20: $3" >&2; exit 1; }; }
+# R01 batch
+need "Version: 1.2.5-rc1" "$P/video-wall-and-live-broadcasting.php" r01-version
+need "Stable tag: 1.2.5-rc1" "$P/readme.txt" r01-readme-version
+need "vwlb_internal_identifier_forbidden" "$P/includes/class-vwlb-future-rest.php" r01-no-internal-api-ids
+need "source_public_ids" "$P/includes/class-vwlb-future-rest.php" r01-source-public-ids
+need "user_public_id" "$P/includes/class-vwlb-future-rest.php" r01-user-public-id
+need "track_public_id" "$P/includes/class-vwlb-future-rest.php" r01-track-public-id
+need "live_event_public_id" "$P/includes/class-vwlb-future-rest.php" r01-health-public-id
+forbid "VWLB_Future_Intelligence::live" "$P/includes/class-vwlb-future-adapters.php" r01-private-live-call
+forbid "VWLB_Future_Intelligence::public_row" "$P/includes/class-vwlb-future-adapters.php" r01-private-row-call
+need "vwlb_track_generation_reconcile_required" "$P/includes/class-vwlb-future-adapters.php" r01-provider-reconcile
+need "VWLB_DB::transaction(function()use(\$result,\$allowed,\$kinds,\$video)" "$P/includes/class-vwlb-future-adapters.php" r01-ai-atomic
+need "vwlb_poll_too_many_options" "$P/includes/class-vwlb-future-safety.php" r01-poll-bound
+need "LIMIT 500" "$P/includes/class-vwlb-future-safety.php" r01-list-bounds
+need "vwlb_operational_failure" "$P/includes/class-vwlb-future-safety.php" r01-cleanup-observable
+need "persist_metrics" "$P/includes/class-vwlb-observability.php" r01-metrics-persist
+need "erasure_has_more" "$P/includes/class-vwlb-privacy.php" r01-privacy-batching
+need "status_header(404)" "$P/includes/class-vwlb-plugin.php" r01-route-404
+need "version state could not be recorded durably" "$P/includes/class-vwlb-activator.php" r01-activation-version
+php -r "define('ABSPATH','/'); require '$P/includes/class-vwlb-future-intelligence.php'; foreach(['live','public_row'] as \$m){\$r=new ReflectionMethod('VWLB_Future_Intelligence',\$m); if(!\$r->isPrivate()) exit(2);}" >/dev/null
+need "register_rest_overrides" "$P/includes/class-vwlb-future-safety.php" r01-bounded-rest-overrides
+need "rest_playback" "$P/includes/class-vwlb-future-safety.php" r01-bounded-playback
+need "rest_poll_create" "$P/includes/class-vwlb-future-safety.php" r01-bounded-poll-rest
+need "VWLB_Future_Safety::annotations" "$P/includes/class-vwlb-future-frontend.php" r01-bounded-frontend-annotations
+need "class-vwlb-future-safety.php" "$P/video-wall-and-live-broadcasting.php" r01-safety-autoload
+need "VWLB_Future_Safety::register" "$P/includes/class-vwlb-plugin.php" r01-safety-register
+
+# R02 batch
+need "class-vwlb-review-hardening.php" "$P/video-wall-and-live-broadcasting.php" r02-hardening-autoload
+need "VWLB_Review_Hardening::register" "$P/includes/class-vwlb-plugin.php" r02-hardening-register
+need "vwlb_public_identifier_required" "$P/includes/class-vwlb-review-hardening.php" r02-route-public-id
+need "channel_public_id" "$P/includes/class-vwlb-review-hardening.php" r02-channel-public-id
+need "video_public_ids" "$P/includes/class-vwlb-review-hardening.php" r02-playlist-public-ids
+need "object_public_id" "$P/includes/class-vwlb-review-hardening.php" r02-download-public-id
+need "series_public_id" "$P/includes/class-vwlb-review-hardening.php" r02-podcast-series-public-id
+need "vwlb_secure_podcast_playback_grant" "$P/includes/class-vwlb-review-hardening.php" r02-protected-podcast-grant
+need "target_public_id" "$P/includes/class-vwlb-review-hardening.php" r02-creator-target-public-id
+need "anonymized_user_id" "$P/includes/class-vwlb-review-hardening.php" r02-privacy-attendee-surrogate
+need "NOT EXISTS (SELECT 1 FROM \$captions_table newer" "$P/includes/class-vwlb-repository.php" r02-caption-current-only
+need "LIMIT 100" "$P/includes/class-vwlb-repository.php" r02-caption-bound
+need "future_live_config" "$P/uninstall.php" r02-purge-future
+need "podcast_episodes" "$P/uninstall.php" r02-purge-podcasts
+need "live_poll_responses" "$P/uninstall.php" r02-purge-polls
+need "vwlb_future_schema_version" "$P/uninstall.php" r02-purge-future-option
+need "vwlb-private-media" "$P/uninstall.php" r02-purge-private-media
+need "vwlb_audit_fallback_" "$P/includes/class-vwlb-helpers.php" r02-audit-fallback
+need "vwlb_outbox_fallback_" "$P/includes/class-vwlb-helpers.php" r02-outbox-fallback
+need "vwlb_inbox_retry_" "$P/includes/class-vwlb-review-hardening.php" r02-inbox-retry
+need "reconcile_inbox_retries" "$P/includes/class-vwlb-review-hardening.php" r02-inbox-reconcile
+need "vwlb_cleanup_delete_failed" "$P/includes/class-vwlb-review-hardening.php" r02-cleanup-observable
+need "VWLB_Repository::find('videos',\$r['id'])" "$P/includes/class-vwlb-review-hardening.php" r02-playback-canonical-row
+forbid "'channel_id'=>\$r['channel_id']" "$P/includes/class-vwlb-review-hardening.php" r02-no-public-channel-pk
+need "unset(\$v['credential_id'])" "$P/includes/class-vwlb-review-hardening.php" r02-credential-pk-redacted
+
+# R03 batch
+need "class-vwlb-r3-playback.php" "$P/video-wall-and-live-broadcasting.php" r03-playback-autoload
+need "VWLB_R3_Playback::register" "$P/includes/class-vwlb-plugin.php" r03-playback-register
+need "anonymous_session_surrogate" "$P/includes/class-vwlb-r3-playback.php" r03-anon-isolation
+need "4611686018427387904" "$P/includes/class-vwlb-r3-playback.php" r03-anon-high-range
+need "vwlb_secure_playback_grant" "$P/includes/class-vwlb-r3-playback.php" r03-secure-playback
+need "vwlb_view_counter_failed" "$P/includes/class-vwlb-r3-playback.php" r03-view-observable
+need "private, no-store" "$P/includes/class-vwlb-r3-playback.php" r03-playback-no-store
+forbid "'user_id'=>0" "$P/includes/class-vwlb-r3-playback.php" r03-no-shared-anon-zero
+need "vwlb_secure_media_contract_grant" "$P/includes/class-vwlb-review-hardening.php" r03-secure-media-contract
+need "vwlb_download_rights_changed" "$P/includes/class-vwlb-review-hardening.php" r03-download-rights-fresh
+need "vwlb_private_download_grant" "$P/includes/class-vwlb-review-hardening.php" r03-private-download-grant
+need "visibility=%s" "$P/includes/class-vwlb-review-hardening.php" r03-podcast-public-only
+need "'ready'!==" "$P/includes/class-vwlb-review-hardening.php" r03-ready-asset
+need "'passed'!==" "$P/includes/class-vwlb-review-hardening.php" r03-scanned-asset
+need "register_rest_overrides'),40" "$P/includes/class-vwlb-r3-playback.php" r03-late-playback-override
+
+# R04 batch — release migration/schema and private-storage verification.
+need "class-vwlb-r4-migration-guard.php" "$P/video-wall-and-live-broadcasting.php" r04-guard-autoload
+need "VWLB_R4_Migration_Guard::verify_release" "$P/includes/class-vwlb-plugin.php" r04-runtime-gate
+need "if(is_wp_error(\$verified))" "$P/includes/class-vwlb-plugin.php" r04-fail-closed
+need "vwlb_schema_verified_release" "$P/includes/class-vwlb-r4-migration-guard.php" r04-release-marker
+need "vwlb_schema_verification_lock" "$P/includes/class-vwlb-r4-migration-guard.php" r04-lock
+need "SHOW COLUMNS FROM" "$P/includes/class-vwlb-r4-migration-guard.php" r04-columns
+need "SHOW INDEX FROM" "$P/includes/class-vwlb-r4-migration-guard.php" r04-indexes
+need "series_slug" "$P/includes/class-vwlb-r4-migration-guard.php" r04-podcast-index
+need "VWLB_DB::install_schema" "$P/includes/class-vwlb-r4-migration-guard.php" r04-base-reconcile
+need "VWLB_Extensions::install_schema" "$P/includes/class-vwlb-r4-migration-guard.php" r04-extension-reconcile
+need "VWLB_Future_Intelligence::install_schema" "$P/includes/class-vwlb-r4-migration-guard.php" r04-future-reconcile
+need "file_put_contents(\$path,\$content,LOCK_EX)" "$P/includes/class-vwlb-r4-migration-guard.php" r04-storage-write
+need "hash_equals(hash('sha256',\$content),hash('sha256',\$actual))" "$P/includes/class-vwlb-r4-migration-guard.php" r04-storage-verify
+need "vwlb_schema_verified_release" "$P/uninstall.php" r04-uninstall-marker
+need "vwlb_schema_verification_lock" "$P/uninstall.php" r04-uninstall-lock
