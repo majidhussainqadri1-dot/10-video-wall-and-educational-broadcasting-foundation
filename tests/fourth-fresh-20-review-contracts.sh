@@ -5,8 +5,8 @@ P="$ROOT/video-wall-and-live-broadcasting"
 need(){ grep -R -F -- "$1" "$2" >/dev/null || { echo "FAIL fourth-fresh-20: $3" >&2; exit 1; }; }
 forbid(){ ! grep -R -F -- "$1" "$2" >/dev/null || { echo "FAIL fourth-fresh-20: $3" >&2; exit 1; }; }
 # R01 batch
-need "Version: 1.2.5-rc1" "$P/video-wall-and-live-broadcasting.php" r01-version
-need "Stable tag: 1.2.5-rc1" "$P/readme.txt" r01-readme-version
+need "Version: 1.2.6-rc1" "$P/video-wall-and-live-broadcasting.php" r01-version
+need "Stable tag: 1.2.6-rc1" "$P/readme.txt" r01-readme-version
 need "vwlb_internal_identifier_forbidden" "$P/includes/class-vwlb-future-rest.php" r01-no-internal-api-ids
 need "source_public_ids" "$P/includes/class-vwlb-future-rest.php" r01-source-public-ids
 need "user_public_id" "$P/includes/class-vwlb-future-rest.php" r01-user-public-id
