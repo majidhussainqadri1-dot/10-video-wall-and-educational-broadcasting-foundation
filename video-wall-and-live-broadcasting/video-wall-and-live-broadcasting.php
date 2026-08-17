@@ -42,7 +42,8 @@ register_activation_hook( VWLB_FILE, array( 'VWLB_Activator', 'activate' ) );
 register_deactivation_hook( VWLB_FILE, array( 'VWLB_Activator', 'deactivate' ) );
 
 function vwlb_boot() {
-	VWLB_Plugin::instance()->run();
+	// R21: do not register mutation/reconciliation hardening surfaces when the core boot failed (for example, while a schema migration lock is active).
+	if ( true !== VWLB_Plugin::instance()->run() ) return;
 	VWLB_R10_Integrity::register();
 	VWLB_R11_Restore_Guard::register();
 	VWLB_R18_Durability::register();
