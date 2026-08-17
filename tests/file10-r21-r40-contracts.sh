@@ -49,5 +49,9 @@ need "thumbnail_url" "$P/includes/class-vwlb-r34-frontend-contract.php" r34-publ
 # R35
 need "vwlb_provider_health_read_failed" "$P/includes/class-vwlb-observability.php" r35-read-failure-signal
 need "if(''!==(string)\$wpdb->last_error)" "$P/includes/class-vwlb-observability.php" r35-query-error-check
-need "return false;" "$P/includes/class-vwlb-observability.php" r35-fail-closed
+# R36
+need "scheduled_publish" "$P/includes/class-vwlb-jobs.php" r36-audit-action
+need "Scheduled publication gate revalidated at execution time" "$P/includes/class-vwlb-jobs.php" r36-gate-revalidation
+need "VWLB_DB::transaction(function()use(\$candidate,\$now)" "$P/includes/class-vwlb-jobs.php" r36-atomic-transaction
+need "'public_id'=>\$current['public_id'],'scheduled'=>true" "$P/includes/class-vwlb-jobs.php" r36-public-event
 printf '%s\n' 'File 10 R21-R40 sequential contracts PASS'
