@@ -33,9 +33,16 @@ final class VWLB_Media {
 		if(!$url&&!$attachment)return VWLB_Helpers::error('vwlb_source_required',__('A source URL or attachment is required. Use the resumable endpoint for private chunked uploads.',VWLB_TEXT_DOMAIN));
 		if($attachment&&!current_user_can('read_post',$attachment))return VWLB_Helpers::error('vwlb_attachment_forbidden',__('The attachment is not accessible.',VWLB_TEXT_DOMAIN),403);
 		if($attachment&&!apply_filters('vwlb_allow_legacy_attachment_ingest',false,$attachment,$asset))return VWLB_Helpers::error('vwlb_private_ingest_required',__('Raw media must use the private resumable ingest path; public Media Library ingest is disabled by default.',VWLB_TEXT_DOMAIN),422);
-		$checksum=strtolower(VWLB_Helpers::text($data['checksum']??$asset['checksum'],128));if($checksum&&!preg_match('/^[a-f0-9]{64}$/',$checksum))return VWLB_Helpers::error('vwlb_checksum_invalid',__('Checksum must be SHA-256.',VWLB_TEXT_DOMAIN),422);$result=VWLB_Repository::update_versioned('media_assets',$asset['id'],$expected_version,array('source_url'=>$url,'attachment_id'=>$attachment,'status'=>'uploaded','scan_status'=>'pending','checksum'=>$checksum,'duration_seconds'=>VWLB_Helpers::duration_seconds($data['duration']??0)),array('%s','%d','%s','%s','%s','%d'));
+		$checksum=strtolower(VWLB_Helpers::text($data['checksum']??$asset['checksum'],128));if($checksum&&!preg_match('/^[a-f0-9]{64}$/',$checksum))return VWLB_Helpers::error('vwlb_checksum_invalid',__('Checksum must be SHA-256.',VWLB_TEXT_DOMAIN),422);
+		// R25: state transition and processing-queue persistence are one transaction. Never strand an uploaded asset without its required job.
+		$result=VWLB_DB::transaction(function()use($asset,$expected_version,$url,$attachment,$checksum,$data){
+			$updated=VWLB_Repository::update_versioned('media_assets',$asset['id'],$expected_version,array('source_url'=>$url,'attachment_id'=>$attachment,'status'=>'uploaded','scan_status'=>'pending','checksum'=>$checksum,'duration_seconds'=>VWLB_Helpers::duration_seconds($data['duration']??0)),array('%s','%d','%s','%s','%s','%d'));
+			if(is_wp_error($updated))return $updated;
+			$job=self::enqueue($asset['id'],'verify_and_process',array('required_derivatives'=>array('hls','mp4_high','mp4_low','audio_only','poster','storyboard','transcript_draft')));
+			if(!$job)return VWLB_Helpers::error('vwlb_processing_queue_failed',__('Media completion was rolled back because processing could not be queued. Retry safely.',VWLB_TEXT_DOMAIN),503);
+			return $updated;
+		});
 		if(is_wp_error($result))return $result;
-		$job=self::enqueue($asset['id'],'verify_and_process',array('required_derivatives'=>array('hls','mp4_high','mp4_low','audio_only','poster','storyboard','transcript_draft')));if(!$job)return VWLB_Helpers::error('vwlb_processing_queue_failed',__('Media uploaded but processing could not be queued; retry completion after reconciliation.',VWLB_TEXT_DOMAIN),503);
 		VWLB_Helpers::audit('asset',$asset['id'],'complete','initiated','uploaded','Upload completed; validation, scan and transcoding queued');return $result;
 	}
 	public static function enqueue($asset_id,$type,$input=array(),$priority=100){
