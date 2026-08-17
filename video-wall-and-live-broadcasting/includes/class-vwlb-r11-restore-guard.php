@@ -1,5 +1,5 @@
 <?php
-/** R11 sequential review: case-bound restoration guard across moderation, takedown and consent restrictions. */
+/** R11/R28 sequential review: case-bound restoration guard across moderation, takedown and consent restrictions. */
 defined( 'ABSPATH' ) || exit;
 
 final class VWLB_R11_Restore_Guard {
@@ -35,6 +35,37 @@ final class VWLB_R11_Restore_Guard {
 		return ! empty( $evidence['target_previous_status'] );
 	}
 
+	/** R28: scan every potentially blocking case in bounded pages; a blocker older than the newest 100 cases must never be skipped. */
+	private static function moderation_blocker_exists( $target_type, $target_id, $exclude_id ) {
+		global $wpdb; $table = VWLB_Helpers::table('moderation'); $before = PHP_INT_MAX;
+		do {
+			$rows = $wpdb->get_results( $wpdb->prepare(
+				"SELECT id,evidence_json FROM $table WHERE target_type=%s AND target_id=%d AND id<%d AND id<>%d AND status='closed' AND action IN ('restrict','remove') ORDER BY id DESC LIMIT 100",
+				$target_type, $target_id, $before, max(0,(int)$exclude_id)
+			), ARRAY_A );
+			if ( null === $rows || '' !== (string) $wpdb->last_error ) return VWLB_Helpers::error( 'vwlb_restore_blocker_check_failed', __( 'Restoration blockers could not be verified safely.', VWLB_TEXT_DOMAIN ), 503 );
+			foreach ( $rows as $row ) if ( self::proven_restriction( $row['evidence_json'] ?? '{}' ) ) return true;
+			if ( count($rows) < 100 ) return false;
+			$last = end($rows); $before = max(1,(int)($last['id'] ?? 1));
+		} while ( $before > 1 );
+		return false;
+	}
+
+	private static function takedown_blocker_exists( $target_type, $target_id, $exclude_id ) {
+		global $wpdb; $table = VWLB_Helpers::table('takedowns'); $before = PHP_INT_MAX;
+		do {
+			$rows = $wpdb->get_results( $wpdb->prepare(
+				"SELECT id,evidence_json FROM $table WHERE target_type=%s AND target_id=%d AND id<%d AND id<>%d AND status<>'restored' ORDER BY id DESC LIMIT 100",
+				$target_type, $target_id, $before, max(0,(int)$exclude_id)
+			), ARRAY_A );
+			if ( null === $rows || '' !== (string) $wpdb->last_error ) return VWLB_Helpers::error( 'vwlb_restore_blocker_check_failed', __( 'Restoration blockers could not be verified safely.', VWLB_TEXT_DOMAIN ), 503 );
+			foreach ( $rows as $row ) if ( self::proven_restriction( $row['evidence_json'] ?? '{}' ) ) return true;
+			if ( count($rows) < 100 ) return false;
+			$last = end($rows); $before = max(1,(int)($last['id'] ?? 1));
+		} while ( $before > 1 );
+		return false;
+	}
+
 	private static function assert_restore_allowed( $target_type, $target_id, $exclude_kind, $exclude_id ) {
 		global $wpdb;
 		if ( 'video' === $target_type ) {
@@ -42,34 +73,17 @@ final class VWLB_R11_Restore_Guard {
 				"SELECT id FROM " . VWLB_Helpers::table('consent_links') . " WHERE video_id=%d AND (status IN ('expired','withdrawn') OR (status='active' AND expires_at IS NOT NULL AND expires_at<=%s)) ORDER BY id DESC LIMIT 1",
 				$target_id, VWLB_Helpers::now()
 			) );
+			if ( '' !== (string) $wpdb->last_error ) return VWLB_Helpers::error( 'vwlb_restore_blocker_check_failed', __( 'Restoration blockers could not be verified safely.', VWLB_TEXT_DOMAIN ), 503 );
 			if ( $consent ) return VWLB_Helpers::error( 'vwlb_restore_blocked_by_consent', __( 'This video cannot be restored while a consent restriction remains active.', VWLB_TEXT_DOMAIN ), 409 );
 		}
 
-		$moderation_table = VWLB_Helpers::table( 'moderation' );
-		$moderation_rows = $wpdb->get_results( $wpdb->prepare(
-			"SELECT id,action,status,evidence_json FROM $moderation_table WHERE target_type=%s AND target_id=%d ORDER BY id DESC LIMIT 100",
-			$target_type, $target_id
-		), ARRAY_A );
-		if ( ! is_array( $moderation_rows ) ) return VWLB_Helpers::error( 'vwlb_restore_blocker_check_failed', __( 'Restoration blockers could not be verified safely.', VWLB_TEXT_DOMAIN ), 503 );
-		foreach ( $moderation_rows as $row ) {
-			if ( 'moderation' === $exclude_kind && (int) $row['id'] === $exclude_id ) continue;
-			if ( 'closed' === ( $row['status'] ?? '' ) && in_array( $row['action'] ?? '', array( 'restrict','remove' ), true ) && self::proven_restriction( $row['evidence_json'] ?? '{}' ) ) {
-				return VWLB_Helpers::error( 'vwlb_restore_blocked_by_moderation', __( 'Another moderation case still requires this content to remain restricted.', VWLB_TEXT_DOMAIN ), 409 );
-			}
-		}
+		$moderation = self::moderation_blocker_exists( $target_type, $target_id, 'moderation' === $exclude_kind ? $exclude_id : 0 );
+		if ( is_wp_error($moderation) ) return $moderation;
+		if ( $moderation ) return VWLB_Helpers::error( 'vwlb_restore_blocked_by_moderation', __( 'Another moderation case still requires this content to remain restricted.', VWLB_TEXT_DOMAIN ), 409 );
 
-		$takedown_table = VWLB_Helpers::table( 'takedowns' );
-		$takedown_rows = $wpdb->get_results( $wpdb->prepare(
-			"SELECT id,status,evidence_json FROM $takedown_table WHERE target_type=%s AND target_id=%d ORDER BY id DESC LIMIT 100",
-			$target_type, $target_id
-		), ARRAY_A );
-		if ( ! is_array( $takedown_rows ) ) return VWLB_Helpers::error( 'vwlb_restore_blocker_check_failed', __( 'Restoration blockers could not be verified safely.', VWLB_TEXT_DOMAIN ), 503 );
-		foreach ( $takedown_rows as $row ) {
-			if ( 'takedown' === $exclude_kind && (int) $row['id'] === $exclude_id ) continue;
-			if ( 'restored' !== ( $row['status'] ?? '' ) && self::proven_restriction( $row['evidence_json'] ?? '{}' ) ) {
-				return VWLB_Helpers::error( 'vwlb_restore_blocked_by_takedown', __( 'Another takedown case still requires this content to remain restricted.', VWLB_TEXT_DOMAIN ), 409 );
-			}
-		}
-		return $GLOBALS['wp_rest_server'] instanceof WP_REST_Server ? null : null;
+		$takedown = self::takedown_blocker_exists( $target_type, $target_id, 'takedown' === $exclude_kind ? $exclude_id : 0 );
+		if ( is_wp_error($takedown) ) return $takedown;
+		if ( $takedown ) return VWLB_Helpers::error( 'vwlb_restore_blocked_by_takedown', __( 'Another takedown case still requires this content to remain restricted.', VWLB_TEXT_DOMAIN ), 409 );
+		return null;
 	}
 }
