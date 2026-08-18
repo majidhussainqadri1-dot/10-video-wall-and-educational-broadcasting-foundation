@@ -4,8 +4,8 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PLUGIN="$ROOT/video-wall-and-live-broadcasting"
 fail(){ echo "FAIL: $*" >&2; exit 1; }
 [[ -f "$PLUGIN/video-wall-and-live-broadcasting.php" ]] || fail "main plugin missing"
-grep -F "Version: 1.2.6-rc1" "$PLUGIN/video-wall-and-live-broadcasting.php" >/dev/null || fail version
-grep -F "define( 'VWLB_VERSION', '1.2.6-rc1' );" "$PLUGIN/video-wall-and-live-broadcasting.php" >/dev/null || fail constant
+grep -F "Version: 1.2.7-rc1" "$PLUGIN/video-wall-and-live-broadcasting.php" >/dev/null || fail version
+grep -F "define( 'VWLB_VERSION', '1.2.7-rc1' );" "$PLUGIN/video-wall-and-live-broadcasting.php" >/dev/null || fail constant
 grep -F "define( 'VWLB_FUTURE_SCHEMA_VERSION', '1.2.0' );" "$PLUGIN/video-wall-and-live-broadcasting.php" >/dev/null || fail future-schema
 grep -F "Text Domain: video-wall-live-broadcasting" "$PLUGIN/video-wall-and-live-broadcasting.php" >/dev/null || fail text-domain
 for id in $(seq -w 1 19); do grep -F "F10-FR-0${id}" "$ROOT/docs/REQUIREMENTS-TRACEABILITY.md" >/dev/null || fail "missing FR $id"; done

@@ -3,7 +3,7 @@ Contributors: sabrihomeopathy
 Requires at least: 7.0
 Tested up to: 7.0.1
 Requires PHP: 8.3
-Stable tag: 1.2.6-rc1
+Stable tag: 1.2.7-rc1
 License: GPLv2 or later
 
 File 10 canonical owner for recorded video and live broadcasting in the Sabri Social Homeopathy Platform.
@@ -38,7 +38,7 @@ Keyboard-visible focus, approximate 44px controls, semantic status regions, capt
 == Installation ==
 
 1. Back up the approved staging environment and verify restoration.
-2. Upload `video-wall-and-live-broadcasting-1.2.6-rc1.zip` to WordPress staging.
+2. Upload `video-wall-and-live-broadcasting-1.2.7-rc1.zip` to WordPress staging.
 3. Activate the plugin; schema, capabilities, pages and cron jobs are reconciled idempotently.
 4. Configure File 00 identity claims/capabilities and approved provider adapters.
 5. Run Video & Live diagnostics.
@@ -54,8 +54,14 @@ Source code, deterministic packaging and automated checks do not prove Hostinger
 
 == Changelog ==
 
+= 1.2.7-rc1 =
+* Close R40 of the sequential R21-R40 review cycle.
+* Make explicit destructive purge remove schema-verification time, R10 structural-verification and R30 encrypted-evidence migration markers.
+* Synchronize the canonical manifest and current release identity after the R40 package-changing correction.
+* Preserve the immutable-package rule by assigning a new runtime/package identity instead of overwriting the earlier 1.2.6-rc1 artifact identity.
+
 = 1.2.6-rc1 =
-* R21-R40 sequential corrective review candidate with exact-head evidence discipline.
+* R21-R39 interim sequential corrective review candidate with exact-head evidence discipline.
 * Fail closed when core schema boot verification fails before post-run hardening surfaces register.
 * Remove internal owner/attachment identifiers from Video Wall public DTOs and align frontend rendering.
 * Make upload completion and required processing enqueue atomic.
