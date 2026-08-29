@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-CURRENT_VERSION='1.2.9-rc1'
+CURRENT_VERSION='1.2.10-rc1'
 run_rebased_124(){ local src="$1" tmp; tmp="$(mktemp "$ROOT/tests/.rebased.XXXXXX.sh")"; sed "s/1\\.2\\.4-rc1/${CURRENT_VERSION}/g" "$src" > "$tmp"; bash "$tmp"; rm -f "$tmp"; }
 run_rebased_127(){ local src="$1" tmp; tmp="$(mktemp "$ROOT/tests/.rebased127.XXXXXX.sh")"; sed "s/1\\.2\\.7-rc1/${CURRENT_VERSION}/g" "$src" > "$tmp"; bash "$tmp"; rm -f "$tmp"; }
 run_rebased_128(){
