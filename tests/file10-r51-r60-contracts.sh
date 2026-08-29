@@ -69,4 +69,11 @@ need "vwlb_provider_live_reconcile_required" "$P/includes/class-vwlb-live.php" r
 need "if(\$compensated){VWLB_Security::idempotency_abort" "$P/includes/class-vwlb-live.php" r57-release-only-after-confirmed-compensation
 need "Reconciliation is required before this idempotency key can be retried." "$P/includes/class-vwlb-live.php" r57-retry-block-message
 
+# R58 — durable stream-credential compensation is enforced by the command itself, and transition-to-live distinguishes DB read failure from a genuinely missing active credential.
+need "public static function issue_durable" "$P/includes/class-vwlb-r46-stream-credential-durability.php" r58-public-durable-issuer
+need "VWLB_R46_Stream_Credential_Durability::issue_durable" "$P/includes/class-vwlb-live.php" r58-command-delegation
+need "vwlb_stream_credential_read_failed" "$P/includes/class-vwlb-live.php" r58-read-failure
+need "if(is_wp_error(\$active))return \$active" "$P/includes/class-vwlb-live.php" r58-read-error-propagation
+need "\$wpdb->last_error=''" "$P/includes/class-vwlb-live.php" r58-fresh-credential-read
+
 printf '%s\n' 'File 10 R51-R60 sequential contracts PASS'
