@@ -19,7 +19,7 @@ need "RECONCILE_CURSOR_PREFIX = 'vwlb_r30_reconcile_cursor_'" "$P/includes/class
 need "RECONCILE_PAGE_SIZE = 50" "$P/includes/class-vwlb-r30-evidence-privacy.php" r42-page-size
 need "persist_cursor" "$P/includes/class-vwlb-r30-evidence-privacy.php" r42-cursor-persist
 need "vwlb_evidence_reconcile_cursor_failed" "$P/includes/class-vwlb-r30-evidence-privacy.php" r42-cursor-observable
-need "SELECT * FROM {$canonical_table} WHERE public_id=%s LIMIT 1" "$P/includes/class-vwlb-r30-evidence-privacy.php" r42-dedupe-read
+need 'SELECT * FROM {$canonical_table} WHERE public_id=%s LIMIT 1' "$P/includes/class-vwlb-r30-evidence-privacy.php" r42-dedupe-read
 need "canonical_matches" "$P/includes/class-vwlb-r30-evidence-privacy.php" r42-dedupe-compare
 need "vwlb_evidence_fallback_conflict" "$P/includes/class-vwlb-r30-evidence-privacy.php" r42-conflict-signal
 need "count(\$rows)<self::RECONCILE_PAGE_SIZE?0:\$last_id" "$P/includes/class-vwlb-r30-evidence-privacy.php" r42-fair-cursor-advance
