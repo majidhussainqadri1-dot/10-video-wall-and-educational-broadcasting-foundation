@@ -4,7 +4,8 @@ defined( 'ABSPATH' ) || exit;
 final class VWLB_Jobs {
 	public static function process($limit=5){
 		global $wpdb;$table=VWLB_Helpers::table('processing_jobs');$worker=VWLB_Helpers::public_id('worker');$now=VWLB_Helpers::now();$stale=gmdate('Y-m-d H:i:s',time()-15*MINUTE_IN_SECONDS);
-		$jobs=$wpdb->get_results($wpdb->prepare("SELECT * FROM $table WHERE ((status IN ('pending','retry') AND available_at<=%s) OR (status='running' AND locked_at<%s)) ORDER BY priority ASC,id ASC LIMIT %d",$now,$stale,max(1,min(20,(int)$limit))),ARRAY_A);
+		$wpdb->last_error='';$jobs=$wpdb->get_results($wpdb->prepare("SELECT * FROM $table WHERE ((status IN ('pending','retry') AND available_at<=%s) OR (status='running' AND locked_at<%s)) ORDER BY priority ASC,id ASC LIMIT %d",$now,$stale,max(1,min(20,(int)$limit))),ARRAY_A);
+		if(''!==(string)$wpdb->last_error){do_action('vwlb_operational_failure','jobs','vwlb_processing_queue_read_failed',array());return;}
 		foreach($jobs as $job){
 			$attempt=(int)$job['attempts']+1;$locked_at=VWLB_Helpers::now();
 			$locked=$wpdb->query($wpdb->prepare("UPDATE $table SET status='running',locked_at=%s,locked_by=%s,attempts=%d,updated_at=%s WHERE id=%d AND status=%s AND attempts=%d",$locked_at,$worker,$attempt,$locked_at,$job['id'],$job['status'],$job['attempts']));
@@ -42,7 +43,8 @@ final class VWLB_Jobs {
 
 	public static function publish_outbox($limit=20){
 		global $wpdb;$table=VWLB_Helpers::table('outbox');$now=VWLB_Helpers::now();$stale=gmdate('Y-m-d H:i:s',time()-15*MINUTE_IN_SECONDS);
-		$events=$wpdb->get_results($wpdb->prepare("SELECT * FROM $table WHERE ((status IN ('pending','retry') AND available_at<=%s) OR (status='publishing' AND locked_at<%s)) ORDER BY id ASC LIMIT %d",$now,$stale,max(1,min(100,(int)$limit))),ARRAY_A);
+		$wpdb->last_error='';$events=$wpdb->get_results($wpdb->prepare("SELECT * FROM $table WHERE ((status IN ('pending','retry') AND available_at<=%s) OR (status='publishing' AND locked_at<%s)) ORDER BY id ASC LIMIT %d",$now,$stale,max(1,min(100,(int)$limit))),ARRAY_A);
+		if(''!==(string)$wpdb->last_error){do_action('vwlb_operational_failure','outbox','vwlb_outbox_queue_read_failed',array());return;}
 		foreach($events as $event){$attempt=(int)$event['attempts']+1;$locked=$wpdb->query($wpdb->prepare("UPDATE $table SET status='publishing',attempts=%d,locked_at=%s,updated_at=%s WHERE id=%d AND status=%s AND attempts=%d",$attempt,$now,$now,$event['id'],$event['status'],$event['attempts']));if(1!==$locked)continue;
 			try{do_action('vwlb_domain_event',$event['event_name'],VWLB_Helpers::json($event['payload_json']),$event);$published=$wpdb->query($wpdb->prepare("UPDATE $table SET status='published',published_at=%s,last_error='',updated_at=%s WHERE id=%d AND status='publishing' AND attempts=%d",VWLB_Helpers::now(),VWLB_Helpers::now(),$event['id'],$attempt));if(1!==$published)continue;}
 			catch(Throwable $e){$wpdb->query($wpdb->prepare("UPDATE $table SET status=%s,available_at=%s,locked_at=NULL,last_error=%s,updated_at=%s WHERE id=%d AND status='publishing' AND attempts=%d",$attempt>=8?'dead':'retry',gmdate('Y-m-d H:i:s',time()+min(HOUR_IN_SECONDS,pow(2,$attempt)*30)),mb_substr($e->getMessage(),0,1000),VWLB_Helpers::now(),$event['id'],$attempt));}
@@ -50,13 +52,15 @@ final class VWLB_Jobs {
 	}
 
 	public static function reconcile(){
-		global $wpdb;$now=VWLB_Helpers::now();$videos=$wpdb->get_results($wpdb->prepare('SELECT * FROM '.VWLB_Helpers::table('videos').' WHERE status=%s AND scheduled_at<=%s ORDER BY id ASC LIMIT 100','scheduled',$now),ARRAY_A);
+		global $wpdb;$now=VWLB_Helpers::now();$wpdb->last_error='';$videos=$wpdb->get_results($wpdb->prepare('SELECT * FROM '.VWLB_Helpers::table('videos').' WHERE status=%s AND scheduled_at<=%s ORDER BY id ASC LIMIT 100','scheduled',$now),ARRAY_A);
+		if(''!==(string)$wpdb->last_error){do_action('vwlb_operational_failure','scheduled_publish','vwlb_scheduled_publish_queue_read_failed',array());$videos=array();}
 		foreach((array)$videos as $candidate){
 			// R36: scheduled publication, its mandatory audit, and outbox evidence are one transaction; revalidate under row lock.
 			$result=VWLB_DB::transaction(function()use($candidate,$now){$current=VWLB_Repository::find('videos',$candidate['id'],true);if(!$current||'scheduled'!==($current['status']??'')||empty($current['scheduled_at'])||strtotime($current['scheduled_at'].' UTC')>time())return array('changed'=>false);$gate=VWLB_Videos::publication_gate($current);if(is_wp_error($gate))return $gate;$published=VWLB_Repository::update_versioned('videos',$current['id'],$current['version'],array('status'=>'published','published_at'=>$now));if(is_wp_error($published))return $published;VWLB_Helpers::audit('video',$current['id'],'scheduled_publish','scheduled','published','Scheduled publication gate revalidated at execution time');VWLB_Helpers::outbox('VideoPublished','video',$current['id'],array('public_id'=>$current['public_id'],'scheduled'=>true));return array('changed'=>true);});
 			if(is_wp_error($result))do_action('vwlb_operational_failure','scheduled_publish',$result->get_error_code(),array('video_public_id'=>$candidate['public_id']??''));
 		}
-		$events=$wpdb->get_results("SELECT * FROM ".VWLB_Helpers::table('live_events')." WHERE status IN ('scheduled','live','interrupted') LIMIT 100",ARRAY_A);
+		$wpdb->last_error='';$events=$wpdb->get_results("SELECT * FROM ".VWLB_Helpers::table('live_events')." WHERE status IN ('scheduled','live','interrupted') LIMIT 100",ARRAY_A);
+		if(''!==(string)$wpdb->last_error){do_action('vwlb_operational_failure','live_reconcile','vwlb_live_reconcile_queue_read_failed',array());return;}
 		foreach($events as $event){$provider=VWLB_Providers::get($event['provider']);if(!$provider)continue;$start=microtime(true);$state=$provider->reconcile('live',$event);$ms=(int)round((microtime(true)-$start)*1000);VWLB_Observability::record_provider($event['provider'],'live',is_array($state)?'healthy':'degraded',is_wp_error($state)?$state->get_error_code():'',$ms);if(!is_array($state))continue;
 			$fresh=VWLB_Repository::find('live_events',$event['id']);if(!$fresh||$fresh['provider']!==$event['provider']||!in_array($fresh['status'],array('scheduled','live','interrupted'),true))continue;$safe=array_intersect_key($state,array_flip(array('provider_event_ref','status','degraded','region','health_code')));$merged=array_merge(VWLB_Helpers::json($fresh['provider_state_json']),$safe);VWLB_Repository::update_versioned('live_events',$fresh['id'],$fresh['version'],array('provider_state_json'=>VWLB_Helpers::json_encode($merged)));
 		}
