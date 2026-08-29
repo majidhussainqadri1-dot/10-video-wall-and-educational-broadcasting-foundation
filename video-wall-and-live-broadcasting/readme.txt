@@ -3,7 +3,7 @@ Contributors: sabrihomeopathy
 Requires at least: 7.0
 Tested up to: 7.0.1
 Requires PHP: 8.3
-Stable tag: 1.2.8-rc1
+Stable tag: 1.2.9-rc1
 License: GPLv2 or later
 
 File 10 canonical owner for recorded video and live broadcasting in the Sabri Social Homeopathy Platform.
@@ -27,6 +27,7 @@ Local, YouTube, Vimeo and custom adapters are registered. External provider cred
 * Public/private DTO allowlists prevent row, secret and provider-state disclosure.
 * Mutations use authorization, validation, rate limiting and idempotency controls.
 * Provider webhooks require signature verification and content-bound provider-event deduplication.
+* External provider-effect retries remain blocked when the provider outcome is unverified until explicit reconciliation.
 * Private history/studio surfaces use no-store/noindex controls.
 * Privacy erasure is bounded and retryable; retained safety/rights evidence is anonymized where required.
 * Audit, outbox, rollback snapshots, bounded retries, dead-letter and reconciliation are included.
@@ -38,15 +39,15 @@ Keyboard-visible focus, approximate 44px controls, semantic status regions, capt
 == Installation ==
 
 1. Back up the approved staging environment and verify restoration.
-2. Upload `video-wall-and-live-broadcasting-1.2.8-rc1.zip` to WordPress staging.
-3. Activate the plugin; schema, capabilities, pages and cron jobs are reconciled idempotently.
+2. Upload `video-wall-and-live-broadcasting-1.2.9-rc1.zip` to WordPress staging.
+3. Activate the plugin; schema, capabilities, pages and cron jobs are reconciled with R60 activation compensation evidence.
 4. Configure File 00 identity claims/capabilities and approved provider adapters.
 5. Run Video & Live diagnostics.
 6. Complete the current File 10 staging acceptance checklist before production.
 
 == Upgrade ==
 
-The activation migration reads supported legacy File 10 data when present, stores rollback evidence, verifies schema markers and keeps the legacy public owner disabled only after controlled cutover acceptance. Do not run duplicate public route owners after acceptance.
+The activation migration reads supported legacy File 10 data when present, stores rollback evidence, verifies schema markers and keeps the legacy public owner disabled only after controlled cutover acceptance. R60 revalidates the encrypted-evidence migration marker with DB-error-aware reads before trusting completion. Do not run duplicate public route owners after acceptance.
 
 == External acceptance boundary ==
 
@@ -54,8 +55,17 @@ Source code, deterministic packaging and automated checks do not prove Hostinger
 
 == Changelog ==
 
+= 1.2.9-rc1 =
+* Complete sequential review round R60 and close the R41-R60 source-review cycle.
+* Make encrypted fallback and legacy migration reads DB-error-aware and re-prove the old migration completion marker.
+* Add whole-activation rollback evidence for pages, selected options, administrator File 10 capabilities and File 10 cron state when activation aborts.
+* Preserve a durable retry/reconciliation guard across unverified external provider effects and provide a step-up repair release only after explicit provider reconciliation confirmation.
+* Replace the earlier command-idempotency after-filter with an unsafe-retry-aware verifier and preserve reconciliation locks instead of blindly aborting them on provider-uncertain failures.
+* Fail public catalogue rendering/REST reads closed on database failure and guard interaction recount repair with transactional read/error verification plus post-check.
+* Advance immutable runtime/package identity after deployable R60 corrections.
+
 = 1.2.8-rc1 =
-* R41-R59 sequential corrective-review candidate; R60 remains the final review round before cycle closure.
+* R41-R59 sequential corrective-review candidate before final R60 closure.
 * Close full-namespace encrypted-evidence migration/reconciliation gaps, private-storage containment gaps and partial upload-write rollback gaps.
 * Add provider ingest/live-create compensation and reconciliation, durable stream-credential command ownership, DB-read failure signaling and privacy-completion proof.
 * Harden activation compensation, worker queue read failures, soft-deleted object authorization and command-level restoration invariants.
