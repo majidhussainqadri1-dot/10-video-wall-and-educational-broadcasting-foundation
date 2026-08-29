@@ -4,6 +4,22 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 CURRENT_VERSION='1.2.8-rc1'
 run_rebased_124(){ local src="$1" tmp; tmp="$(mktemp "$ROOT/tests/.rebased.XXXXXX.sh")"; sed "s/1\\.2\\.4-rc1/${CURRENT_VERSION}/g" "$src" > "$tmp"; bash "$tmp"; rm -f "$tmp"; }
 run_rebased_127(){ local src="$1" tmp; tmp="$(mktemp "$ROOT/tests/.rebased127.XXXXXX.sh")"; sed "s/1\\.2\\.7-rc1/${CURRENT_VERSION}/g" "$src" > "$tmp"; bash "$tmp"; rm -f "$tmp"; }
+run_rebased_r21_r40(){
+  local src="$1" tmp; tmp="$(mktemp "$ROOT/tests/.rebased-r21-r40.XXXXXX.sh")"
+  python3 - "$src" "$tmp" "$CURRENT_VERSION" <<'PY'
+import pathlib, sys
+src, dst, version = sys.argv[1:]
+text = pathlib.Path(src).read_text()
+text = text.replace('1.2.7-rc1', version)
+# R59 moved the current release ledger to the next cycle. Keep the historical R21-R40 behavioral assertions,
+# but rebase assertions that intentionally inspect the mutable current release-evidence documents.
+text = text.replace('Cycle baseline exact HEAD: `83558aea2e581e6f7b76084e21695989254704b7`', 'Cycle baseline exact HEAD: `824f149269f451a2071882128a655581a3d18ef4`')
+text = text.replace('Review boundary: final sequential cycle round `R40`', 'Review boundary: sequential cycle round `R59` completed')
+text = text.replace('R40 found additional package/release-hygiene defects', 'R59 advances the immutable candidate identity')
+pathlib.Path(dst).write_text(text)
+PY
+  bash "$tmp"; rm -f "$tmp"
+}
 run_rebased_legacy40(){
   local src="$1" tmp; tmp="$(mktemp "$ROOT/tests/.rebased40.XXXXXX.sh")"
   python3 - "$src" "$tmp" "$CURRENT_VERSION" <<'PY'
@@ -33,7 +49,7 @@ bash "$ROOT/tests/third-fresh-20-review-contracts.sh"
 run_rebased_127 "$ROOT/tests/fourth-fresh-20-review-contracts.sh"
 bash "$ROOT/tests/file10-sequential-20-contracts.sh"
 bash "$ROOT/tests/file10-sequential-late-contracts.sh"
-run_rebased_127 "$ROOT/tests/file10-r21-r40-contracts.sh"
+run_rebased_r21_r40 "$ROOT/tests/file10-r21-r40-contracts.sh"
 bash "$ROOT/tests/file10-r41-r60-contracts.sh"
 bash "$ROOT/tests/file10-r51-r60-contracts.sh"
 bash "$ROOT/tools/build-package.sh" /tmp/vwlb-build-a.zip >/dev/null
