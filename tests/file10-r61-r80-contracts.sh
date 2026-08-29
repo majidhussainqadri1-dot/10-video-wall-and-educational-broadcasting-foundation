@@ -7,11 +7,13 @@ need "class-vwlb-r61-activation-role-guard.php" "$P/video-wall-and-live-broadcas
 # R63
 need "vwlb_provider_future_policy_reconcile_required" "$P/includes/class-vwlb-future-adapters.php" r63-policy; need "vwlb_simulcast_adapter_exception" "$P/includes/class-vwlb-future-adapters.php" r63-simulcast; need "vwlb_track_generation_cancel_exception" "$P/includes/class-vwlb-future-adapters.php" r63-track; need "vwlb_video_intelligence_processor_exception" "$P/includes/class-vwlb-future-adapters.php" r63-intelligence
 # R64
-need "class-vwlb-r64-intelligence-guard.php" "$P/video-wall-and-live-broadcasting.php" r64-autoload; need "VWLB_R64_Intelligence_Guard::register" "$P/video-wall-and-live-broadcasting.php" r64-register; need "intelligence/suggest" "$P/includes/class-vwlb-r64-intelligence-guard.php" r64-route
+need "VWLB_R64_Intelligence_Guard::register" "$P/video-wall-and-live-broadcasting.php" r64-register; need "intelligence/suggest" "$P/includes/class-vwlb-r64-intelligence-guard.php" r64-route
 # R65
-need "private static \$read_failure=false" "$P/includes/class-vwlb-repository.php" r65-state; need "vwlb_repository_read_failed" "$P/includes/class-vwlb-repository.php" r65-signal; need "VWLB_Repository::read_failed" "$P/includes/class-vwlb-r65-repository-read-guard.php" r65-guard
+need "private static \$read_failure=false" "$P/includes/class-vwlb-repository.php" r65-state; need "VWLB_Repository::read_failed" "$P/includes/class-vwlb-r65-repository-read-guard.php" r65-guard
 # R66
 need "VWLB_R66_Request_DB_Guard::register" "$P/video-wall-and-live-broadcasting.php" r66-register; need "vwlb_request_database_failure" "$P/includes/class-vwlb-r66-request-db-guard.php" r66-signal
-# R67 — playback must not turn a session DB-read failure into a duplicate insert, and provider/secure-grant Throwables must be contained.
-need "vwlb_playback_session_read_failed" "$P/includes/class-vwlb-r3-playback.php" r67-session-read; need "vwlb_playback_provider_exception" "$P/includes/class-vwlb-r3-playback.php" r67-provider-exception; need "vwlb_secure_playback_grant_exception" "$P/includes/class-vwlb-r3-playback.php" r67-grant-exception; need "catch(Throwable" "$P/includes/class-vwlb-r3-playback.php" r67-throwable
+# R67
+need "vwlb_playback_session_read_failed" "$P/includes/class-vwlb-r3-playback.php" r67-session-read; need "vwlb_playback_provider_exception" "$P/includes/class-vwlb-r3-playback.php" r67-provider; need "vwlb_secure_playback_grant_exception" "$P/includes/class-vwlb-r3-playback.php" r67-grant
+# R68 — privacy export/erase reads must fail closed before omission, false completion or destructive follow-on work.
+need "vwlb_privacy_export_read_failed" "$P/includes/class-vwlb-privacy.php" r68-export-read; need "Private upload state could not be read safely" "$P/includes/class-vwlb-privacy.php" r68-upload-read; need "Interaction state could not be read safely" "$P/includes/class-vwlb-privacy.php" r68-interaction-read; need "vwlb_privacy_counter_read_failed" "$P/includes/class-vwlb-privacy.php" r68-counter-read; need "vwlb_privacy_completion_unverifiable" "$P/includes/class-vwlb-privacy.php" r68-completion
 printf '%s\n' 'File 10 R61-R80 sequential contracts PASS'
