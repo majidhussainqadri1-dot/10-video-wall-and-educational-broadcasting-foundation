@@ -61,4 +61,12 @@ need "vwlb_restore_blocked_by_consent" "$P/includes/class-vwlb-r11-restore-guard
 need "vwlb_restore_blocked_by_moderation" "$P/includes/class-vwlb-r11-restore-guard.php" r56-moderation-block
 need "vwlb_restore_blocked_by_takedown" "$P/includes/class-vwlb-r11-restore-guard.php" r56-takedown-block
 
+# R57 — external provider live creation must be compensated before its idempotency lock is released; unconfirmed compensation is operator-reconciled and retry-blocked.
+need "compensate_live_creation" "$P/includes/class-vwlb-live.php" r57-compensation-helper
+need "vwlb_provider_live_compensation_requested" "$P/includes/class-vwlb-live.php" r57-compensation-hook
+need "vwlb_provider_delete_live_result" "$P/includes/class-vwlb-live.php" r57-confirmation-filter
+need "vwlb_provider_live_reconcile_required" "$P/includes/class-vwlb-live.php" r57-reconcile-signal
+need "if(\$compensated){VWLB_Security::idempotency_abort" "$P/includes/class-vwlb-live.php" r57-release-only-after-confirmed-compensation
+need "Reconciliation is required before this idempotency key can be retried." "$P/includes/class-vwlb-live.php" r57-retry-block-message
+
 printf '%s\n' 'File 10 R51-R60 sequential contracts PASS'
