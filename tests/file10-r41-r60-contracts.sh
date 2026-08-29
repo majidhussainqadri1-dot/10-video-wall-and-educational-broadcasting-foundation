@@ -55,4 +55,16 @@ need "vwlb_provider_ingest_reconcile_required" "$P/includes/class-vwlb-r46-strea
 need "The credential was not disclosed; reconciliation is required." "$P/includes/class-vwlb-r46-stream-credential-durability.php" r46-no-secret-disclosure
 need "Cache-Control','private, no-store" "$P/includes/class-vwlb-r46-stream-credential-durability.php" r46-secret-no-store
 
+# R47 — clean: remote URL normalization plus terminal WordPress DNS/private-address validation reviewed.
+# R48 — clean: emergency-end REST override commits local safety state before irreversible provider termination and reconciles unconfirmed provider state.
+# R49 — clean: scheduled publication re-runs rights/consent/asset/caption gates inside its publication transaction.
+
+# R50 — privacy completion cannot be declared when any required proof query fails or eligible rows still exist.
+need "class-vwlb-r50-privacy-proof.php" "$P/video-wall-and-live-broadcasting.php" r50-autoload
+need "VWLB_R50_Privacy_Proof::register" "$P/video-wall-and-live-broadcasting.php" r50-register
+need "vwlb_privacy_completion_unverifiable" "$P/includes/class-vwlb-r50-privacy-proof.php" r50-db-failure
+need "File 10 detected additional eligible data" "$P/includes/class-vwlb-r50-privacy-proof.php" r50-race-residual
+need "'done'=>false" "$P/includes/class-vwlb-r50-privacy-proof.php" r50-fail-closed
+need "\$wpdb->last_error=''" "$P/includes/class-vwlb-r50-privacy-proof.php" r50-error-aware-read
+
 printf '%s\n' 'File 10 R41-R60 sequential contracts PASS'
