@@ -32,7 +32,8 @@ foreach(array(
 	'vwlb_schema_version','vwlb_ext_schema_version','vwlb_future_schema_version','vwlb_version','vwlb_safe_mode','vwlb_page_map',
 	'vwlb_legacy_migration_complete','vwlb_schema_migration_lock','vwlb_schema_verified_release','vwlb_schema_verified_at','vwlb_schema_verification_lock',
 	'vwlb_r10_structural_verified_release','vwlb_r30_evidence_fallback_migration','vwlb_r30_reconcile_cursor_audit','vwlb_r30_reconcile_cursor_outbox',
-	'vwlb_operational_metrics','vwlb_allow_purge'
+	'vwlb_retry_reconcile_cursor','vwlb_retry_cleanup_cursor','vwlb_operational_metrics','vwlb_allow_purge'
 ) as $option)delete_option($option);
 $wpdb->query($wpdb->prepare("DELETE FROM {$wpdb->options} WHERE option_name LIKE %s OR option_name LIKE %s OR option_name LIKE %s",$wpdb->esc_like('vwlb_audit_fallback_').'%', $wpdb->esc_like('vwlb_outbox_fallback_').'%', $wpdb->esc_like('vwlb_inbox_retry_').'%'));
+$wpdb->query($wpdb->prepare("DELETE FROM {$wpdb->options} WHERE option_name LIKE %s",$wpdb->esc_like('vwlb_retry_erasure_cursor_').'%'));
 error_log('VWLB explicit destructive purge completed after dual confirmation.');
