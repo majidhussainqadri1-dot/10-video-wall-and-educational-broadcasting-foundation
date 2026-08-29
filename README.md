@@ -4,7 +4,7 @@ Canonical source repository for **Sabri Social Homeopathy Platform File 10**.
 
 ## Current reviewed candidate
 
-- Runtime: `1.2.7-rc1`
+- Runtime: `1.2.8-rc1`
 - Plugin folder: `video-wall-and-live-broadcasting`
 - Base schema: `1.1.0`
 - Extension schema: `1.1.0`
@@ -15,6 +15,10 @@ Canonical source repository for **Sabri Social Homeopathy Platform File 10**.
 - Compatibility API: `vwlb/v1`
 
 File 10 is the canonical owner of recorded video, channels/playlists, media ingest/processing, captions/transcripts, playback, live events/streams, stream authorization, moderation, recording/replay and media-provider adapters. Companion modules consume versioned contracts and must not create duplicate live-video truth.
+
+## Current review boundary
+
+The R41–R60 sequential corrective-review cycle is active. R59 has advanced the immutable candidate to `1.2.8-rc1`; R60 remains the final review round and is not preclaimed as complete.
 
 ## Completion boundary
 
