@@ -24,9 +24,9 @@ import pathlib, sys
 src, dst, version = sys.argv[1:]
 text = pathlib.Path(src).read_text()
 text = text.replace('1.2.7-rc1', version)
-text = text.replace('Cycle baseline exact HEAD: `83558aea2e581e6f7b76084e21695989254704b7`', 'Cycle baseline exact HEAD: `824f149269f451a2071882128a655581a3d18ef4`')
-text = text.replace('Review boundary: final sequential cycle round `R40`', 'Review boundary: sequential cycle round `R60` completed')
-text = text.replace('R40 found additional package/release-hygiene defects', 'R60 found final reliability and failure-truth defects')
+text = text.replace('Cycle baseline exact HEAD: `83558aea2e581e6f7b76084e21695989254704b7`', 'Cycle baseline exact HEAD: `7a6ff440cb54730dd6824698856b25a397978d32`')
+text = text.replace('Review boundary: final sequential cycle round `R40`', 'Review boundary: sequential cycle rounds `R61–R80` completed at repository source-review level')
+text = text.replace('R40 found additional package/release-hygiene defects', 'R80 found final release-hygiene defects')
 pathlib.Path(dst).write_text(text)
 PY
   bash "$tmp"; rm -f "$tmp"
