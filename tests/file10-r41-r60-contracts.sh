@@ -34,4 +34,16 @@ need "vwlb_private_storage_protection_symlink_forbidden" "$P/includes/class-vwlb
 need "\$root=self::validate_private_storage_root();if(is_wp_error(\$root))return \$root;" "$P/includes/class-vwlb-r4-migration-guard.php" r43-always-root-check
 need "Base, extension, Future and podcast installers plus private-storage containment/protection verified." "$P/includes/class-vwlb-r4-migration-guard.php" r43-audit-evidence
 
+# R44 — clean: rate-limit upsert/read and idempotency fail-closed semantics reviewed; no new corrective source required.
+
+# R45 — partial/failed chunk writes must roll back to the prior offset before returning; rollback failure stops the upload session.
+need "class-vwlb-r45-upload-durability.php" "$P/video-wall-and-live-broadcasting.php" r45-autoload
+need "VWLB_R45_Upload_Durability::register" "$P/video-wall-and-live-broadcasting.php" r45-register
+need "rest_request_before_callbacks" "$P/includes/class-vwlb-r45-upload-durability.php" r45-intercept
+need "rollback_locked" "$P/includes/class-vwlb-r45-upload-durability.php" r45-rollback-helper
+need "partial_chunk_write_rollback_failed" "$P/includes/class-vwlb-r45-upload-durability.php" r45-partial-rollback
+need "chunk_database_cas_rollback_failed" "$P/includes/class-vwlb-r45-upload-durability.php" r45-cas-rollback
+need "vwlb_private_upload_symlink_forbidden" "$P/includes/class-vwlb-r45-upload-durability.php" r45-file-symlink
+need "while(\$write_ok&&\$written<\$length)" "$P/includes/class-vwlb-r45-upload-durability.php" r45-full-write-loop
+
 printf '%s\n' 'File 10 R41-R60 sequential contracts PASS'
