@@ -3,7 +3,7 @@
  * Plugin Name: Video Wall and Live Broadcasting
  * Plugin URI: https://www.sabrihomeopathy.com/
  * Description: File 10 canonical owner for recorded video, channels, podcasts, media ingest/processing, captions/transcripts, playback, live events, stream authorization, moderation, recording/replay, rights, provider adapters, File 11 media contracts, and Future Video & Broadcasting Intelligence 24 enhancements.
- * Version: 1.2.7-rc1
+ * Version: 1.2.8-rc1
  * Requires at least: 7.0
  * Requires PHP: 8.3
  * Author: Dr. Allamah Majid Hussain Sabri Muhaddith Mursheed
@@ -13,7 +13,7 @@
  */
 defined( 'ABSPATH' ) || exit;
 
-define( 'VWLB_VERSION', '1.2.7-rc1' );
+define( 'VWLB_VERSION', '1.2.8-rc1' );
 define( 'VWLB_SCHEMA_VERSION', '1.1.0' );
 define( 'VWLB_EXT_SCHEMA_VERSION', '1.1.0' );
 define( 'VWLB_FUTURE_SCHEMA_VERSION', '1.2.0' );
