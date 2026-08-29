@@ -26,4 +26,12 @@ need "count(\$rows)<self::RECONCILE_PAGE_SIZE?0:\$last_id" "$P/includes/class-vw
 need "vwlb_r30_reconcile_cursor_audit" "$P/uninstall.php" r42-purge-audit-cursor
 need "vwlb_r30_reconcile_cursor_outbox" "$P/uninstall.php" r42-purge-outbox-cursor
 
+# R43 — private storage must never resolve through a symlink/outside wp-content, including while the schema verification lease is still fresh.
+need "validate_private_storage_root" "$P/includes/class-vwlb-r4-migration-guard.php" r43-root-validator
+need "vwlb_private_storage_symlink_forbidden" "$P/includes/class-vwlb-r4-migration-guard.php" r43-root-symlink
+need "vwlb_private_storage_root_escape" "$P/includes/class-vwlb-r4-migration-guard.php" r43-root-containment
+need "vwlb_private_storage_protection_symlink_forbidden" "$P/includes/class-vwlb-r4-migration-guard.php" r43-protection-symlink
+need "\$root=self::validate_private_storage_root();if(is_wp_error(\$root))return \$root;" "$P/includes/class-vwlb-r4-migration-guard.php" r43-always-root-check
+need "Base, extension, Future and podcast installers plus private-storage containment/protection verified." "$P/includes/class-vwlb-r4-migration-guard.php" r43-audit-evidence
+
 printf '%s\n' 'File 10 R41-R60 sequential contracts PASS'
