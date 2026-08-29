@@ -29,7 +29,7 @@ $autoload = array(
 	'class-vwlb-videos.php', 'class-vwlb-live.php', 'class-vwlb-moderation.php',
 	'class-vwlb-jobs.php', 'class-vwlb-extensions.php', 'class-vwlb-podcasts.php',
 	'class-vwlb-observability.php', 'class-vwlb-rest.php', 'class-vwlb-extended-rest.php',
-	'class-vwlb-future-intelligence.php', 'class-vwlb-future-safety.php', 'class-vwlb-review-hardening.php', 'class-vwlb-sequential-review-hardening.php', 'class-vwlb-r10-integrity.php', 'class-vwlb-r11-restore-guard.php', 'class-vwlb-r18-durability.php', 'class-vwlb-r20-retry-privacy.php', 'class-vwlb-r30-evidence-privacy.php', 'class-vwlb-r31-webhook-integrity.php', 'class-vwlb-r34-frontend-contract.php', 'class-vwlb-r45-upload-durability.php', 'class-vwlb-r46-stream-credential-durability.php', 'class-vwlb-r50-privacy-proof.php', 'class-vwlb-r60-final-hardening.php', 'class-vwlb-r3-playback.php', 'class-vwlb-r4-migration-guard.php', 'class-vwlb-future-adapters.php', 'class-vwlb-future-rest.php', 'class-vwlb-future-frontend.php',
+	'class-vwlb-future-intelligence.php', 'class-vwlb-future-safety.php', 'class-vwlb-review-hardening.php', 'class-vwlb-sequential-review-hardening.php', 'class-vwlb-r10-integrity.php', 'class-vwlb-r11-restore-guard.php', 'class-vwlb-r18-durability.php', 'class-vwlb-r20-retry-privacy.php', 'class-vwlb-r30-evidence-privacy.php', 'class-vwlb-r31-webhook-integrity.php', 'class-vwlb-r34-frontend-contract.php', 'class-vwlb-r45-upload-durability.php', 'class-vwlb-r46-stream-credential-durability.php', 'class-vwlb-r50-privacy-proof.php', 'class-vwlb-r60-final-hardening.php', 'class-vwlb-r61-activation-role-guard.php', 'class-vwlb-r3-playback.php', 'class-vwlb-r4-migration-guard.php', 'class-vwlb-future-adapters.php', 'class-vwlb-future-rest.php', 'class-vwlb-future-frontend.php',
 	'class-vwlb-frontend.php', 'class-vwlb-admin.php', 'class-vwlb-privacy.php',
 	'class-vwlb-seo.php', 'class-vwlb-integrations.php', 'class-vwlb-compatibility.php',
 	'class-vwlb-diagnostics.php', 'class-vwlb-plugin.php',
@@ -38,9 +38,11 @@ foreach ( $autoload as $file ) {
 	require_once VWLB_DIR . 'includes/' . $file;
 }
 
+register_activation_hook( VWLB_FILE, array( 'VWLB_R61_Activation_Role_Guard', 'activation_begin' ) );
 register_activation_hook( VWLB_FILE, array( 'VWLB_R60_Final_Hardening', 'activation_begin' ) );
 register_activation_hook( VWLB_FILE, array( 'VWLB_Activator', 'activate' ) );
 register_activation_hook( VWLB_FILE, array( 'VWLB_R60_Final_Hardening', 'activation_commit' ) );
+register_activation_hook( VWLB_FILE, array( 'VWLB_R61_Activation_Role_Guard', 'activation_commit' ) );
 register_deactivation_hook( VWLB_FILE, array( 'VWLB_Activator', 'deactivate' ) );
 
 function vwlb_boot() {

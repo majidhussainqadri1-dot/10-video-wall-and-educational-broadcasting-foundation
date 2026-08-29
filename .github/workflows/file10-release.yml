@@ -5,6 +5,8 @@ on:
   pull_request:
 permissions:
   contents: read
+env:
+  VWLB_PUBLISH_REVIEW_ARTIFACT: '0'
 jobs:
   source-package-qa:
     strategy:
@@ -36,7 +38,7 @@ jobs:
           unzip -q packages/video-wall-and-live-broadcasting-1.2.9-rc1.zip -d /tmp/vwlb-extract
           diff -ru video-wall-and-live-broadcasting /tmp/vwlb-extract/video-wall-and-live-broadcasting
       - name: Publish release-candidate artifact
-        if: matrix.php == '8.3'
+        if: matrix.php == '8.3' && env.VWLB_PUBLISH_REVIEW_ARTIFACT == '1'
         uses: actions/upload-artifact@v4
         with:
           name: file10-video-wall-live-1.2.9-rc1
