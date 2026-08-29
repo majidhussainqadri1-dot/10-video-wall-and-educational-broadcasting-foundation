@@ -3,7 +3,7 @@ Contributors: sabrihomeopathy
 Requires at least: 7.0
 Tested up to: 7.0.1
 Requires PHP: 8.3
-Stable tag: 1.2.9-rc1
+Stable tag: 1.2.10-rc1
 License: GPLv2 or later
 
 File 10 canonical owner for recorded video and live broadcasting in the Sabri Social Homeopathy Platform.
@@ -30,6 +30,7 @@ Local, YouTube, Vimeo and custom adapters are registered. External provider cred
 * External provider-effect retries remain blocked when the provider outcome is unverified until explicit reconciliation.
 * Private history/studio surfaces use no-store/noindex controls.
 * Privacy erasure is bounded and retryable; retained safety/rights evidence is anonymized where required.
+* Forensic watermark grants require a verified playback/live viewer session and remain private/no-store.
 * Audit, outbox, rollback snapshots, bounded retries, dead-letter and reconciliation are included.
 
 == Accessibility and localization ==
@@ -39,15 +40,15 @@ Keyboard-visible focus, approximate 44px controls, semantic status regions, capt
 == Installation ==
 
 1. Back up the approved staging environment and verify restoration.
-2. Upload `video-wall-and-live-broadcasting-1.2.9-rc1.zip` to WordPress staging.
-3. Activate the plugin; schema, capabilities, pages and cron jobs are reconciled with R60 activation compensation evidence.
+2. Upload `video-wall-and-live-broadcasting-1.2.10-rc1.zip` to WordPress staging.
+3. Activate the plugin; schema, capabilities, pages and cron jobs are reconciled with activation compensation evidence.
 4. Configure File 00 identity claims/capabilities and approved provider adapters.
 5. Run Video & Live diagnostics.
 6. Complete the current File 10 staging acceptance checklist before production.
 
 == Upgrade ==
 
-The activation migration reads supported legacy File 10 data when present, stores rollback evidence, verifies schema markers and keeps the legacy public owner disabled only after controlled cutover acceptance. R60 revalidates the encrypted-evidence migration marker with DB-error-aware reads before trusting completion. Do not run duplicate public route owners after acceptance.
+The activation migration reads supported legacy File 10 data when present, stores rollback evidence, verifies schema markers and keeps the legacy public owner disabled only after controlled cutover acceptance. Encrypted-evidence migration markers are revalidated with DB-error-aware reads before trusting completion. Do not run duplicate public route owners after acceptance.
 
 == External acceptance boundary ==
 
@@ -55,47 +56,29 @@ Source code, deterministic packaging and automated checks do not prove Hostinger
 
 == Changelog ==
 
+= 1.2.10-rc1 =
+* Complete the fresh sequential R61-R80 source-review cycle under Review → Findings Freeze → batch correction → full retest discipline.
+* Harden activation rollback, provider/processor exception containment, repository/direct-DB failure truth, playback and privacy read failures, webhook fairness, resumable completion, private downloads, podcast delivery, recording consent, takedown identity, cleanup fairness, bounded poll integrity and private public-delivery boundaries.
+* Bind forensic watermark grants to verified playback/live viewer sessions and fail closed when session proof is unavailable.
+* Assign a fresh immutable package identity after deployable corrections and re-enable final exact-head release artifact publication.
+
 = 1.2.9-rc1 =
 * Complete sequential review round R60 and close the R41-R60 source-review cycle.
 * Make encrypted fallback and legacy migration reads DB-error-aware and re-prove the old migration completion marker.
-* Add whole-activation rollback evidence for pages, selected options, administrator File 10 capabilities and File 10 cron state when activation aborts.
-* Preserve a durable retry/reconciliation guard across unverified external provider effects and provide a step-up repair release only after explicit provider reconciliation confirmation.
-* Replace the earlier command-idempotency after-filter with an unsafe-retry-aware verifier and preserve reconciliation locks instead of blindly aborting them on provider-uncertain failures.
-* Fail public catalogue rendering/REST reads closed on database failure and guard interaction recount repair with transactional read/error verification plus post-check.
-* Advance immutable runtime/package identity after deployable R60 corrections.
+* Add whole-activation rollback evidence and provider-effect retry/reconciliation guards.
+* Fail public catalogue rendering/REST reads closed on database failure and guard interaction recount repair.
 
 = 1.2.8-rc1 =
 * R41-R59 sequential corrective-review candidate before final R60 closure.
-* Close full-namespace encrypted-evidence migration/reconciliation gaps, private-storage containment gaps and partial upload-write rollback gaps.
-* Add provider ingest/live-create compensation and reconciliation, durable stream-credential command ownership, DB-read failure signaling and privacy-completion proof.
-* Harden activation compensation, worker queue read failures, soft-deleted object authorization and command-level restoration invariants.
-* Assign a fresh immutable runtime/package identity after package-changing corrections made beyond the prior 1.2.7-rc1 candidate.
 
 = 1.2.7-rc1 =
-* Close R40 of the sequential R21-R40 review cycle.
-* Make explicit destructive purge remove schema-verification time, R10 structural-verification and R30 encrypted-evidence migration markers.
-* Synchronize the canonical manifest and current release identity after the R40 package-changing correction.
-* Preserve the immutable-package rule by assigning a new runtime/package identity instead of overwriting the earlier 1.2.6-rc1 artifact identity.
+* Close R40 of the sequential R21-R40 review cycle and synchronize destructive purge/release hygiene.
 
 = 1.2.6-rc1 =
-* R21-R39 interim sequential corrective review candidate with exact-head evidence discipline.
-* Fail closed when core schema boot verification fails before post-run hardening surfaces register.
-* Remove internal owner/attachment identifiers from Video Wall public DTOs and align frontend rendering.
-* Make upload completion and required processing enqueue atomic.
-* Harden provider configuration drift, provider-health reads, webhook dedupe collisions and restoration-blocker scans.
-* Encrypt retry/audit/outbox fallback evidence and fail closed on unverifiable privacy erasure.
-* Make scheduled publication evidence atomic, block repairs on unverified database preflight and bound schema-verification trust with periodic revalidation.
-* Assign a new immutable package/runtime identity so the corrected candidate cannot be confused with the earlier 1.2.5-rc1 artifact.
+* R21-R39 interim sequential corrective review candidate.
 
 = 1.2.5-rc1 =
-* Harden Future 24 REST outputs to opaque public contracts and reject internal-ID mutation inputs.
-* Correct a cross-class private-method runtime fatal in simulcast orchestration.
-* Make generated annotation persistence atomic and add processor-cancellation reconciliation for local track persistence failure.
-* Bound Future list queries and live-poll option counts; preserve correct-answer alignment after option normalization.
-* Make Future cleanup/consent reconciliation failures observable.
-* Verify activation version/Safe Mode persistence and operational metrics/provider-health persistence.
-* Bound privacy erasure batches and remove soft-404 success status from missing protected media routes.
-* Synchronize WordPress/PHP/runtime release metadata.
+* Harden Future 24 REST outputs, provider orchestration, bounded Future lists and release metadata.
 
 = 1.2.4-rc1 =
 * Third fresh 20-round corrective review cycle and exact-head release QA candidate.

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-CURRENT_VERSION='1.2.9-rc1'
+CURRENT_VERSION='1.2.10-rc1'
 run_rebased_124(){ local src="$1" tmp; tmp="$(mktemp "$ROOT/tests/.rebased.XXXXXX.sh")"; sed "s/1\\.2\\.4-rc1/${CURRENT_VERSION}/g" "$src" > "$tmp"; bash "$tmp"; rm -f "$tmp"; }
 run_rebased_127(){ local src="$1" tmp; tmp="$(mktemp "$ROOT/tests/.rebased127.XXXXXX.sh")"; sed "s/1\\.2\\.7-rc1/${CURRENT_VERSION}/g" "$src" > "$tmp"; bash "$tmp"; rm -f "$tmp"; }
 run_rebased_128(){
@@ -11,8 +11,8 @@ import pathlib, sys
 src, dst, version = sys.argv[1:]
 text = pathlib.Path(src).read_text()
 text = text.replace('1.2.8-rc1', version)
-text = text.replace('round `R59` completed', 'round `R60` completed')
-text = text.replace('R60 remains pending', 'R60 completed')
+text = text.replace('round `R59` completed', 'sequential cycle rounds `R61–R80` completed at repository source-review level')
+text = text.replace('R60 remains pending', 'R80 found final release-hygiene defects')
 pathlib.Path(dst).write_text(text)
 PY
   bash "$tmp"; rm -f "$tmp"
@@ -24,9 +24,9 @@ import pathlib, sys
 src, dst, version = sys.argv[1:]
 text = pathlib.Path(src).read_text()
 text = text.replace('1.2.7-rc1', version)
-text = text.replace('Cycle baseline exact HEAD: `83558aea2e581e6f7b76084e21695989254704b7`', 'Cycle baseline exact HEAD: `824f149269f451a2071882128a655581a3d18ef4`')
-text = text.replace('Review boundary: final sequential cycle round `R40`', 'Review boundary: sequential cycle round `R60` completed')
-text = text.replace('R40 found additional package/release-hygiene defects', 'R60 found final reliability and failure-truth defects')
+text = text.replace('Cycle baseline exact HEAD: `83558aea2e581e6f7b76084e21695989254704b7`', 'Cycle baseline exact HEAD: `7a6ff440cb54730dd6824698856b25a397978d32`')
+text = text.replace('Review boundary: final sequential cycle round `R40`', 'Review boundary: sequential cycle rounds `R61–R80` completed at repository source-review level')
+text = text.replace('R40 found additional package/release-hygiene defects', 'R80 found final release-hygiene defects')
 pathlib.Path(dst).write_text(text)
 PY
   bash "$tmp"; rm -f "$tmp"
@@ -61,6 +61,7 @@ run_rebased_r21_r40 "$ROOT/tests/file10-r21-r40-contracts.sh"
 bash "$ROOT/tests/file10-r41-r60-contracts.sh"
 run_rebased_128 "$ROOT/tests/file10-r51-r60-contracts.sh"
 bash "$ROOT/tests/file10-r60-contracts.sh"
+bash "$ROOT/tests/file10-r61-r80-contracts.sh"
 bash "$ROOT/tools/build-package.sh" /tmp/vwlb-build-a.zip >/dev/null
 bash "$ROOT/tools/build-package.sh" /tmp/vwlb-build-b.zip >/dev/null
 cmp /tmp/vwlb-build-a.zip /tmp/vwlb-build-b.zip
