@@ -86,10 +86,10 @@ need "video-wall-and-live-broadcasting-1.2.8-rc1.zip" "$ROOT/tools/build-package
 need "CURRENT_VERSION='1.2.8-rc1'" "$ROOT/tests/run-all.sh" r59-suite-version
 need "run_rebased_127" "$ROOT/tests/run-all.sh" r59-historical-version-rebase
 need "# File 10 Release Candidate Manifest — 1.2.8-rc1" "$ROOT/MANIFEST.md" r59-manifest
-need "round `R59` completed" "$ROOT/MANIFEST.md" r59-manifest-boundary
+need 'round `R59` completed' "$ROOT/MANIFEST.md" r59-manifest-boundary
 need "# File 10 Status — 1.2.8-rc1" "$ROOT/STATUS.md" r59-status
 need "R60 remains pending" "$ROOT/STATUS.md" r59-no-premature-r60
-need "Runtime: `1.2.8-rc1`" "$ROOT/README.md" r59-readme-root
+need 'Runtime: `1.2.8-rc1`' "$ROOT/README.md" r59-readme-root
 need '"version": "1.2.8-rc1"' "$ROOT/SBOM-1.2.8-rc1.json" r59-sbom
 
 printf '%s\n' 'File 10 R51-R60 sequential contracts PASS'
