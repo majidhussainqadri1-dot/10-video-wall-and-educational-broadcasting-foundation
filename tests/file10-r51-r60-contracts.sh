@@ -31,4 +31,13 @@ need "vwlb_retry_cleanup_cursor" "$P/uninstall.php" r52-purge-cleanup-cursor
 need "vwlb_retry_erasure_cursor_" "$P/uninstall.php" r52-purge-erasure-cursors
 forbid "foreach(self::records(0,25)" "$P/includes/class-vwlb-r20-retry-privacy.php" r52-no-head-of-line-loop
 
+# R53 — activation scheduling is compensating: a partial cron setup or any later activation failure must not leave orphan workers running.
+need "\$created=array();" "$P/includes/class-vwlb-activator.php" r53-created-ledger
+need "array_reverse(\$created)" "$P/includes/class-vwlb-activator.php" r53-reverse-compensation
+need "wp_clear_scheduled_hook(\$hook)" "$P/includes/class-vwlb-activator.php" r53-clear-created-hook
+need "if(is_wp_error(\$scheduled)){self::deactivate();" "$P/includes/class-vwlb-activator.php" r53-schedule-failure-cleanup
+need "if(is_wp_error(\$legacy)){self::deactivate();" "$P/includes/class-vwlb-activator.php" r53-legacy-failure-cleanup
+need "File 10 version state could not be recorded durably." "$P/includes/class-vwlb-activator.php" r53-version-failure-path
+need "self::deactivate();deactivate_plugins" "$P/includes/class-vwlb-activator.php" r53-post-schedule-deactivation
+
 printf '%s\n' 'File 10 R51-R60 sequential contracts PASS'
