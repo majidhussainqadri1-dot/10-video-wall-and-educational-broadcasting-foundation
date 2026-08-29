@@ -40,4 +40,11 @@ need "if(is_wp_error(\$legacy)){self::deactivate();" "$P/includes/class-vwlb-act
 need "File 10 version state could not be recorded durably." "$P/includes/class-vwlb-activator.php" r53-version-failure-path
 need "self::deactivate();deactivate_plugins" "$P/includes/class-vwlb-activator.php" r53-post-schedule-deactivation
 
+# R54 — worker queue scans must distinguish an empty queue from an unreadable database state and emit an operational failure signal.
+need "vwlb_processing_queue_read_failed" "$P/includes/class-vwlb-jobs.php" r54-processing-read
+need "vwlb_outbox_queue_read_failed" "$P/includes/class-vwlb-jobs.php" r54-outbox-read
+need "vwlb_scheduled_publish_queue_read_failed" "$P/includes/class-vwlb-jobs.php" r54-scheduled-read
+need "vwlb_live_reconcile_queue_read_failed" "$P/includes/class-vwlb-jobs.php" r54-live-read
+need "\$wpdb->last_error=''" "$P/includes/class-vwlb-jobs.php" r54-error-reset
+
 printf '%s\n' 'File 10 R51-R60 sequential contracts PASS'
