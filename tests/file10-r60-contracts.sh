@@ -5,7 +5,7 @@ P="$ROOT/video-wall-and-live-broadcasting"
 fail(){ echo "FAIL r60: $*" >&2; exit 1; }
 need(){ grep -R -F -- "$1" "$2" >/dev/null || fail "$3"; }
 
-# R60 — final full review findings were frozen before this correction batch.
+# R60 historical hardening remains required; current immutable release identity may advance in later completed cycles.
 need "vwlb_evidence_option_read_failed" "$P/includes/class-vwlb-r30-evidence-privacy.php" evidence-db-read
 need "MIGRATION_MARKER = 'complete:r60-db-verified-v1'" "$P/includes/class-vwlb-r30-evidence-privacy.php" evidence-old-marker-reverify
 need "vwlb_legacy_probe_failed" "$P/includes/class-vwlb-compatibility.php" legacy-probe
@@ -26,6 +26,6 @@ need "safe_recount" "$P/includes/class-vwlb-r60-final-hardening.php" guarded-rec
 need "vwlb_repair_postcheck_unverified" "$P/includes/class-vwlb-r60-final-hardening.php" repair-postcheck
 need "vwlb_r60_activation_snapshot" "$P/uninstall.php" purge-activation-snapshot
 need "vwlb_r60_external_guard_" "$P/uninstall.php" purge-external-guards
-need "Version: 1.2.9-rc1" "$P/video-wall-and-live-broadcasting.php" final-version
-need "define( 'VWLB_VERSION', '1.2.9-rc1' );" "$P/video-wall-and-live-broadcasting.php" final-version-constant
-printf '%s\n' 'File 10 R60 final contracts PASS'
+need "Version: 1.2.10-rc1" "$P/video-wall-and-live-broadcasting.php" current-version
+need "define( 'VWLB_VERSION', '1.2.10-rc1' );" "$P/video-wall-and-live-broadcasting.php" current-version-constant
+printf '%s\n' 'File 10 R60 retained contracts PASS'
