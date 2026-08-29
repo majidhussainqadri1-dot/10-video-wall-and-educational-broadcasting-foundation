@@ -76,4 +76,20 @@ need "vwlb_stream_credential_read_failed" "$P/includes/class-vwlb-live.php" r58-
 need "if(is_wp_error(\$active))return \$active" "$P/includes/class-vwlb-live.php" r58-read-error-propagation
 need "\$wpdb->last_error=''" "$P/includes/class-vwlb-live.php" r58-fresh-credential-read
 
+# R59 — materially changed deployable code must receive a fresh immutable identity, and every current release surface must agree on it.
+need "Version: 1.2.8-rc1" "$P/video-wall-and-live-broadcasting.php" r59-plugin-header
+need "define( 'VWLB_VERSION', '1.2.8-rc1' );" "$P/video-wall-and-live-broadcasting.php" r59-runtime-constant
+need "Stable tag: 1.2.8-rc1" "$P/readme.txt" r59-readme
+need "video-wall-and-live-broadcasting-1.2.8-rc1.zip" "$ROOT/.github/workflows/file10-release.yml" r59-workflow-package
+need "file10-video-wall-live-1.2.8-rc1" "$ROOT/.github/workflows/file10-release.yml" r59-workflow-artifact
+need "video-wall-and-live-broadcasting-1.2.8-rc1.zip" "$ROOT/tools/build-package.sh" r59-builder
+need "CURRENT_VERSION='1.2.8-rc1'" "$ROOT/tests/run-all.sh" r59-suite-version
+need "run_rebased_127" "$ROOT/tests/run-all.sh" r59-historical-version-rebase
+need "# File 10 Release Candidate Manifest — 1.2.8-rc1" "$ROOT/MANIFEST.md" r59-manifest
+need "round `R59` completed" "$ROOT/MANIFEST.md" r59-manifest-boundary
+need "# File 10 Status — 1.2.8-rc1" "$ROOT/STATUS.md" r59-status
+need "R60 remains pending" "$ROOT/STATUS.md" r59-no-premature-r60
+need "Runtime: `1.2.8-rc1`" "$ROOT/README.md" r59-readme-root
+need '"version": "1.2.8-rc1"' "$ROOT/SBOM-1.2.8-rc1.json" r59-sbom
+
 printf '%s\n' 'File 10 R51-R60 sequential contracts PASS'
