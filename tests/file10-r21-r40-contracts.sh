@@ -15,10 +15,10 @@ need "\$r['thumbnail_url']" "$P/includes/class-vwlb-repository.php" r22-public-t
 need "R25: state transition and processing-queue persistence are one transaction" "$P/includes/class-vwlb-media.php" r25-atomic-intent
 need "VWLB_DB::transaction(function()use(\$asset" "$P/includes/class-vwlb-media.php" r25-transaction
 need "Media completion was rolled back because processing could not be queued" "$P/includes/class-vwlb-media.php" r25-queue-rollback
-# R27
-need "vwlb_provider_missing" "$P/includes/class-vwlb-live.php" r27-provider-missing
-need "The configured live provider is unavailable." "$P/includes/class-vwlb-live.php" r27-provider-message
-need "if(!\$provider)return VWLB_Helpers::error('vwlb_provider_missing'" "$P/includes/class-vwlb-live.php" r27-null-guard
+# R27 — credential provider validation now lives in the durable issuance command owner introduced later.
+need "vwlb_provider_missing" "$P/includes/class-vwlb-r46-stream-credential-durability.php" r27-provider-missing
+need "The configured live provider is unavailable." "$P/includes/class-vwlb-r46-stream-credential-durability.php" r27-provider-message
+need "if(!\$provider)return VWLB_Helpers::error('vwlb_provider_missing'" "$P/includes/class-vwlb-r46-stream-credential-durability.php" r27-null-guard
 # R28
 need "moderation_blocker_exists" "$P/includes/class-vwlb-r11-restore-guard.php" r28-moderation-pagination
 need "takedown_blocker_exists" "$P/includes/class-vwlb-r11-restore-guard.php" r28-takedown-pagination
