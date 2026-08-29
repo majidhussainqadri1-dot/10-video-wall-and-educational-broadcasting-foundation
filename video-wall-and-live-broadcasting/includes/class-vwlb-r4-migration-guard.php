@@ -1,5 +1,5 @@
 <?php
-/** R04/R38 migration/storage verification guard. Revalidates on a bounded runtime lease and fails closed. */
+/** R04/R38/R43 migration/storage verification guard. Revalidates on a bounded runtime lease and fails closed. */
 defined( 'ABSPATH' ) || exit;
 final class VWLB_R4_Migration_Guard {
 	const VERIFIED_OPTION = 'vwlb_schema_verified_release';
@@ -34,18 +34,28 @@ final class VWLB_R4_Migration_Guard {
 		);
 		foreach($contracts as $name=>$contract){$result=self::verify_table_contract(VWLB_Helpers::table($name),$contract['columns'],$contract['indexes']);if(is_wp_error($result))return $result;}return true;
 	}
-	private static function harden_private_storage() {
+	private static function validate_private_storage_root() {
 		$base=trailingslashit(WP_CONTENT_DIR).VWLB_Extensions::PRIVATE_DIR;
+		if(is_link($base))return VWLB_Helpers::error('vwlb_private_storage_symlink_forbidden',__('Private media storage cannot be a symbolic link.',VWLB_TEXT_DOMAIN),503);
+		if(file_exists($base)&&!is_dir($base))return VWLB_Helpers::error('vwlb_private_storage_invalid',__('Private media storage path is not a directory.',VWLB_TEXT_DOMAIN),503);
 		if(!is_dir($base)&&!wp_mkdir_p($base))return VWLB_Helpers::error('vwlb_private_storage_unavailable',__('Private media storage could not be created.',VWLB_TEXT_DOMAIN),503);
+		clearstatcache(true,$base);if(is_link($base)||!is_dir($base))return VWLB_Helpers::error('vwlb_private_storage_symlink_forbidden',__('Private media storage could not be verified safely.',VWLB_TEXT_DOMAIN),503);
+		$root=realpath($base);$content=realpath(WP_CONTENT_DIR);if(!$root||!$content||($root!==$content&&!str_starts_with($root,trailingslashit($content))))return VWLB_Helpers::error('vwlb_private_storage_root_escape',__('Private media storage resolves outside the approved WordPress content directory.',VWLB_TEXT_DOMAIN),503);
+		return $base;
+	}
+	private static function harden_private_storage() {
+		$base=self::validate_private_storage_root();if(is_wp_error($base))return $base;
 		$protect=array('index.php'=>"<?php\nhttp_response_code(404);\nexit;\n",'.htaccess'=>"Require all denied\nDeny from all\nOptions -Indexes\n",'web.config'=>"<?xml version=\"1.0\"?><configuration><system.webServer><authorization><deny users=\"*\" /></authorization></system.webServer></configuration>");
-		foreach($protect as $file=>$content){$path=trailingslashit($base).$file;$written=file_put_contents($path,$content,LOCK_EX);if(false===$written)return VWLB_Helpers::error('vwlb_private_storage_protection_failed',__('Private media storage protection could not be written.',VWLB_TEXT_DOMAIN),503,array('file'=>$file));$actual=file_get_contents($path);if(false===$actual||!hash_equals(hash('sha256',$content),hash('sha256',$actual)))return VWLB_Helpers::error('vwlb_private_storage_protection_unverified',__('Private media storage protection could not be verified.',VWLB_TEXT_DOMAIN),503,array('file'=>$file));}return true;
+		foreach($protect as $file=>$content){$path=trailingslashit($base).$file;if(is_link($path))return VWLB_Helpers::error('vwlb_private_storage_protection_symlink_forbidden',__('A private media protection file cannot be a symbolic link.',VWLB_TEXT_DOMAIN),503,array('file'=>$file));$actual=is_file($path)?file_get_contents($path):false;if(false===$actual||!hash_equals(hash('sha256',$content),hash('sha256',$actual))){$written=file_put_contents($path,$content,LOCK_EX);if(false===$written)return VWLB_Helpers::error('vwlb_private_storage_protection_failed',__('Private media storage protection could not be written.',VWLB_TEXT_DOMAIN),503,array('file'=>$file));$actual=file_get_contents($path);}if(false===$actual||!hash_equals(hash('sha256',$content),hash('sha256',$actual)))return VWLB_Helpers::error('vwlb_private_storage_protection_unverified',__('Private media storage protection could not be verified.',VWLB_TEXT_DOMAIN),503,array('file'=>$file));}return true;
 	}
 	public static function verify_release() {
-		// R38: a release marker is not perpetual schema truth. Revalidate/repair on a bounded lease so later schema/storage drift cannot remain trusted indefinitely.
+		// R38/R43: schema proof is leased, but the private storage root itself is revalidated on every boot/request before any installer can touch it.
+		$root=self::validate_private_storage_root();if(is_wp_error($root))return $root;
 		$verified_at=absint(get_option(self::VERIFIED_AT_OPTION,0));
 		if((string)get_option(self::VERIFIED_OPTION,'')===VWLB_VERSION&&$verified_at>0&&(time()-$verified_at)<self::VERIFICATION_TTL)return true;
 		$token=self::acquire_lock();if(is_wp_error($token))return $token;
 		try{
+			$root=self::validate_private_storage_root();if(is_wp_error($root))return $root;
 			$base=VWLB_DB::install_schema();if(is_wp_error($base))return $base;
 			$ext=VWLB_Extensions::install_schema();if(is_wp_error($ext))return $ext;
 			$future=VWLB_Future_Intelligence::install_schema();if(is_wp_error($future))return $future;
@@ -53,7 +63,7 @@ final class VWLB_R4_Migration_Guard {
 			$storage=self::harden_private_storage();if(is_wp_error($storage))return $storage;
 			$now=time();$saved=update_option(self::VERIFIED_OPTION,VWLB_VERSION,false);if(!$saved&&(string)get_option(self::VERIFIED_OPTION,'')!==VWLB_VERSION)return VWLB_Helpers::error('vwlb_schema_release_marker_failed',__('File 10 verified schema release marker could not be recorded.',VWLB_TEXT_DOMAIN),500);
 			$time_saved=update_option(self::VERIFIED_AT_OPTION,$now,false);if(!$time_saved&&(int)get_option(self::VERIFIED_AT_OPTION,0)!==$now)return VWLB_Helpers::error('vwlb_schema_verification_time_failed',__('File 10 schema verification time could not be recorded durably.',VWLB_TEXT_DOMAIN),500);
-			VWLB_Helpers::audit('system',10,'schema_release_verified','',VWLB_VERSION,'Base, extension, Future and podcast installers plus podcast structural contract and private-storage protection verified.',array('verification_ttl_seconds'=>self::VERIFICATION_TTL));return true;
+			VWLB_Helpers::audit('system',10,'schema_release_verified','',VWLB_VERSION,'Base, extension, Future and podcast installers plus private-storage containment/protection verified.',array('verification_ttl_seconds'=>self::VERIFICATION_TTL));return true;
 		}finally{self::release_lock($token);}
 	}
 }
