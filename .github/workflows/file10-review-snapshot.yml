@@ -1,0 +1,27 @@
+name: File 10 Review Snapshot
+on:
+  push:
+    branches:
+      - fix/file-10-fresh-40-review-v1.2.6-rc1
+permissions:
+  contents: read
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Upload exact review source snapshot
+        uses: actions/upload-artifact@v4
+        with:
+          name: file10-review-source-${{ github.sha }}
+          path: |
+            .github
+            docs
+            tests
+            tools
+            video-wall-and-live-broadcasting
+            README.md
+            STATUS.md
+            MANIFEST.md
+          include-hidden-files: true
+          if-no-files-found: error
