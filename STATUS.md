@@ -1,15 +1,15 @@
-# File 10 Status — 1.2.7-rc1
+# File 10 Status — 1.2.8-rc1
 
-**Classification:** repository/source correction candidate after completion of the fresh sequential R21–R40 review cycle opened 2026-08-18.
+**Classification:** repository/source correction candidate in the fresh sequential R41–R60 review cycle opened 2026-08-29.
 
-- Cycle baseline exact HEAD: `83558aea2e581e6f7b76084e21695989254704b7`.
+- Cycle baseline exact HEAD: `824f149269f451a2071882128a655581a3d18ef4` (`1.2.7-rc1`).
 - Review method: complete one round first → freeze that round's findings → correct all proven findings from that round together → full regression/release QA → only then begin the next round.
-- R39 advanced the interim runtime candidate from `1.2.5-rc1` to `1.2.6-rc1` because materially different packages must not share the same deployable version identity.
-- R40 found additional package/release-hygiene defects; its correction therefore advances the candidate to `1.2.7-rc1` rather than overwriting the earlier `1.2.6-rc1` identity.
-- Specified: complete by governing plans.
-- Coded: candidate; the R21–R40 source-review cycle is complete and evidence is tracked in Draft PR #5.
-- Packaged: only an artifact generated from the final exact R40 head is valid as the cycle package.
-- Automated-QA Green: must be established by the final exact-head workflow run; this source file does not preclaim a future CI result.
+- R41–R58 completed before R59; R59 found release/package identity and release-evidence synchronization defects after materially package-changing corrections beyond 1.2.7-rc1.
+- R59 advances the immutable candidate identity to `1.2.8-rc1` and synchronizes plugin/workflow/builder/readme/test-harness/manifest/SBOM metadata. R60 remains pending and no R60 result is preclaimed here.
+- Specified: complete by governing plans at repository specification level.
+- Coded: candidate; R41–R59 corrections are present on Draft PR #6.
+- Packaged: only an artifact generated from the exact current reviewed head is valid as the current candidate package.
+- Automated-QA Green: must be established by an exact-head workflow run after the complete R59 correction batch; this source file does not preclaim a future CI result.
 - Staging-Accepted: not established.
 - Live-Deployed: not established.
 - Operational: not established.
