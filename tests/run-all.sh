@@ -13,6 +13,8 @@ text = text.replace('1.2.4-rc1', version)
 # R36 strengthened scheduled publication from a post-update success branch to fail-early transactional CAS.
 # Preserve every legacy assertion, but rebase this exact syntax-only check to its stronger semantic equivalent.
 text = text.replace('if(!is_wp_error(\\$published))', 'if(is_wp_error(\\$published))return \\$published')
+# R58 moved credential persistence into the mandatory durable command owner; preserve the original assertion at its new canonical location.
+text = text.replace('"$P/includes/class-vwlb-live.php" r21-credential-write', '"$P/includes/class-vwlb-r46-stream-credential-durability.php" r21-credential-write')
 pathlib.Path(dst).write_text(text)
 PY
   bash "$tmp"; rm -f "$tmp"
