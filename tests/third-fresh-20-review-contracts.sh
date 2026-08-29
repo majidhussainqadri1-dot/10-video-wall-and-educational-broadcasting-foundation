@@ -13,7 +13,7 @@ need "nonreplayable'=>true" "$P/includes/class-vwlb-security.php" r01-redacted-s
 # R02 — live end/kill fails closed if recording finalization cannot be queued.
 need "vwlb_recording_queue_failed" "$P/includes/class-vwlb-live.php" r02-recording-queue
 need "\$queued=self::queue_recording" "$P/includes/class-vwlb-live.php" r02-queue-check
-need "VWLB_DB::transaction(function()use(\$event,\$expected_version,\$changes,\$to)" "$P/includes/class-vwlb-live.php" r02-end-atomicity
+need "VWLB_DB::transaction(function()use(\$event,\$expected_version,\$changes,\$to" "$P/includes/class-vwlb-live.php" r02-end-atomicity
 
 # R03 — public recorded-video DTOs expose channel public IDs only.
 need "channel_public_id" "$P/includes/class-vwlb-repository.php" r03-channel-public
