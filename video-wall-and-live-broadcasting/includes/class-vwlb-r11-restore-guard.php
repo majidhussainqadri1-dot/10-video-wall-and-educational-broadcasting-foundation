@@ -1,5 +1,5 @@
 <?php
-/** R11/R28 sequential review: case-bound restoration guard across moderation, takedown and consent restrictions. */
+/** R11/R28/R56 sequential review: case-bound restoration guard across moderation, takedown and consent restrictions. */
 defined( 'ABSPATH' ) || exit;
 
 final class VWLB_R11_Restore_Guard {
@@ -39,6 +39,7 @@ final class VWLB_R11_Restore_Guard {
 	private static function moderation_blocker_exists( $target_type, $target_id, $exclude_id ) {
 		global $wpdb; $table = VWLB_Helpers::table('moderation'); $before = PHP_INT_MAX;
 		do {
+			$wpdb->last_error = '';
 			$rows = $wpdb->get_results( $wpdb->prepare(
 				"SELECT id,evidence_json FROM $table WHERE target_type=%s AND target_id=%d AND id<%d AND id<>%d AND status='closed' AND action IN ('restrict','remove') ORDER BY id DESC LIMIT 100",
 				$target_type, $target_id, $before, max(0,(int)$exclude_id)
@@ -54,6 +55,7 @@ final class VWLB_R11_Restore_Guard {
 	private static function takedown_blocker_exists( $target_type, $target_id, $exclude_id ) {
 		global $wpdb; $table = VWLB_Helpers::table('takedowns'); $before = PHP_INT_MAX;
 		do {
+			$wpdb->last_error = '';
 			$rows = $wpdb->get_results( $wpdb->prepare(
 				"SELECT id,evidence_json FROM $table WHERE target_type=%s AND target_id=%d AND id<%d AND id<>%d AND status<>'restored' ORDER BY id DESC LIMIT 100",
 				$target_type, $target_id, $before, max(0,(int)$exclude_id)
@@ -66,9 +68,11 @@ final class VWLB_R11_Restore_Guard {
 		return false;
 	}
 
-	private static function assert_restore_allowed( $target_type, $target_id, $exclude_kind, $exclude_id ) {
+	/** R56: command services call this invariant directly as well as the REST preflight, so non-REST callers cannot bypass restoration blockers. */
+	public static function assert_restore_allowed( $target_type, $target_id, $exclude_kind, $exclude_id ) {
 		global $wpdb;
 		if ( 'video' === $target_type ) {
+			$wpdb->last_error = '';
 			$consent = $wpdb->get_var( $wpdb->prepare(
 				"SELECT id FROM " . VWLB_Helpers::table('consent_links') . " WHERE video_id=%d AND (status IN ('expired','withdrawn') OR (status='active' AND expires_at IS NOT NULL AND expires_at<=%s)) ORDER BY id DESC LIMIT 1",
 				$target_id, VWLB_Helpers::now()
