@@ -31,7 +31,7 @@ final class VWLB_Security {
 		return $allowed&&$policy; // R16: authorization filters may restrict native authority, never broaden it.
 	}
 	public static function can_view($object,$purpose='playback'){
-		if(!is_array($object)||in_array($object['status']??'',array('removed','restricted','failed','deleted'),true))return false;
+		if(!is_array($object)||!empty($object['deleted_at'])||in_array($object['status']??'',array('removed','restricted','failed','deleted'),true))return false;
 		$is_video=array_key_exists('published_at',$object);$is_live=array_key_exists('scheduled_start',$object);
 		if($is_video&&'published'!==($object['status']??''))return self::can(VWLB_Contracts::CAP_PUBLISH,$object,$purpose);
 		if($is_live&&!in_array($object['status']??'',array('scheduled','live','interrupted','ended','recording_processing','replay_review','replay_published'),true))return self::can(VWLB_Contracts::CAP_BROADCAST,$object,$purpose);
