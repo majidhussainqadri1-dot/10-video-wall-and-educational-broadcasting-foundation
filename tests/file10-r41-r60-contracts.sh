@@ -46,4 +46,13 @@ need "chunk_database_cas_rollback_failed" "$P/includes/class-vwlb-r45-upload-dur
 need "vwlb_private_upload_symlink_forbidden" "$P/includes/class-vwlb-r45-upload-durability.php" r45-file-symlink
 need "while(\$write_ok&&\$written<\$length)" "$P/includes/class-vwlb-r45-upload-durability.php" r45-full-write-loop
 
+# R46 — provider-side ingest issuance is external; failed local persistence must request compensation and surface reconciliation if revocation is unconfirmed.
+need "class-vwlb-r46-stream-credential-durability.php" "$P/video-wall-and-live-broadcasting.php" r46-autoload
+need "VWLB_R46_Stream_Credential_Durability::register" "$P/video-wall-and-live-broadcasting.php" r46-register
+need "vwlb_provider_ingest_compensation_requested" "$P/includes/class-vwlb-r46-stream-credential-durability.php" r46-compensation-hook
+need "vwlb_provider_revoke_ingest_result" "$P/includes/class-vwlb-r46-stream-credential-durability.php" r46-compensation-result
+need "vwlb_provider_ingest_reconcile_required" "$P/includes/class-vwlb-r46-stream-credential-durability.php" r46-reconcile-fail-closed
+need "The credential was not disclosed; reconciliation is required." "$P/includes/class-vwlb-r46-stream-credential-durability.php" r46-no-secret-disclosure
+need "Cache-Control','private, no-store" "$P/includes/class-vwlb-r46-stream-credential-durability.php" r46-secret-no-store
+
 printf '%s\n' 'File 10 R41-R60 sequential contracts PASS'
