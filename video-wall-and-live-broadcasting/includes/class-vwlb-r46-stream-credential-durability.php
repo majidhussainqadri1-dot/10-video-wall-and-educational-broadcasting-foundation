@@ -13,7 +13,7 @@ final class VWLB_R46_Stream_Credential_Durability {
 		if(!$confirmed)do_action('vwlb_operational_failure','live','vwlb_provider_ingest_reconcile_required',array('live_public_id'=>$event['public_id'],'provider'=>$event['provider'],'provider_ref_hash'=>hash('sha256',(string)($ingest['provider_ref']??''))));
 		return $confirmed;
 	}
-	private static function issue($event,$ttl){
+	public static function issue_durable($event,$ttl){
 		$provider=VWLB_Providers::get($event['provider']);if(!$provider)return VWLB_Helpers::error('vwlb_provider_missing',__('The configured live provider is unavailable.',VWLB_TEXT_DOMAIN),503);
 		$ingest=$provider->issue_ingest($event);if(is_wp_error($ingest))return $ingest;if(!is_array($ingest))return VWLB_Helpers::error('vwlb_provider_ingest_invalid',__('The live provider returned an invalid ingest response.',VWLB_TEXT_DOMAIN),503);
 		$secret=!empty($ingest['stream_key'])?(string)$ingest['stream_key']:VWLB_Providers::stream_secret();unset($ingest['stream_key']);$now=VWLB_Helpers::now();global $wpdb;
@@ -28,6 +28,6 @@ final class VWLB_R46_Stream_Credential_Durability {
 		return $result;
 	}
 	public static function intercept_issue($response,$handler,$request){
-		if(null!==$response||!self::route_matches($request))return $response;$event=VWLB_Repository::find('live_events',$request['id']);if(!$event)return VWLB_Helpers::error('vwlb_live_missing',__('Live event not found.',VWLB_TEXT_DOMAIN),404);if(!VWLB_Security::can(VWLB_Contracts::CAP_BROADCAST,$event,'issue_stream_credential'))return VWLB_Helpers::error('vwlb_forbidden',__('You cannot issue credentials.',VWLB_TEXT_DOMAIN),403);$step=VWLB_Security::require_step_up('issue_stream_credential');if(is_wp_error($step))return $step;if(!in_array($event['status'],array('scheduled','rehearsal','ready'),true))return VWLB_Helpers::error('vwlb_live_state_invalid',__('Credentials cannot be issued in this state.',VWLB_TEXT_DOMAIN),409);$issued=self::issue($event,self::ttl($request));if(is_wp_error($issued))return $issued;$out=rest_ensure_response($issued);$out->set_status(201);$out->header('Cache-Control','private, no-store');$out->header('X-Sabri-File','10');$out->header('X-VWLB-Version',VWLB_VERSION);return $out;
+		if(null!==$response||!self::route_matches($request))return $response;$event=VWLB_Repository::find('live_events',$request['id']);if(!$event)return VWLB_Helpers::error('vwlb_live_missing',__('Live event not found.',VWLB_TEXT_DOMAIN),404);if(!VWLB_Security::can(VWLB_Contracts::CAP_BROADCAST,$event,'issue_stream_credential'))return VWLB_Helpers::error('vwlb_forbidden',__('You cannot issue credentials.',VWLB_TEXT_DOMAIN),403);$step=VWLB_Security::require_step_up('issue_stream_credential');if(is_wp_error($step))return $step;if(!in_array($event['status'],array('scheduled','rehearsal','ready'),true))return VWLB_Helpers::error('vwlb_live_state_invalid',__('Credentials cannot be issued in this state.',VWLB_TEXT_DOMAIN),409);$issued=self::issue_durable($event,self::ttl($request));if(is_wp_error($issued))return $issued;$out=rest_ensure_response($issued);$out->set_status(201);$out->header('Cache-Control','private, no-store');$out->header('X-Sabri-File','10');$out->header('X-VWLB-Version',VWLB_VERSION);return $out;
 	}
 }
