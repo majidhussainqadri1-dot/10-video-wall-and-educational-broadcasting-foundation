@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-CURRENT_VERSION='1.2.7-rc1'
+CURRENT_VERSION='1.2.8-rc1'
 run_rebased_124(){ local src="$1" tmp; tmp="$(mktemp "$ROOT/tests/.rebased.XXXXXX.sh")"; sed "s/1\\.2\\.4-rc1/${CURRENT_VERSION}/g" "$src" > "$tmp"; bash "$tmp"; rm -f "$tmp"; }
+run_rebased_127(){ local src="$1" tmp; tmp="$(mktemp "$ROOT/tests/.rebased127.XXXXXX.sh")"; sed "s/1\\.2\\.7-rc1/${CURRENT_VERSION}/g" "$src" > "$tmp"; bash "$tmp"; rm -f "$tmp"; }
 run_rebased_legacy40(){
   local src="$1" tmp; tmp="$(mktemp "$ROOT/tests/.rebased40.XXXXXX.sh")"
   python3 - "$src" "$tmp" "$CURRENT_VERSION" <<'PY'
@@ -32,7 +33,7 @@ bash "$ROOT/tests/third-fresh-20-review-contracts.sh"
 bash "$ROOT/tests/fourth-fresh-20-review-contracts.sh"
 bash "$ROOT/tests/file10-sequential-20-contracts.sh"
 bash "$ROOT/tests/file10-sequential-late-contracts.sh"
-bash "$ROOT/tests/file10-r21-r40-contracts.sh"
+run_rebased_127 "$ROOT/tests/file10-r21-r40-contracts.sh"
 bash "$ROOT/tests/file10-r41-r60-contracts.sh"
 bash "$ROOT/tests/file10-r51-r60-contracts.sh"
 bash "$ROOT/tools/build-package.sh" /tmp/vwlb-build-a.zip >/dev/null
