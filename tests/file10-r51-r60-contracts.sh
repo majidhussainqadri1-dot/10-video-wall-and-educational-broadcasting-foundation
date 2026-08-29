@@ -47,4 +47,9 @@ need "vwlb_scheduled_publish_queue_read_failed" "$P/includes/class-vwlb-jobs.php
 need "vwlb_live_reconcile_queue_read_failed" "$P/includes/class-vwlb-jobs.php" r54-live-read
 need "\$wpdb->last_error=''" "$P/includes/class-vwlb-jobs.php" r54-error-reset
 
+# R55 — direct/object-level authorization must fail closed for soft-deleted rows, not only list queries.
+need "!empty(\$object['deleted_at'])" "$P/includes/class-vwlb-security.php" r55-soft-delete-boundary
+need "public_video_dto" "$P/includes/class-vwlb-repository.php" r55-video-dto-path
+need "public_live_dto" "$P/includes/class-vwlb-repository.php" r55-live-dto-path
+
 printf '%s\n' 'File 10 R51-R60 sequential contracts PASS'
