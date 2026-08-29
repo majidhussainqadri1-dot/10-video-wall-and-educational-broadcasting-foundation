@@ -1,0 +1,20 @@
+<?php
+defined('WP_UNINSTALL_PLUGIN')||exit;
+if(!defined('VWLB_PURGE_CONFIRMED')||true!==VWLB_PURGE_CONFIRMED)return;
+if(!(bool)get_option('vwlb_allow_purge',false))return;
+global $wpdb;
+
+$page_map=(array)get_option('vwlb_page_map',array());
+foreach(array_unique(array_map('absint',$page_map)) as $page_id){if(!$page_id)continue;$post=get_post($page_id);if($post&&'page'===$post->post_type&&strpos((string)$post->post_content,'[vwlb_')!==false)wp_delete_post($page_id,true);}
+
+$tables=array('live_poll_responses','live_poll_options','live_polls','transcript_segments','video_annotations','media_tracks','watermark_policies','consent_links','broadcast_health_samples','simulcast_targets','broadcast_guests','production_scenes','production_sources','future_live_config','podcast_episodes','podcast_series','creator_metrics_daily','download_tokens','live_resources','live_questions','live_attendees','chapters','premieres','provider_health','upload_sessions','interactions','playback_sessions','captions','playlist_items','playlists','stream_credentials','live_events','videos','processing_jobs','media_assets','channel_members','channels','moderation','takedowns','webhooks','inbox','outbox','audit','rate_limits','idempotency','rollback_snapshots');
+foreach($tables as $table){$name=$wpdb->prefix.'vwlb_'.$table;$wpdb->query("DROP TABLE IF EXISTS `$name`");}
+
+$private=trailingslashit(WP_CONTENT_DIR).'vwlb-private-media';
+if(is_dir($private)&&!is_link($private)){$root=realpath($private);$content=realpath(WP_CONTENT_DIR);if($root&&$content&&str_starts_with($root,trailingslashit($content))){$it=new RecursiveIteratorIterator(new RecursiveDirectoryIterator($root,FilesystemIterator::SKIP_DOTS),RecursiveIteratorIterator::CHILD_FIRST);foreach($it as $item){$path=$item->getPathname();if($item->isLink())unlink($path);elseif($item->isDir())rmdir($path);else unlink($path);}rmdir($root);}}
+
+foreach(array('vwlb_schema_version','vwlb_ext_schema_version','vwlb_future_schema_version','vwlb_version','vwlb_safe_mode','vwlb_page_map','vwlb_legacy_migration_complete','vwlb_schema_migration_lock','vwlb_schema_verified_release','vwlb_schema_verified_at','vwlb_schema_verification_lock','vwlb_r10_structural_verified_release','vwlb_r30_evidence_fallback_migration','vwlb_r30_reconcile_cursor_audit','vwlb_r30_reconcile_cursor_outbox','vwlb_retry_reconcile_cursor','vwlb_retry_cleanup_cursor','vwlb_operational_metrics','vwlb_r60_activation_snapshot','vwlb_allow_purge') as $option)delete_option($option);
+$wpdb->query($wpdb->prepare("DELETE FROM {$wpdb->options} WHERE option_name LIKE %s OR option_name LIKE %s OR option_name LIKE %s",$wpdb->esc_like('vwlb_audit_fallback_').'%', $wpdb->esc_like('vwlb_outbox_fallback_').'%', $wpdb->esc_like('vwlb_inbox_retry_').'%'));
+$wpdb->query($wpdb->prepare("DELETE FROM {$wpdb->options} WHERE option_name LIKE %s",$wpdb->esc_like('vwlb_retry_erasure_cursor_').'%'));
+$wpdb->query($wpdb->prepare("DELETE FROM {$wpdb->options} WHERE option_name LIKE %s",$wpdb->esc_like('vwlb_r60_external_guard_').'%'));
+error_log('VWLB explicit destructive purge completed after dual confirmation.');
