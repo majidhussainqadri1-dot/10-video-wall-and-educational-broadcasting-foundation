@@ -11,8 +11,8 @@ import pathlib, sys
 src, dst, version = sys.argv[1:]
 text = pathlib.Path(src).read_text()
 text = text.replace('1.2.8-rc1', version)
-text = text.replace('round `R59` completed', 'round `R60` completed')
-text = text.replace('R60 remains pending', 'R60 completed')
+text = text.replace('round `R59` completed', 'sequential cycle rounds `R61–R80` completed at repository source-review level')
+text = text.replace('R60 remains pending', 'R80 found final release-hygiene defects')
 pathlib.Path(dst).write_text(text)
 PY
   bash "$tmp"; rm -f "$tmp"
