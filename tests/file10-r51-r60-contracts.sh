@@ -52,4 +52,13 @@ need "!empty(\$object['deleted_at'])" "$P/includes/class-vwlb-security.php" r55-
 need "public_video_dto" "$P/includes/class-vwlb-repository.php" r55-video-dto-path
 need "public_live_dto" "$P/includes/class-vwlb-repository.php" r55-live-dto-path
 
+# R56 — restoration safety is a command invariant, not merely a REST preflight; consent/moderation/takedown blocker reads are fresh-error-aware.
+need "public static function assert_restore_allowed" "$P/includes/class-vwlb-r11-restore-guard.php" r56-public-invariant
+need "assert_restore_allowed(\$fresh['target_type'],(int)\$fresh['target_id'],'moderation'" "$P/includes/class-vwlb-moderation.php" r56-moderation-command-guard
+need "assert_restore_allowed(\$fresh['target_type'],(int)\$fresh['target_id'],'takedown'" "$P/includes/class-vwlb-moderation.php" r56-takedown-command-guard
+need "\$wpdb->last_error = '';" "$P/includes/class-vwlb-r11-restore-guard.php" r56-fresh-db-error
+need "vwlb_restore_blocked_by_consent" "$P/includes/class-vwlb-r11-restore-guard.php" r56-consent-block
+need "vwlb_restore_blocked_by_moderation" "$P/includes/class-vwlb-r11-restore-guard.php" r56-moderation-block
+need "vwlb_restore_blocked_by_takedown" "$P/includes/class-vwlb-r11-restore-guard.php" r56-takedown-block
+
 printf '%s\n' 'File 10 R51-R60 sequential contracts PASS'
