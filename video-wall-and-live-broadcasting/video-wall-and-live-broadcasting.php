@@ -29,7 +29,7 @@ $autoload = array(
 	'class-vwlb-videos.php', 'class-vwlb-live.php', 'class-vwlb-moderation.php',
 	'class-vwlb-jobs.php', 'class-vwlb-extensions.php', 'class-vwlb-podcasts.php',
 	'class-vwlb-observability.php', 'class-vwlb-rest.php', 'class-vwlb-extended-rest.php',
-	'class-vwlb-future-intelligence.php', 'class-vwlb-future-safety.php', 'class-vwlb-review-hardening.php', 'class-vwlb-sequential-review-hardening.php', 'class-vwlb-r10-integrity.php', 'class-vwlb-r11-restore-guard.php', 'class-vwlb-r18-durability.php', 'class-vwlb-r20-retry-privacy.php', 'class-vwlb-r30-evidence-privacy.php', 'class-vwlb-r31-webhook-integrity.php', 'class-vwlb-r34-frontend-contract.php', 'class-vwlb-r3-playback.php', 'class-vwlb-r4-migration-guard.php', 'class-vwlb-future-adapters.php', 'class-vwlb-future-rest.php', 'class-vwlb-future-frontend.php',
+	'class-vwlb-future-intelligence.php', 'class-vwlb-future-safety.php', 'class-vwlb-review-hardening.php', 'class-vwlb-sequential-review-hardening.php', 'class-vwlb-r10-integrity.php', 'class-vwlb-r11-restore-guard.php', 'class-vwlb-r18-durability.php', 'class-vwlb-r20-retry-privacy.php', 'class-vwlb-r30-evidence-privacy.php', 'class-vwlb-r31-webhook-integrity.php', 'class-vwlb-r34-frontend-contract.php', 'class-vwlb-r45-upload-durability.php', 'class-vwlb-r3-playback.php', 'class-vwlb-r4-migration-guard.php', 'class-vwlb-future-adapters.php', 'class-vwlb-future-rest.php', 'class-vwlb-future-frontend.php',
 	'class-vwlb-frontend.php', 'class-vwlb-admin.php', 'class-vwlb-privacy.php',
 	'class-vwlb-seo.php', 'class-vwlb-integrations.php', 'class-vwlb-compatibility.php',
 	'class-vwlb-diagnostics.php', 'class-vwlb-plugin.php',
@@ -52,5 +52,6 @@ function vwlb_boot() {
 	VWLB_R31_Webhook_Integrity::register();
 	VWLB_Sequential_Review_Hardening::register();
 	VWLB_R34_Frontend_Contract::register();
+	VWLB_R45_Upload_Durability::register();
 }
 add_action( 'plugins_loaded', 'vwlb_boot', 40 );
