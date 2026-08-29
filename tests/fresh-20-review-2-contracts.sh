@@ -80,10 +80,10 @@ need "delegation_ttl" "$P/includes/class-vwlb-future-intelligence.php" r18-guest
 # R19 — existing guest delegation updates require the caller-observed version.
 need "Guest delegation changed. Refresh and submit its current version." "$P/includes/class-vwlb-future-intelligence.php" r19-guest-client-version
 
-# R20 — current candidate, package builder, QA and release workflow share one release identity.
-need "Version: 1.2.7-rc1" "$P/video-wall-and-live-broadcasting.php" r20-runtime-version
-need "video-wall-and-live-broadcasting-1.2.7-rc1.zip" "$ROOT/tools/build-package.sh" r20-build-version
-need "file10-video-wall-live-1.2.7-rc1" "$ROOT/.github/workflows/file10-release.yml" r20-artifact-version
-need "Version: 1.2.7-rc1" "$ROOT/tests/static-contracts.sh" r20-static-version
-need "Version: 1.2.7-rc1" "$ROOT/tests/plan-completion-contracts.sh" r20-plan-version
-need "Version: 1.2.7-rc1" "$ROOT/tests/fourth-fresh-20-review-contracts.sh" r20-current-review-version
+# R20 — current candidate, package builder, QA and release workflow share one release identity. The fourth-fresh script is a historical template and is rebased by run-all before execution.
+need "Version: 1.2.8-rc1" "$P/video-wall-and-live-broadcasting.php" r20-runtime-version
+need "video-wall-and-live-broadcasting-1.2.8-rc1.zip" "$ROOT/tools/build-package.sh" r20-build-version
+need "file10-video-wall-live-1.2.8-rc1" "$ROOT/.github/workflows/file10-release.yml" r20-artifact-version
+need "Version: 1.2.8-rc1" "$ROOT/tests/static-contracts.sh" r20-static-version
+need "Version: 1.2.8-rc1" "$ROOT/tests/plan-completion-contracts.sh" r20-plan-version
+need "Version: 1.2.7-rc1" "$ROOT/tests/fourth-fresh-20-review-contracts.sh" r20-historical-review-template
