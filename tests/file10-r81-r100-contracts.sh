@@ -33,7 +33,7 @@ need "UNIQUE KEY event_user (live_event_id,user_id)" "$P/includes/class-vwlb-ext
 need "UNIQUE KEY metric_object (metric_date,owner_id,object_type,object_id)" "$P/includes/class-vwlb-extensions.php" r86-metrics-unique-contract
 
 # R91 — unlisted access is signed, non-indexable and secure-delivery scoped.
-need "'unlisted'===$visibility" "$P/includes/class-vwlb-security.php" r91-unlisted-explicit
+need "'unlisted'===\$visibility" "$P/includes/class-vwlb-security.php" r91-unlisted-explicit
 need "vwlb_unlisted_access_authorized" "$P/includes/class-vwlb-security.php" r91-unlisted-fail-closed-hook
 need "VWLB_R91_Unlisted_Access_Guard::register" "$P/video-wall-and-live-broadcasting.php" r91-guard-registered
 need "vwlb_exp" "$P/includes/class-vwlb-r91-unlisted-access-guard.php" r91-expiry-proof
