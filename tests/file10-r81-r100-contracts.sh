@@ -24,4 +24,17 @@ need "private static function grant_payload" "$P/includes/class-vwlb-r79-waterma
 need "self::grant_payload(\$policy,\$type,\$object,\$session_ref)" "$P/includes/class-vwlb-r79-watermark-session-guard.php" r84-no-second-read
 reject "VWLB_Future_Intelligence::watermark_payload(array('mode'=>'off')" "$P/includes/class-vwlb-r79-watermark-session-guard.php" r84-no-fail-open-requery
 
+# R85 — recording finalization must keep the canonical live lifecycle, job
+# lease, consent proof and policy snapshot in one fail-closed state machine.
+need "'ended'=>array('recording_processing'" "$P/includes/class-vwlb-state-machine.php" r85-ended-processing
+need "'recording_processing'=>array('replay_review','replay_published','failed')" "$P/includes/class-vwlb-state-machine.php" r85-processing-review
+need "'recording_policy_snapshot'=>\$policy" "$P/includes/class-vwlb-live.php" r85-policy-snapshot
+need "array('status'=>'recording_processing')" "$P/includes/class-vwlb-live.php" r85-queue-state
+need "VWLB_R73_Recording_Consent_Guard::finalization_proof" "$P/includes/class-vwlb-jobs.php" r85-post-finalizer-consent
+need "array('status'=>'replay_review')" "$P/includes/class-vwlb-jobs.php" r85-success-review
+need "array('status'=>'failed')" "$P/includes/class-vwlb-jobs.php" r85-terminal-failed
+need "public static function finalization_proof" "$P/includes/class-vwlb-r73-recording-consent-guard.php" r85-consent-invariant
+reject "add_filter('vwlb_finalize_live_recording'" "$P/includes/class-vwlb-r73-recording-consent-guard.php" r85-no-overwritable-early-filter
+need "vwlb_recording_live_missing" "$P/includes/class-vwlb-r73-recording-consent-guard.php" r85-missing-live-failclosed
+
 printf '%s\n' 'File 10 R81-R100 sequential contracts PASS'
