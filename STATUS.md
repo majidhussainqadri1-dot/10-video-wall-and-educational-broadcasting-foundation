@@ -1,53 +1,22 @@
-# File 10 Status
+# File 10 Status — 1.2.10-rc1
 
-## Current classification
+**Classification:** repository/source correction candidate after completion of the fresh sequential R61–R80 review cycle on 2026-08-30.
 
-**All code-audit defects corrected in Version 0.2.0 — automated local QA passed — real WordPress staging acceptance still required.**
+- Cycle baseline exact HEAD: `7a6ff440cb54730dd6824698856b25a397978d32` (`1.2.9-rc1`).
+- Review method: complete one round first → freeze that round's findings → correct all proven findings from that round together → full regression/release QA → only then begin the next round.
+- R61–R80 completed at review/correction level. Defect-bearing rounds: R61, R63, R64, R65, R66, R67, R68, R69, R70, R71, R72, R73, R74, R75, R76, R77, R78, R79, R80. Clean round: R62.
+- R80 found final release-hygiene defects after deployable R61–R79 changes: stale immutable runtime/package identity, stale workflow/builder/test/docs metadata, disabled final artifact publication and missing current SBOM/release evidence. The R80 correction batch advances the candidate to `1.2.10-rc1` and synchronizes final exact-head package evidence.
+- R79 additionally bound forensic watermark grants to verified playback/live viewer sessions so session-aware watermark evidence cannot silently degrade to an empty session reference.
+- Specified: complete by governing plans at repository specification level.
+- Coded/reviewed candidate: `1.2.10-rc1` on Draft PR #7.
+- Packaged: only an artifact generated from the exact final reviewed head is valid as the current candidate package.
+- Automated-QA Green: not preclaimed by this source file; the final exact-head PHP 8.3/8.4 workflow after R80 must establish it.
+- Staging-Accepted: not established.
+- Live-Deployed: not established.
+- Operational: not established.
+- Deployed version: unverified.
+- Live DB/schema version: unverified.
+- Migration state: unverified.
+- Live verification: not performed.
 
-## Completed corrective work
-
-- Original Version 0.1.0 ZIP retained byte-for-byte.
-- Original source tree made reviewable in the baseline branch.
-- Corrected Version 0.2.0 source tree prepared.
-- Custom post-type admin bypass closed.
-- Safe page creation and activation snapshots implemented.
-- Schema upgrade runner added.
-- Moderation, report, actor, state, time, and note audit table added.
-- Reject/hide notes made mandatory.
-- Private Saved Videos and Video History pages set to no-store/no-cache/noindex/noarchive.
-- Privacy export expanded to reactions, saves, history, reports, and audit records.
-- Privacy erasure recounts totals and anonymizes retained safety/audit records.
-- Media publication made transactional with cleanup on failure.
-- Official host and strict duration validation implemented.
-- Factual author labels implemented.
-- AJAX success/error handling corrected.
-- Viewing history and local-video resume progress implemented.
-- Video/user deletion cleanup implemented.
-- Public/admin pagination and batched interaction-state loading implemented.
-- View-count bot/admin/preview suppression and atomic increment improved.
-- Source-correct structured data and accessibility controls implemented.
-- Corrected ZIP built deterministically and checksummed.
-
-## Automated validation
-
-- PHP lint: PASS, 10/10 files.
-- JavaScript syntax: PASS.
-- Helper tests: PASS.
-- Static correction contracts: PASS.
-- ZIP integrity: PASS.
-
-## Remaining acceptance gates
-
-- Fresh installation on approved Hostinger staging.
-- Upgrade test from Version 0.1.0 with existing tables, pages, posts, and page maps.
-- Files 00/02/03/04/07/09 integration.
-- Founder direct-publish and verified-doctor pending workflow.
-- Non-doctor and wp-admin bypass-denial tests.
-- YouTube, Vimeo, local MP4/WebM/OGG, thumbnail, and rollback tests.
-- Real LiteSpeed/Hostinger private-cache exclusion verification.
-- Real WordPress privacy export/erasure execution.
-- Mobile, keyboard, focus, screen-reader, and cross-browser acceptance.
-- Backup restoration and plugin rollback.
-- Live deployment and post-deployment smoke tests.
-
-No merge, production-complete claim, or live deployment is permitted before these gates pass.
+GitHub, staging and live are distinct realities. Repository source/package evidence does not identify the code currently deployed to the website. Exact deployed code, live DB/schema and migration state remain unverified until separately frozen from the environment.

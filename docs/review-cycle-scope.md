@@ -1,0 +1,1 @@
+Fresh 40-review cycle. Baseline includes completed R04 correction state from the previous interrupted cycle. Each round is reviewed fully before its fixes are applied, then retested before the next round.
