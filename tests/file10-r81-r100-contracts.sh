@@ -44,4 +44,12 @@ need "vwlb_secure_playback_grant" "$P/includes/class-vwlb-r91-unlisted-access-gu
 need "vwlb_secure_live_playback_grant" "$P/includes/class-vwlb-r91-unlisted-access-guard.php" r91-live-secure-delivery
 need "vwlb_public_podcast_feed_grant" "$P/includes/class-vwlb-r91-unlisted-access-guard.php" r91-podcast-secure-delivery
 
+# R94 — emergency-end 5xx outcomes must stay reconciliation-required.
+need "VWLB_R94_Live_External_Uncertainty_Guard::register" "$P/video-wall-and-live-broadcasting.php" r94-guard-registered
+need "vwlb_provider_emergency_end_reconcile_required" "$P/includes/class-vwlb-r94-live-external-uncertainty-guard.php" r94-typed-uncertainty
+need "if(\$status<500)return \$response" "$P/includes/class-vwlb-r94-live-external-uncertainty-guard.php" r94-server-failure-boundary
+need "reconcile_required'=>true" "$P/includes/class-vwlb-r94-live-external-uncertainty-guard.php" r94-reconcile-contract
+need "vwlb_provider_emergency_end_reconcile_required" "$P/includes/class-vwlb-r60-final-hardening.php" r94-r60-recognizes-unsafe
+need "(?:credentials|kill|future-config/apply)" "$P/includes/class-vwlb-r60-final-hardening.php" r94-kill-external-route
+
 printf '%s\n' 'File 10 R81-R100 sequential contracts PASS'
