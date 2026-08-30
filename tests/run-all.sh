@@ -62,6 +62,7 @@ bash "$ROOT/tests/file10-r41-r60-contracts.sh"
 run_rebased_128 "$ROOT/tests/file10-r51-r60-contracts.sh"
 bash "$ROOT/tests/file10-r60-contracts.sh"
 bash "$ROOT/tests/file10-r61-r80-contracts.sh"
+bash "$ROOT/tests/file10-r81-r100-contracts.sh"
 bash "$ROOT/tools/build-package.sh" /tmp/vwlb-build-a.zip >/dev/null
 bash "$ROOT/tools/build-package.sh" /tmp/vwlb-build-b.zip >/dev/null
 cmp /tmp/vwlb-build-a.zip /tmp/vwlb-build-b.zip
