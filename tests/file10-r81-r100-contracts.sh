@@ -37,4 +37,11 @@ need "public static function finalization_proof" "$P/includes/class-vwlb-r73-rec
 reject "add_filter('vwlb_finalize_live_recording'" "$P/includes/class-vwlb-r73-recording-consent-guard.php" r85-no-overwritable-early-filter
 need "vwlb_recording_live_missing" "$P/includes/class-vwlb-r73-recording-consent-guard.php" r85-missing-live-failclosed
 
+# R86 — provider circuit history and reconciled provider state must never be
+# silently rewritten/discarded when their persistence reads or writes fail.
+need "vwlb_provider_health_history_read_failed" "$P/includes/class-vwlb-observability.php" r86-health-history-read
+need "\$wpdb->last_error='';\$row=\$wpdb->get_row" "$P/includes/class-vwlb-observability.php" r86-health-read-reset
+need "vwlb_live_reconcile_persist_failed" "$P/includes/class-vwlb-jobs.php" r86-live-persist-signal
+need "\$persisted=VWLB_Repository::update_versioned('live_events'" "$P/includes/class-vwlb-jobs.php" r86-live-persist-check
+
 printf '%s\n' 'File 10 R81-R100 sequential contracts PASS'
