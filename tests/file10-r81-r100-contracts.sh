@@ -27,7 +27,7 @@ reject "VWLB_Future_Intelligence::watermark_payload(array('mode'=>'off')" "$P/in
 # R85 — recording finalization must keep the canonical live lifecycle, job
 # lease, consent proof and policy snapshot in one fail-closed state machine.
 need "'ended'=>array('recording_processing'" "$P/includes/class-vwlb-state-machine.php" r85-ended-processing
-need "'recording_processing'=>array('replay_review','replay_published','failed')" "$P/includes/class-vwlb-state-machine.php" r85-processing-review
+need "'recording_processing'=>array('replay_review','failed')" "$P/includes/class-vwlb-state-machine.php" r85-processing-review
 need "'recording_policy_snapshot'=>\$policy" "$P/includes/class-vwlb-live.php" r85-policy-snapshot
 need "array('status'=>'recording_processing')" "$P/includes/class-vwlb-live.php" r85-queue-state
 need "VWLB_R73_Recording_Consent_Guard::finalization_proof" "$P/includes/class-vwlb-jobs.php" r85-post-finalizer-consent
