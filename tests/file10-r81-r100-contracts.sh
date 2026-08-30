@@ -17,4 +17,11 @@ reject "register_activation_hook" "$LEGACY" r81-no-legacy-activation
 reject "add_action( 'plugins_loaded'" "$LEGACY" r81-no-legacy-runtime
 need 'SOURCE="$ROOT/video-wall-and-live-broadcasting"' "$ROOT/tools/build-package.sh" r81-package-canonical-source
 
+# R84 — watermark grants use the already verified policy snapshot. A second
+# unverified policy query must not be able to silently downgrade forensic mode.
+need "SELECT mode,status,version" "$P/includes/class-vwlb-r79-watermark-session-guard.php" r84-policy-version
+need "private static function grant_payload" "$P/includes/class-vwlb-r79-watermark-session-guard.php" r84-snapshot-grant
+need "self::grant_payload(\$policy,\$type,\$object,\$session_ref)" "$P/includes/class-vwlb-r79-watermark-session-guard.php" r84-no-second-read
+reject "VWLB_Future_Intelligence::watermark_payload(array('mode'=>'off')" "$P/includes/class-vwlb-r79-watermark-session-guard.php" r84-no-fail-open-requery
+
 printf '%s\n' 'File 10 R81-R100 sequential contracts PASS'
