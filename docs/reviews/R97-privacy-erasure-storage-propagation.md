@@ -1,0 +1,11 @@
+# File 10 R97 — Privacy erasure and private-storage propagation review
+
+Review completed in full before correction.
+
+Reviewed: WordPress personal-data exporter/eraser registration; bounded core erasure; R50 DB-error-aware completion proof; encrypted retry-evidence erasure; retained/audited attribution anonymization; upload-session lifecycle; R76 expiry cleanup; private storage path containment and concurrency behavior. The governing File 10 plan requires purpose/retention/export/erasure behavior and dependent storage deletion propagation, with private uploads never public.
+
+Frozen findings: (1) core privacy erasure deleted a private `.part` upload file only when the upload-session row had literal status `active`; a failed but not-yet-expired resumable upload could therefore have its database row erased while its private raw bytes remained on disk until an unrelated cleanup cycle. (2) that privacy-specific deletion path did not apply the stronger basename/realpath/symlink checks already present in upload completion/cleanup, so corrupted or adversarial persisted filename state was not independently proven safe before erasure. (3) no file lock was taken in the eraser, so erasure could race an in-flight chunk write.
+
+Correction batch: R97 replaces the File 10 eraser after R50 registration with a storage-first wrapper. For the same bounded first 100 upload-session rows selected for the core erasure batch, it enumerates all statuses, resolves only sanitized basename `.part` files inside the verified File 10 private root, rejects symlinks/non-regular files, obtains a non-blocking exclusive lock, and deletes the private file before allowing database erasure. Any unreadable/unsafe/busy/delete-failed storage state stops erasure for safe retry. The wrapper then delegates to the existing R50 completion-proof eraser. Regression contracts assert all-status enumeration, containment, symlink/race protection and completion-proof chaining.
+
+R96 exact head `ce944a8367111a9fd588361ab0dcdc922c7d685c` passed File 10 Release QA run `33298417289` on PHP 8.3/8.4 before R97 began. The corrected R97 exact head must pass the complete suite before R98 begins.
