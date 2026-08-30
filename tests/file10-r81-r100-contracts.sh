@@ -23,4 +23,13 @@ need "status_header(503)" "$P/includes/class-vwlb-plugin.php" r85-http-503
 need "vwlb_route_unavailable" "$P/templates/route.php" r85-unavailable-template
 need "Video service temporarily unavailable" "$P/templates/route.php" r85-user-state
 
+# R86 — privacy anonymization must preserve unique-key validity across multiple erased users.
+need "anonymized_subject_id" "$P/includes/class-vwlb-privacy.php" r86-surrogate-helper
+need "array('live_attendees','user_id',array('user_id'=>\$anon_uid" "$P/includes/class-vwlb-privacy.php" r86-live-surrogate
+need "array('creator_metrics_daily','owner_id',array('owner_id'=>\$anon_uid" "$P/includes/class-vwlb-privacy.php" r86-metrics-surrogate
+reject "array('live_attendees','user_id',array('user_id'=>0" "$P/includes/class-vwlb-privacy.php" r86-no-live-zero
+reject "array('creator_metrics_daily','owner_id',array('owner_id'=>0" "$P/includes/class-vwlb-privacy.php" r86-no-metrics-zero
+need "UNIQUE KEY event_user (live_event_id,user_id)" "$P/includes/class-vwlb-extensions.php" r86-live-unique-contract
+need "UNIQUE KEY metric_object (metric_date,owner_id,object_type,object_id)" "$P/includes/class-vwlb-extensions.php" r86-metrics-unique-contract
+
 printf '%s\n' 'File 10 R81-R100 sequential contracts PASS'
