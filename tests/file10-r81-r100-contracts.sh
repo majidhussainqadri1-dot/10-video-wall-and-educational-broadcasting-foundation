@@ -52,4 +52,14 @@ need "reconcile_required'=>true" "$P/includes/class-vwlb-r94-live-external-uncer
 need "vwlb_provider_emergency_end_reconcile_required" "$P/includes/class-vwlb-r60-final-hardening.php" r94-r60-recognizes-unsafe
 need "(?:credentials|kill|future-config/apply)" "$P/includes/class-vwlb-r60-final-hardening.php" r94-kill-external-route
 
+# R97 — privacy erasure must cover private upload files regardless of session status and reject unsafe paths/races.
+need "VWLB_R97_Privacy_Storage_Erasure_Guard::register" "$P/video-wall-and-live-broadcasting.php" r97-guard-registered
+need "WHERE owner_id=%d ORDER BY id ASC LIMIT %d" "$P/includes/class-vwlb-r97-privacy-storage-erasure-guard.php" r97-all-status-upload-enumeration
+reject "status='active'" "$P/includes/class-vwlb-r97-privacy-storage-erasure-guard.php" r97-no-active-only-erasure
+need "basename((string)\$filename)" "$P/includes/class-vwlb-r97-privacy-storage-erasure-guard.php" r97-basename
+need "realpath(\$base)" "$P/includes/class-vwlb-r97-privacy-storage-erasure-guard.php" r97-realpath
+need "is_link(\$path)" "$P/includes/class-vwlb-r97-privacy-storage-erasure-guard.php" r97-symlink
+need "LOCK_EX|LOCK_NB" "$P/includes/class-vwlb-r97-privacy-storage-erasure-guard.php" r97-concurrent-write-lock
+need "VWLB_R50_Privacy_Proof::erase" "$P/includes/class-vwlb-r97-privacy-storage-erasure-guard.php" r97-completion-proof-chain
+
 printf '%s\n' 'File 10 R81-R100 sequential contracts PASS'
