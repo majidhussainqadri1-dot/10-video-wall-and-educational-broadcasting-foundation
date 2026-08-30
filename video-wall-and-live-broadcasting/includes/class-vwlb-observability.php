@@ -23,13 +23,15 @@ final class VWLB_Observability {
 	public static function provider_failure_passthrough($result,$provider_id,$asset,$job){if(is_wp_error($result))self::record_provider($provider_id,'processing','degraded',$result->get_error_code(),0);return $result;}
 	public static function record_provider($provider,$capability,$state,$error_code='',$latency_ms=0){
 		global $wpdb;$table=VWLB_Helpers::table('provider_health');$provider=sanitize_key($provider);$capability=sanitize_key($capability);$state=VWLB_Helpers::enum($state,array('healthy','degraded','down','unknown'),'unknown');$now=VWLB_Helpers::now();
-		$row=$wpdb->get_row($wpdb->prepare("SELECT * FROM $table WHERE provider=%s AND capability=%s",$provider,$capability),ARRAY_A);$failures=in_array($state,array('degraded','down'),true)?((int)($row['failures']??0)+1):0;$open=$failures>=5?gmdate('Y-m-d H:i:s',time()+min(HOUR_IN_SECONDS,$failures*60)):null;
+		$wpdb->last_error='';$row=$wpdb->get_row($wpdb->prepare("SELECT * FROM $table WHERE provider=%s AND capability=%s",$provider,$capability),ARRAY_A);
+		if(''!==(string)$wpdb->last_error){do_action('vwlb_operational_failure','provider_health','vwlb_provider_health_history_read_failed',array('provider'=>$provider,'capability'=>$capability));return false;}
+		$failures=in_array($state,array('degraded','down'),true)?((int)($row['failures']??0)+1):0;$open=$failures>=5?gmdate('Y-m-d H:i:s',time()+min(HOUR_IN_SECONDS,$failures*60)):null;
 		$saved=$wpdb->replace($table,array('id'=>(int)($row['id']??0),'provider'=>$provider,'capability'=>$capability,'state'=>$state,'failures'=>$failures,'last_latency_ms'=>max(0,min(600000,(int)$latency_ms)),'circuit_open_until'=>$open,'last_error_code'=>VWLB_Helpers::text($error_code,128),'checked_at'=>$now,'updated_at'=>$now));
 		if(false===$saved)do_action('vwlb_operational_failure','provider_health','vwlb_provider_health_persist_failed',array('provider'=>$provider,'capability'=>$capability));return false!==$saved;
 	}
 	public static function provider_available($provider,$capability){
-		global $wpdb;$provider=sanitize_key($provider);$capability=sanitize_key($capability);$row=$wpdb->get_row($wpdb->prepare('SELECT * FROM '.VWLB_Helpers::table('provider_health').' WHERE provider=%s AND capability=%s',$provider,$capability),ARRAY_A);
-		// R35: absence of a health row is an allowed first-use state, but a failed health query must not be interpreted as healthy.
+		global $wpdb;$provider=sanitize_key($provider);$capability=sanitize_key($capability);$wpdb->last_error='';$row=$wpdb->get_row($wpdb->prepare('SELECT * FROM '.VWLB_Helpers::table('provider_health').' WHERE provider=%s AND capability=%s',$provider,$capability),ARRAY_A);
+		// R35/R86: absence of a health row is an allowed first-use state, but a failed health query must not be interpreted as healthy.
 		if(''!==(string)$wpdb->last_error){do_action('vwlb_operational_failure','provider_health','vwlb_provider_health_read_failed',array('provider'=>$provider,'capability'=>$capability));return false;}
 		if(!$row)return true;if('down'===$row['state'])return false;if($row['circuit_open_until']&&strtotime($row['circuit_open_until'].' UTC')>time())return false;return true;
 	}
