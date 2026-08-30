@@ -32,4 +32,16 @@ reject "array('creator_metrics_daily','owner_id',array('owner_id'=>0" "$P/includ
 need "UNIQUE KEY event_user (live_event_id,user_id)" "$P/includes/class-vwlb-extensions.php" r86-live-unique-contract
 need "UNIQUE KEY metric_object (metric_date,owner_id,object_type,object_id)" "$P/includes/class-vwlb-extensions.php" r86-metrics-unique-contract
 
+# R91 — unlisted access is signed, non-indexable and secure-delivery scoped.
+need "'unlisted'===$visibility" "$P/includes/class-vwlb-security.php" r91-unlisted-explicit
+need "vwlb_unlisted_access_authorized" "$P/includes/class-vwlb-security.php" r91-unlisted-fail-closed-hook
+need "VWLB_R91_Unlisted_Access_Guard::register" "$P/video-wall-and-live-broadcasting.php" r91-guard-registered
+need "vwlb_exp" "$P/includes/class-vwlb-r91-unlisted-access-guard.php" r91-expiry-proof
+need "hash_hmac('sha256','v1|'" "$P/includes/class-vwlb-r91-unlisted-access-guard.php" r91-signed-proof
+need "X-Robots-Tag" "$P/includes/class-vwlb-r91-unlisted-access-guard.php" r91-noindex
+need "Cache-Control','private, no-store" "$P/includes/class-vwlb-r91-unlisted-access-guard.php" r91-no-store
+need "vwlb_secure_playback_grant" "$P/includes/class-vwlb-r91-unlisted-access-guard.php" r91-video-secure-delivery
+need "vwlb_secure_live_playback_grant" "$P/includes/class-vwlb-r91-unlisted-access-guard.php" r91-live-secure-delivery
+need "vwlb_public_podcast_feed_grant" "$P/includes/class-vwlb-r91-unlisted-access-guard.php" r91-podcast-secure-delivery
+
 printf '%s\n' 'File 10 R81-R100 sequential contracts PASS'
