@@ -24,4 +24,12 @@ need "vwlb_processing_asset_read_failed" "$P/includes/class-vwlb-media.php" r103
 need "if(!\$asset)return 0" "$P/includes/class-vwlb-media.php" r103-missing-asset
 need "!VWLB_Providers::get(\$provider)" "$P/includes/class-vwlb-media.php" r103-provider-exists
 
+# R104 — public playlist mutation accepts opaque video public IDs only; raw internal IDs are rejected.
+need "class-vwlb-r104-public-id-boundary.php" "$P/video-wall-and-live-broadcasting.php" r104-autoload
+need "VWLB_R104_Public_ID_Boundary::register" "$P/video-wall-and-live-broadcasting.php" r104-register
+need "array_key_exists('video_ids',\$data)" "$P/includes/class-vwlb-r104-public-id-boundary.php" r104-reject-internal
+need "video_public_ids" "$P/includes/class-vwlb-r104-public-id-boundary.php" r104-public-contract
+need "is_numeric(\$public_id)" "$P/includes/class-vwlb-r104-public-id-boundary.php" r104-no-numeric-alias
+need "vwlb_playlist_video_read_failed" "$P/includes/class-vwlb-r104-public-id-boundary.php" r104-db-failclosed
+
 printf '%s\n' 'File 10 R101-R120 sequential contracts PASS'
