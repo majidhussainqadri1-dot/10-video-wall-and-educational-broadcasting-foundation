@@ -80,11 +80,14 @@ final class VWLB_Integrations {
 		}catch(Throwable $e){$wpdb->update($table,array('status'=>'failed','processed_at'=>VWLB_Helpers::now()),array('event_id'=>$event_id,'status'=>'processing'));return VWLB_Helpers::error('vwlb_inbound_handler_failed',__('Inbound event handling failed safely.',VWLB_TEXT_DOMAIN),503,array('exception'=>get_class($e)));}
 		$done=$wpdb->update($table,array('status'=>'processed','processed_at'=>VWLB_Helpers::now()),array('event_id'=>$event_id,'status'=>'processing'));if(1!==$done)return VWLB_Helpers::error('vwlb_inbox_finalize_failed',__('Inbound event was handled but durable completion could not be recorded; reconciliation is required.',VWLB_TEXT_DOMAIN),503);return array('processed'=>true);
 	}
+	private function integration_read_failure($code,$message,$context=array()){
+		if(!VWLB_Repository::read_failed())return null;do_action('vwlb_operational_failure','integration',$code,$context);return VWLB_Helpers::error($code,$message,503);
+	}
 	public function file11_media_source($value,$media_id,$context=array()){
-		return VWLB_Extensions::reels_media_contract($value,$media_id,is_array($context)?$context:array());
+		VWLB_Repository::reset_read_failure();$result=VWLB_Extensions::reels_media_contract($value,$media_id,is_array($context)?$context:array());$failure=$this->integration_read_failure('vwlb_file11_media_source_unreadable',__('File 10 media truth could not be verified safely for File 11.',VWLB_TEXT_DOMAIN),array('consumer'=>'File 11'));return $failure?:$result;
 	}
 	public function file17_live_context($value,$live_id,$viewer=array()){
-		$event=VWLB_Repository::find('live_events',$live_id);if(!$event||!VWLB_Security::can_view($event,'file17_live_context'))return VWLB_Helpers::error('vwlb_not_found',__('Live context not found.',VWLB_TEXT_DOMAIN),404);
+		VWLB_Repository::reset_read_failure();$event=VWLB_Repository::find('live_events',$live_id);$failure=$this->integration_read_failure('vwlb_file17_live_context_unreadable',__('File 10 live context could not be verified safely for File 17.',VWLB_TEXT_DOMAIN),array('consumer'=>'File 17'));if($failure)return $failure;if(!$event||!VWLB_Security::can_view($event,'file17_live_context'))return VWLB_Helpers::error('vwlb_not_found',__('Live context not found.',VWLB_TEXT_DOMAIN),404);
 		$chat=VWLB_Helpers::json($event['chat_policy_json']??'{}');
 		return array('contract'=>'File10LiveContext.v1','owner'=>'File 10','live_public_id'=>$event['public_id'],'status'=>$event['status'],'visibility'=>$event['visibility'],'chat_policy'=>array('enabled'=>!empty($chat['enabled']),'moderated'=>!empty($chat['moderated']),'slow_mode_seconds'=>max(0,(int)($event['slow_mode_seconds']??$chat['slow_mode_seconds']??0))),'conversation_owner'=>'File 17','duplicate_chat_forbidden'=>true);
 	}
