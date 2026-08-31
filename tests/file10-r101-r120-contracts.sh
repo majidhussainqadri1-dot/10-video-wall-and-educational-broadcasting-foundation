@@ -24,9 +24,12 @@ need "vwlb_processing_asset_read_failed" "$P/includes/class-vwlb-media.php" r103
 need "if(!\$asset)return 0" "$P/includes/class-vwlb-media.php" r103-missing-asset
 need "!VWLB_Providers::get(\$provider)" "$P/includes/class-vwlb-media.php" r103-provider-exists
 
-# R104 — public playlist mutation accepts opaque video public IDs only; raw internal IDs are rejected.
+# R104 — public object routes and playlist membership accept opaque File 10 identifiers only.
 need "class-vwlb-r104-public-id-boundary.php" "$P/video-wall-and-live-broadcasting.php" r104-autoload
 need "VWLB_R104_Public_ID_Boundary::register" "$P/video-wall-and-live-broadcasting.php" r104-register
+need "public static function opaque_path" "$P/includes/class-vwlb-r104-public-id-boundary.php" r104-path-guard
+need "foreach(array('id','scene','target') as \$key)" "$P/includes/class-vwlb-r104-public-id-boundary.php" r104-route-fields
+need "ctype_digit(\$value)" "$P/includes/class-vwlb-r104-public-id-boundary.php" r104-reject-numeric-path
 need "array_key_exists('video_ids',\$data)" "$P/includes/class-vwlb-r104-public-id-boundary.php" r104-reject-internal
 need "video_public_ids" "$P/includes/class-vwlb-r104-public-id-boundary.php" r104-public-contract
 need "is_numeric(\$public_id)" "$P/includes/class-vwlb-r104-public-id-boundary.php" r104-no-numeric-alias
