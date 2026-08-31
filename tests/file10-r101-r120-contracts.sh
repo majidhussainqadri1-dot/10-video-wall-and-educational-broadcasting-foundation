@@ -35,4 +35,13 @@ need "video_public_ids" "$P/includes/class-vwlb-r104-public-id-boundary.php" r10
 need "is_numeric(\$public_id)" "$P/includes/class-vwlb-r104-public-id-boundary.php" r104-no-numeric-alias
 need "vwlb_playlist_video_read_failed" "$P/includes/class-vwlb-r104-public-id-boundary.php" r104-db-failclosed
 
+# R105-R107 — clean source reviews: live external-effect retry guards, webhook integrity and privacy storage/proof remain retained.
+
+# R108 — after-callback privacy revalidation must fail closed; it may never preserve public/unlisted delivery on an unreadable second read.
+need "vwlb_caption_cache_state_unreadable" "$P/includes/class-vwlb-r78-public-delivery-guard.php" r108-caption-db-failclosed
+need "if(!\$caption)return VWLB_Helpers::error('vwlb_not_found'" "$P/includes/class-vwlb-r78-public-delivery-guard.php" r108-caption-race
+need "vwlb_unlisted_state_unreadable" "$P/includes/class-vwlb-r91-unlisted-access-guard.php" r108-unlisted-db-failclosed
+need "if(!\$row)return VWLB_Helpers::error('vwlb_not_found'" "$P/includes/class-vwlb-r91-unlisted-access-guard.php" r108-unlisted-race
+need "catch(Throwable \$e)" "$P/includes/class-vwlb-r91-unlisted-access-guard.php" r108-grant-exception
+
 printf '%s\n' 'File 10 R101-R120 sequential contracts PASS'
