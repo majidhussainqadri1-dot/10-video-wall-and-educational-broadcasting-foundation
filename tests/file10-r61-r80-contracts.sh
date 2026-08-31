@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)";P="$ROOT/video-wall-and-live-broadcasting";fail(){ echo "FAIL r61-r80: $*" >&2; exit 1; };need(){ grep -R -F -- "$1" "$2" >/dev/null || fail "$3"; }
-# R61
-need "class-vwlb-r61-activation-role-guard.php" "$P/video-wall-and-live-broadcasting.php" r61-autoload;need "wp_roles()" "$P/includes/class-vwlb-r61-activation-role-guard.php" r61-all-roles;need "VWLB_PUBLISH_REVIEW_ARTIFACT:" "$ROOT/.github/workflows/file10-release.yml" r61-artifact-gate
+# R61 — historical requirement retained: every capability mutation is rollback-covered. R101 refined this to the exact post-filter mutation map.
+need "class-vwlb-r61-activation-role-guard.php" "$P/video-wall-and-live-broadcasting.php" r61-autoload;need "capture_role_map" "$P/includes/class-vwlb-r61-activation-role-guard.php" r61-all-role-mutations;need "VWLB_PUBLISH_REVIEW_ARTIFACT:" "$ROOT/.github/workflows/file10-release.yml" r61-artifact-gate
 # R62 clean.
 # R63
 need "vwlb_provider_future_policy_reconcile_required" "$P/includes/class-vwlb-future-adapters.php" r63-policy;need "vwlb_simulcast_adapter_exception" "$P/includes/class-vwlb-future-adapters.php" r63-simulcast;need "vwlb_track_generation_cancel_exception" "$P/includes/class-vwlb-future-adapters.php" r63-track;need "vwlb_video_intelligence_processor_exception" "$P/includes/class-vwlb-future-adapters.php" r63-intelligence
