@@ -1,0 +1,11 @@
+.vwlb-future-tools,.vwlb-future-live,.vwlb-future-studio{margin-block:1.25rem;padding:1rem;border:1px solid currentColor;border-radius:.75rem;max-width:100%;overflow-wrap:anywhere}
+.vwlb-future-tools form,.vwlb-future-live form{display:grid;gap:.75rem}
+.vwlb-future-tools input[type="search"]{min-height:44px;width:min(100%,38rem);padding:.6rem .75rem}
+.vwlb-future-tools button,.vwlb-future-live button,.vwlb-future-studio button{min-width:44px;min-height:44px}
+.vwlb-annotation-list,.vwlb-search-inside-results{display:grid;gap:.5rem;padding-inline-start:1.5rem}
+.vwlb-annotation-list small{display:block;opacity:.8}
+.vwlb-future-live fieldset{display:grid;gap:.65rem;border:0;padding:0;margin:0}
+.vwlb-future-live label{display:flex;align-items:flex-start;gap:.5rem}
+[dir="rtl"] .vwlb-annotation-list,[dir="rtl"] .vwlb-search-inside-results{padding-inline-start:0;padding-inline-end:1.5rem}
+@media (max-width:480px){.vwlb-future-tools,.vwlb-future-live,.vwlb-future-studio{padding:.75rem}.vwlb-future-tools button,.vwlb-future-live button{width:100%}}
+@media (prefers-reduced-motion:reduce){.vwlb-future-tools *,.vwlb-future-live *{scroll-behavior:auto!important;transition:none!important;animation:none!important}}

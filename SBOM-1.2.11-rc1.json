@@ -1,0 +1,21 @@
+{
+  "bomFormat": "Sabri-Public-SBOM",
+  "specVersion": "1.0",
+  "component": {
+    "name": "video-wall-and-live-broadcasting",
+    "version": "1.2.11-rc1",
+    "type": "wordpress-plugin"
+  },
+  "runtime": {
+    "wordpress": ">=7.0",
+    "php": ">=8.3"
+  },
+  "schemas": {
+    "base": "1.1.0",
+    "extension": "1.1.0",
+    "future": "1.2.0"
+  },
+  "bundledThirdPartyRuntimeLibraries": [],
+  "externalServiceAdapters": ["local", "youtube", "vimeo", "custom"],
+  "notes": "R100 final source-review closure for the R81-R100 sequential corrective cycle. Historical 1.2.10-rc1 R61-R80 evidence is retained separately. Repository/package QA remains distinct from staging, live deployment and operational acceptance."
+}
