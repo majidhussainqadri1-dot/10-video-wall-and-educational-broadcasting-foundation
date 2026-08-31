@@ -26,6 +26,6 @@ need "safe_recount" "$P/includes/class-vwlb-r60-final-hardening.php" guarded-rec
 need "vwlb_repair_postcheck_unverified" "$P/includes/class-vwlb-r60-final-hardening.php" repair-postcheck
 need "vwlb_r60_activation_snapshot" "$P/uninstall.php" purge-activation-snapshot
 need "vwlb_r60_external_guard_" "$P/uninstall.php" purge-external-guards
-need "Version: 1.2.10-rc1" "$P/video-wall-and-live-broadcasting.php" current-version
-need "define( 'VWLB_VERSION', '1.2.10-rc1' );" "$P/video-wall-and-live-broadcasting.php" current-version-constant
+need "Version: 1.2.11-rc1" "$P/video-wall-and-live-broadcasting.php" current-version
+need "define( 'VWLB_VERSION', '1.2.11-rc1' );" "$P/video-wall-and-live-broadcasting.php" current-version-constant
 printf '%s\n' 'File 10 R60 retained contracts PASS'

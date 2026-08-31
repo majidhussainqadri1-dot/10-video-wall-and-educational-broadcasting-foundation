@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-CURRENT_VERSION='1.2.10-rc1'
+CURRENT_VERSION='1.2.11-rc1'
 run_rebased_124(){ local src="$1" tmp; tmp="$(mktemp "$ROOT/tests/.rebased.XXXXXX.sh")"; sed "s/1\\.2\\.4-rc1/${CURRENT_VERSION}/g" "$src" > "$tmp"; bash "$tmp"; rm -f "$tmp"; }
 run_rebased_127(){ local src="$1" tmp; tmp="$(mktemp "$ROOT/tests/.rebased127.XXXXXX.sh")"; sed "s/1\\.2\\.7-rc1/${CURRENT_VERSION}/g" "$src" > "$tmp"; bash "$tmp"; rm -f "$tmp"; }
 run_rebased_128(){
@@ -11,8 +11,8 @@ import pathlib, sys
 src, dst, version = sys.argv[1:]
 text = pathlib.Path(src).read_text()
 text = text.replace('1.2.8-rc1', version)
-text = text.replace('round `R59` completed', 'sequential cycle rounds `R61–R80` completed at repository source-review level')
-text = text.replace('R60 remains pending', 'R80 found final release-hygiene defects')
+text = text.replace('round `R59` completed', 'sequential cycle rounds `R81–R100` completed at repository source-review level')
+text = text.replace('R60 remains pending', 'R100 found final release-identity/traceability defects')
 pathlib.Path(dst).write_text(text)
 PY
   bash "$tmp"; rm -f "$tmp"
@@ -25,8 +25,8 @@ src, dst, version = sys.argv[1:]
 text = pathlib.Path(src).read_text()
 text = text.replace('1.2.7-rc1', version)
 text = text.replace('Cycle baseline exact HEAD: `83558aea2e581e6f7b76084e21695989254704b7`', 'Cycle baseline exact HEAD: `7a6ff440cb54730dd6824698856b25a397978d32`')
-text = text.replace('Review boundary: final sequential cycle round `R40`', 'Review boundary: sequential cycle rounds `R61–R80` completed at repository source-review level')
-text = text.replace('R40 found additional package/release-hygiene defects', 'R80 found final release-hygiene defects')
+text = text.replace('Review boundary: final sequential cycle round `R40`', 'Review boundary: sequential cycle rounds `R81–R100` completed at repository source-review level')
+text = text.replace('R40 found additional package/release-hygiene defects', 'R100 found final release-identity/traceability defects')
 pathlib.Path(dst).write_text(text)
 PY
   bash "$tmp"; rm -f "$tmp"

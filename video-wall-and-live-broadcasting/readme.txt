@@ -3,7 +3,7 @@ Contributors: sabrihomeopathy
 Requires at least: 7.0
 Tested up to: 7.0.1
 Requires PHP: 8.3
-Stable tag: 1.2.10-rc1
+Stable tag: 1.2.11-rc1
 License: GPLv2 or later
 
 File 10 canonical owner for recorded video and live broadcasting in the Sabri Social Homeopathy Platform.
@@ -29,7 +29,7 @@ Local, YouTube, Vimeo and custom adapters are registered. External provider cred
 * Provider webhooks require signature verification and content-bound provider-event deduplication.
 * External provider-effect retries remain blocked when the provider outcome is unverified until explicit reconciliation.
 * Private history/studio surfaces use no-store/noindex controls.
-* Privacy erasure is bounded and retryable; retained safety/rights evidence is anonymized where required.
+* Privacy erasure is bounded and retryable; private resumable-upload files are removed before their database rows and retained safety/rights evidence is anonymized where required.
 * Forensic watermark grants require a verified playback/live viewer session and remain private/no-store.
 * Audit, outbox, rollback snapshots, bounded retries, dead-letter and reconciliation are included.
 
@@ -40,7 +40,7 @@ Keyboard-visible focus, approximate 44px controls, semantic status regions, capt
 == Installation ==
 
 1. Back up the approved staging environment and verify restoration.
-2. Upload `video-wall-and-live-broadcasting-1.2.10-rc1.zip` to WordPress staging.
+2. Upload `video-wall-and-live-broadcasting-1.2.11-rc1.zip` to WordPress staging.
 3. Activate the plugin; schema, capabilities, pages and cron jobs are reconciled with activation compensation evidence.
 4. Configure File 00 identity claims/capabilities and approved provider adapters.
 5. Run Video & Live diagnostics.
@@ -55,6 +55,11 @@ The activation migration reads supported legacy File 10 data when present, store
 Source code, deterministic packaging and automated checks do not prove Hostinger/LiteSpeed runtime, real provider credentials, actual transcoding/live delivery, browser/device accessibility, high-concurrency streaming, backup restoration, rollback, staging acceptance, Founder acceptance or live deployment. Those remain separate evidence gates.
 
 == Changelog ==
+
+= 1.2.11-rc1 =
+* Complete the sequential R81-R100 source-review cycle under Review → Findings Freeze → batch correction → full retest discipline.
+* Correct canonical-owner duplication, DB-failure route truth, privacy anonymization uniqueness, signed unlisted delivery, emergency-end provider uncertainty and private-upload erasure propagation.
+* Close final candidate identity/traceability drift with a fresh immutable package identity while retaining the 1.2.10-rc1 R61-R80 evidence as historical.
 
 = 1.2.10-rc1 =
 * Complete the fresh sequential R61-R80 source-review cycle under Review → Findings Freeze → batch correction → full retest discipline.

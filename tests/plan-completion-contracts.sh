@@ -4,7 +4,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 P="$ROOT/video-wall-and-live-broadcasting"
 fail(){ echo "FAIL plan-completion: $*" >&2; exit 1; }
 need(){ grep -R -F -- "$1" "$2" >/dev/null || fail "$3"; }
-need "Version: 1.2.10-rc1" "$P/video-wall-and-live-broadcasting.php" version
+need "Version: 1.2.11-rc1" "$P/video-wall-and-live-broadcasting.php" version
 need "Requires at least: 7.0" "$P/video-wall-and-live-broadcasting.php" wordpress-baseline
 need "Requires PHP: 8.3" "$P/video-wall-and-live-broadcasting.php" php-baseline
 need "video-wall-live-broadcasting/v1" "$P/includes/class-vwlb-contracts.php" canonical-api

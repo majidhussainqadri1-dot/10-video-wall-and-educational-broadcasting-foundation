@@ -4,7 +4,7 @@ Canonical source repository for **Sabri Social Homeopathy Platform File 10**.
 
 ## Current reviewed candidate
 
-- Runtime: `1.2.10-rc1`
+- Runtime: `1.2.11-rc1`
 - Plugin folder: `video-wall-and-live-broadcasting`
 - Base schema: `1.1.0`
 - Extension schema: `1.1.0`
@@ -18,11 +18,13 @@ File 10 is the canonical owner of recorded video, channels/playlists, media inge
 
 ## Current review boundary
 
-The fresh sequential **R61–R80** corrective-review cycle is complete at repository source-review level. Every round followed the required order: **full review → findings freeze → correction of that round's proven defects → full regression/retest → next round**.
+The sequential **R81–R100** corrective-review cycle is complete at repository source-review level. Every round followed the required order: **full review → findings freeze → correction of that round's proven defects → full regression/retest → next round**.
 
-Defect-bearing rounds: **R61, R63, R64, R65, R66, R67, R68, R69, R70, R71, R72, R73, R74, R75, R76, R77, R78, R79, R80**. Clean round: **R62**.
+First ten defect-bearing rounds (`R81–R90`): **R81, R84, R85, R86**.
 
-R80 closes release-hygiene drift after deployable R61–R79 corrections by assigning a fresh immutable candidate identity, synchronizing package/test/docs metadata and enabling final exact-head artifact publication.
+Defect-bearing rounds (`R81–R100`): **R81, R84, R85, R86, R91, R94, R97, R100**. Clean rounds: **R82, R83, R87, R88, R89, R90, R92, R93, R95, R96, R98, R99**.
+
+R100 closes release-identity and traceability drift after material R81–R99 source corrections by assigning the fresh immutable `1.2.11-rc1` candidate identity, synchronizing runtime/workflow/builder/tests/docs/SBOM metadata and retaining `1.2.10-rc1` as historical R61–R80 evidence.
 
 ## Completion boundary
 
