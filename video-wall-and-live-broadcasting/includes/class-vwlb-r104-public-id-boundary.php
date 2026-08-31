@@ -1,15 +1,21 @@
 <?php
-/** R104: public playlist membership accepts opaque File 10 video identifiers only. */
+/** R104: public File 10 object routes and playlist membership use opaque identifiers only. */
 defined( 'ABSPATH' ) || exit;
 final class VWLB_R104_Public_ID_Boundary {
-	public static function register(){add_filter('rest_request_before_callbacks',array(__CLASS__,'playlist_items'),11,3);}
-	private static function matches($request){
+	public static function register(){add_filter('rest_request_before_callbacks',array(__CLASS__,'opaque_path'),1,3);add_filter('rest_request_before_callbacks',array(__CLASS__,'playlist_items'),11,3);}
+	private static function file10($request){if(!$request instanceof WP_REST_Request)return false;$route=(string)$request->get_route();foreach(VWLB_Contracts::namespaces() as $n)if(str_starts_with($route,'/'.$n.'/'))return true;return false;}
+	private static function playlist_route($request){
 		if(!$request instanceof WP_REST_Request||'PUT'!==strtoupper((string)$request->get_method()))return false;
 		$route=(string)$request->get_route();foreach(VWLB_Contracts::namespaces() as $n)if(preg_match('#^/'.preg_quote($n,'#').'/playlists/[A-Za-z0-9_-]+/items$#',$route))return true;return false;
 	}
 	private static function response($value){if(is_wp_error($value))return $value;$r=rest_ensure_response($value);$r->header('X-Sabri-File','10');$r->header('X-VWLB-Version',VWLB_VERSION);$r->header('X-VWLB-Canonical-API',VWLB_Contracts::CANONICAL_API_NAMESPACE);return $r;}
+	public static function opaque_path($response,$handler,$request){
+		if(null!==$response||!self::file10($request))return $response;
+		foreach(array('id','scene','target') as $key){$value=isset($request[$key])?VWLB_Helpers::text($request[$key],80):'';if($value!==''&&ctype_digit($value))return VWLB_Helpers::error('vwlb_internal_identifier_forbidden',__('Internal numeric identifiers are not accepted on public File 10 routes.',VWLB_TEXT_DOMAIN),422,array('field'=>$key));}
+		return $response;
+	}
 	public static function playlist_items($response,$handler,$request){
-		if(null!==$response||!self::matches($request))return $response;
+		if(null!==$response||!self::playlist_route($request))return $response;
 		$data=$request->get_json_params();$data=is_array($data)?$data:array();
 		if(array_key_exists('video_ids',$data))return VWLB_Helpers::error('vwlb_internal_identifier_forbidden',__('Internal video identifiers are not accepted on the public API. Use video_public_ids.',VWLB_TEXT_DOMAIN),422);
 		$public_ids=array_values(array_unique(array_filter(array_map(function($v){return VWLB_Helpers::text($v,64);},(array)($data['video_public_ids']??array())))));
