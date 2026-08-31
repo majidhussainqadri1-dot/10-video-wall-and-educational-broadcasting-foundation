@@ -44,4 +44,11 @@ need "vwlb_unlisted_state_unreadable" "$P/includes/class-vwlb-r91-unlisted-acces
 need "if(!\$row)return VWLB_Helpers::error('vwlb_not_found'" "$P/includes/class-vwlb-r91-unlisted-access-guard.php" r108-unlisted-race
 need "catch(Throwable \$e)" "$P/includes/class-vwlb-r91-unlisted-access-guard.php" r108-grant-exception
 
+# R109 — cross-file File 11/File 17 read contracts distinguish database unavailability from legitimate not-found state.
+need "integration_read_failure" "$P/includes/class-vwlb-integrations.php" r109-helper
+need "vwlb_file11_media_source_unreadable" "$P/includes/class-vwlb-integrations.php" r109-file11-failclosed
+need "vwlb_file17_live_context_unreadable" "$P/includes/class-vwlb-integrations.php" r109-file17-failclosed
+need "VWLB_Repository::reset_read_failure()" "$P/includes/class-vwlb-integrations.php" r109-reset
+need "VWLB_Repository::read_failed()" "$P/includes/class-vwlb-integrations.php" r109-read-state
+
 printf '%s\n' 'File 10 R101-R120 sequential contracts PASS'
