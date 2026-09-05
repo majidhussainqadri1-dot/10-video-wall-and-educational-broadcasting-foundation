@@ -58,4 +58,18 @@ need "vwlb_caption_version_unreadable" "$P/includes/class-vwlb-videos.php" r110-
 need "VWLB_Repository::read_failed()" "$P/includes/class-vwlb-videos.php" r110-asset-gate-db
 need "if(!\$saved||!(int)\$wpdb->insert_id)" "$P/includes/class-vwlb-videos.php" r110-caption-insert-proof
 
+# R111 — clean moderation/takedown invariant review.
+
+# R112 — waiting-room capacity/policy and live-reminder execution/reconciliation must fail closed.
+need "class-vwlb-r112-live-attendance-durability-guard.php" "$P/video-wall-and-live-broadcasting.php" r112-autoload
+need "VWLB_R112_Live_Attendance_Durability_Guard::register" "$P/video-wall-and-live-broadcasting.php" r112-register
+need "vwlb_waiting_room_disabled" "$P/includes/class-vwlb-r112-live-attendance-durability-guard.php" r112-policy
+need "vwlb_waiting_room_capacity_unreadable" "$P/includes/class-vwlb-r112-live-attendance-durability-guard.php" r112-capacity-db
+need "already_active" "$P/includes/class-vwlb-r112-live-attendance-durability-guard.php" r112-reentry-capacity
+need "vwlb_recording_consent_unverifiable" "$P/includes/class-vwlb-r112-live-attendance-durability-guard.php" r112-consent-db
+need "reconcile_reminders" "$P/includes/class-vwlb-r112-live-attendance-durability-guard.php" r112-reminder-reconcile
+need "scheduled_start" "$P/includes/class-vwlb-r112-live-attendance-durability-guard.php" r112-reminder-schedule-proof
+need "event_not_remindable" "$P/includes/class-vwlb-r112-live-attendance-durability-guard.php" r112-reminder-state-proof
+need "remove_filter('vwlb_process_job',array('VWLB_Extensions','process_job'),10)" "$P/includes/class-vwlb-r112-live-attendance-durability-guard.php" r112-replace-old-reminder
+
 printf '%s\n' 'File 10 R101-R120 sequential contracts PASS'
