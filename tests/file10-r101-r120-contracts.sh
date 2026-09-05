@@ -72,4 +72,16 @@ need "scheduled_start" "$P/includes/class-vwlb-r112-live-attendance-durability-g
 need "event_not_remindable" "$P/includes/class-vwlb-r112-live-attendance-durability-guard.php" r112-reminder-state-proof
 need "remove_filter('vwlb_process_job',array('VWLB_Extensions','process_job'),10)" "$P/includes/class-vwlb-r112-live-attendance-durability-guard.php" r112-replace-old-reminder
 
+# R113 — provider/filter outputs are revalidated for type, HTTPS remote URL and secret boundaries.
+need "class-vwlb-r113-provider-output-guard.php" "$P/video-wall-and-live-broadcasting.php" r113-autoload
+need "VWLB_R113_Provider_Output_Guard::register" "$P/video-wall-and-live-broadcasting.php" r113-register
+need "vwlb_provider_source_contract_invalid" "$P/includes/class-vwlb-r113-provider-output-guard.php" r113-source-type
+need "vwlb_provider_ingest_url_invalid" "$P/includes/class-vwlb-r113-provider-output-guard.php" r113-ingest-url
+need "vwlb_provider_stream_secret_invalid" "$P/includes/class-vwlb-r113-provider-output-guard.php" r113-secret
+need "vwlb_provider_ingest_reconcile_required" "$P/includes/class-vwlb-r113-provider-output-guard.php" r113-compensation
+need "vwlb_provider_playback_url_invalid" "$P/includes/class-vwlb-r113-provider-output-guard.php" r113-playback-url
+need "vwlb_provider_derivative_url_invalid" "$P/includes/class-vwlb-r113-provider-output-guard.php" r113-derivative-url
+need "www.youtube-nocookie.com" "$P/includes/class-vwlb-r113-provider-output-guard.php" r113-youtube-host
+need "player.vimeo.com" "$P/includes/class-vwlb-r113-provider-output-guard.php" r113-vimeo-host
+
 printf '%s\n' 'File 10 R101-R120 sequential contracts PASS'
