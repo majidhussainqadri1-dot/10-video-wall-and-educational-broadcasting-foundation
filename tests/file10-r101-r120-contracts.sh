@@ -84,4 +84,15 @@ need "vwlb_provider_derivative_url_invalid" "$P/includes/class-vwlb-r113-provide
 need "www.youtube-nocookie.com" "$P/includes/class-vwlb-r113-provider-output-guard.php" r113-youtube-host
 need "player.vimeo.com" "$P/includes/class-vwlb-r113-provider-output-guard.php" r113-vimeo-host
 
+# R114 — external AI suggestion failures retain retry guards; published auxiliary tracks are review- and audience-bound.
+need "\$uncertain=\$status>=500" "$P/includes/class-vwlb-r64-intelligence-guard.php" r114-ai-uncertainty
+need "class-vwlb-r114-ai-track-delivery-guard.php" "$P/video-wall-and-live-broadcasting.php" r114-autoload
+need "VWLB_R114_AI_Track_Delivery_Guard::register" "$P/video-wall-and-live-broadcasting.php" r114-register
+need "vwlb_media_track_publish_unreadable" "$P/includes/class-vwlb-r114-ai-track-delivery-guard.php" r114-publish-db
+need "vwlb_media_track_file_ref_invalid" "$P/includes/class-vwlb-r114-ai-track-delivery-guard.php" r114-file-ref
+need "vwlb_secure_media_track_grant" "$P/includes/class-vwlb-r114-ai-track-delivery-guard.php" r114-private-grant
+need "vwlb_public_media_track_ref" "$P/includes/class-vwlb-r114-ai-track-delivery-guard.php" r114-public-grant
+need "vwlb_media_track_delivery_unreadable" "$P/includes/class-vwlb-r114-ai-track-delivery-guard.php" r114-delivery-db
+need "X-Robots-Tag" "$P/includes/class-vwlb-r114-ai-track-delivery-guard.php" r114-noindex
+
 printf '%s\n' 'File 10 R101-R120 sequential contracts PASS'
