@@ -51,4 +51,11 @@ need "vwlb_file17_live_context_unreadable" "$P/includes/class-vwlb-integrations.
 need "VWLB_Repository::reset_read_failure()" "$P/includes/class-vwlb-integrations.php" r109-reset
 need "VWLB_Repository::read_failed()" "$P/includes/class-vwlb-integrations.php" r109-read-state
 
+# R110 — publication/caption truth must reject invalid schedules and surface unreadable gates as operational failures.
+need "vwlb_schedule_invalid" "$P/includes/class-vwlb-videos.php" r110-invalid-schedule
+need "vwlb_caption_gate_unreadable" "$P/includes/class-vwlb-videos.php" r110-caption-gate-db
+need "vwlb_caption_version_unreadable" "$P/includes/class-vwlb-videos.php" r110-caption-version-db
+need "VWLB_Repository::read_failed()" "$P/includes/class-vwlb-videos.php" r110-asset-gate-db
+need "if(!\$saved||!(int)\$wpdb->insert_id)" "$P/includes/class-vwlb-videos.php" r110-caption-insert-proof
+
 printf '%s\n' 'File 10 R101-R120 sequential contracts PASS'
