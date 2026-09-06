@@ -53,4 +53,23 @@ grep -F 'global $wpdb;if(!VWLB_Helpers::is_public_id' "$P/includes/class-vwlb-po
 grep -F "item['thumbnail_url']" "$P/includes/class-vwlb-frontend.php" >/dev/null
 ! grep -F "item['thumbnail_id']" "$P/includes/class-vwlb-frontend.php" >/dev/null
 
+
+# R104 — public/read truth, cache privacy and podcast unlisted authorization.
+grep -F "public static function read_results" "$P/includes/class-vwlb-db.php" >/dev/null
+grep -F "public static function read_row" "$P/includes/class-vwlb-db.php" >/dev/null
+grep -F "public static function read_var" "$P/includes/class-vwlb-db.php" >/dev/null
+grep -F "VWLB_DB::read_results" "$P/includes/class-vwlb-frontend.php" >/dev/null
+grep -F "VWLB_DB::read_results" "$P/includes/class-vwlb-extensions.php" >/dev/null
+grep -F "VWLB_DB::read_results" "$P/includes/class-vwlb-future-safety.php" >/dev/null
+grep -F "is_wp_error(\$chapters)" "$P/includes/class-vwlb-frontend.php" >/dev/null
+grep -F "is_wp_error(\$extras)" "$P/includes/class-vwlb-frontend.php" >/dev/null
+# R78 already owned caption cache privacy before R104; keep that canonical guard rather than stacking a duplicate response filter.
+grep -F "function caption_cache" "$P/includes/class-vwlb-r78-public-delivery-guard.php" >/dev/null
+grep -F "Cache-Control','private, no-store" "$P/includes/class-vwlb-r78-public-delivery-guard.php" >/dev/null
+# Feed/RSS must apply the same object-level unlisted policy as normal podcast reads.
+grep -F "can_view(\$series,'podcast_feed')" "$P/includes/class-vwlb-r78-public-delivery-guard.php" >/dev/null
+grep -F "can_view(\$ep,'podcast_feed')" "$P/includes/class-vwlb-r78-public-delivery-guard.php" >/dev/null
+grep -F "can_view(\$series,'podcast_feed')" "$P/includes/class-vwlb-podcasts.php" >/dev/null
+grep -F "can_view(\$ep,'podcast_feed')" "$P/includes/class-vwlb-podcasts.php" >/dev/null
+
 echo 'R101-R120 contracts PASS'

@@ -18,7 +18,7 @@ final class VWLB_Future_Frontend {
 	private function live_id(){ $id=get_query_var('vwlb_live_id'); return $id?:sanitize_text_field(wp_unslash($_GET['live']??'')); }
 	public function video_tools(){
 		$this->enqueue();$id=$this->video_id(); if(!$id)return '';$video=VWLB_Repository::find('videos',$id);if(!$video||!VWLB_Security::can_view($video))return '';
-		$annotations=VWLB_Future_Safety::annotations($id,false);$items=is_wp_error($annotations)?array():($annotations['items']??array());
+		$annotations=VWLB_Future_Safety::annotations($id,false);if(is_wp_error($annotations))return '<section class="vwlb-warning" role="alert">'.esc_html__('Video knowledge tools are temporarily unavailable.',VWLB_TEXT_DOMAIN).'</section>';$items=$annotations['items']??array();
 		ob_start();?><section class="vwlb-future-tools" data-vwlb-future-video="<?php echo esc_attr($video['public_id']);?>" aria-labelledby="vwlb-future-video-tools-title">
 		<h2 id="vwlb-future-video-tools-title"><?php esc_html_e('Video knowledge tools',VWLB_TEXT_DOMAIN);?></h2>
 		<form data-vwlb-search-inside><label><?php esc_html_e('Search inside this video',VWLB_TEXT_DOMAIN);?><input type="search" name="q" minlength="2" maxlength="120" autocomplete="off"></label><button type="submit"><?php esc_html_e('Search',VWLB_TEXT_DOMAIN);?></button></form>
@@ -28,7 +28,7 @@ final class VWLB_Future_Frontend {
 	}
 	public function live_tools(){
 		$this->enqueue();$id=$this->live_id();if(!$id)return '';$event=VWLB_Repository::find('live_events',$id);if(!$event||!VWLB_Security::can_view($event))return '';
-		global $wpdb;$poll=$wpdb->get_row($wpdb->prepare("SELECT public_id FROM ".VWLB_Helpers::table('live_polls')." WHERE live_event_id=%d AND status='open' ORDER BY id DESC LIMIT 1",$event['id']),ARRAY_A);$dto=$poll?VWLB_Future_Intelligence::poll($poll['public_id'],false):null;
+		global $wpdb;$poll=VWLB_DB::read_row($wpdb->prepare("SELECT public_id FROM ".VWLB_Helpers::table('live_polls')." WHERE live_event_id=%d AND status='open' ORDER BY id DESC LIMIT 1",$event['id']),'future_frontend_poll');if(is_wp_error($poll))return '<section class="vwlb-warning" role="alert">'.esc_html__('Live learning tools are temporarily unavailable.',VWLB_TEXT_DOMAIN).'</section>';$dto=$poll?VWLB_Future_Intelligence::poll($poll['public_id'],false):null;if(is_wp_error($dto))return '<section class="vwlb-warning" role="alert">'.esc_html__('Live learning tools are temporarily unavailable.',VWLB_TEXT_DOMAIN).'</section>';
 		ob_start();?><section class="vwlb-future-live" data-vwlb-future-live="<?php echo esc_attr($event['public_id']);?>" aria-labelledby="vwlb-future-live-title"><h2 id="vwlb-future-live-title"><?php esc_html_e('Live learning tools',VWLB_TEXT_DOMAIN);?></h2>
 		<?php if($dto):?><form data-vwlb-live-poll="<?php echo esc_attr($dto['public_id']);?>"><fieldset><legend><?php echo esc_html($dto['question']);?></legend><?php foreach($dto['options'] as $o):?><label><input type="<?php echo esc_attr('multiple'===$dto['poll_type']?'checkbox':'radio');?>" name="poll_option" value="<?php echo esc_attr($o['public_id']);?>"> <?php echo esc_html($o['option_text']);?></label><?php endforeach;?><button type="submit"><?php esc_html_e('Submit answer',VWLB_TEXT_DOMAIN);?></button></fieldset><div class="vwlb-status" role="status" aria-live="polite"></div></form><?php else:?><p><?php esc_html_e('No live knowledge check is open right now.',VWLB_TEXT_DOMAIN);?></p><?php endif;?>
 		</section><?php return ob_get_clean();

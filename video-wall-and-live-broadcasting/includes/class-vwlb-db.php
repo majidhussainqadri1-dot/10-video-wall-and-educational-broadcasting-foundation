@@ -25,6 +25,20 @@ final class VWLB_DB {
 			return VWLB_Helpers::error( 'vwlb_transaction_failed', __( 'The operation could not be completed.', VWLB_TEXT_DOMAIN ), 500, array( 'exception' => get_class( $e ) ) );
 		}
 	}
+\tprivate static function read_error( $context ) {
+\t\t$context=sanitize_key((string)$context);do_action('vwlb_operational_failure','database','vwlb_database_read_failed',array('context'=>$context));
+\t\treturn VWLB_Helpers::error('vwlb_database_read_failed',__('File 10 could not verify the requested database state safely.',VWLB_TEXT_DOMAIN),503,array('context'=>$context));
+\t}
+\tpublic static function read_results( $query, $context='database_read' ) {
+\t\tglobal $wpdb;$wpdb->last_error='';$rows=$wpdb->get_results((string)$query,ARRAY_A);if(''!==(string)$wpdb->last_error)return self::read_error($context);return is_array($rows)?$rows:array();
+\t}
+\tpublic static function read_row( $query, $context='database_read' ) {
+\t\tglobal $wpdb;$wpdb->last_error='';$row=$wpdb->get_row((string)$query,ARRAY_A);if(''!==(string)$wpdb->last_error)return self::read_error($context);return is_array($row)?$row:null;
+\t}
+\tpublic static function read_var( $query, $context='database_read' ) {
+\t\tglobal $wpdb;$wpdb->last_error='';$value=$wpdb->get_var((string)$query);if(''!==(string)$wpdb->last_error)return self::read_error($context);return $value;
+\t}
+
 	public static function schema_sql() {
 		global $wpdb; $c=$wpdb->get_charset_collate(); $p=$wpdb->prefix.'vwlb_';
 		return array(

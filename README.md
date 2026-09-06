@@ -4,7 +4,7 @@ Canonical source repository for **Sabri Social Homeopathy Platform File 10**.
 
 ## Current reviewed candidate
 
-- Runtime: `1.2.14-rc1`
+- Runtime: `1.2.15-rc1`
 - Plugin folder: `video-wall-and-live-broadcasting`
 - Base schema: `1.1.0`
 - Extension schema: `1.1.0`
@@ -26,7 +26,9 @@ R102 found that several public route/body boundaries still admitted native numer
 
 R103 found incomplete schema-proofing (table existence without required column/index proof), a one-page 10,000-row legacy migration ceiling, non-REST numeric-ID public entry paths, a podcast public DTO database-handle failure and a Video Wall thumbnail DTO/template mismatch. The `1.2.14-rc1` correction candidate closes those five frozen findings; exact-head QA is required before R104 begins.
 
-`1.2.11-rc1` remains the historical R81–R100 candidate. `1.2.12-rc1` is the historical R101 correction candidate. `1.2.13-rc1` is the exact-head-green R102 correction candidate. `1.2.14-rc1` is the current R103 correction candidate and must not be treated as Automated-QA Green until its exact-head PHP 8.3/8.4 release QA, deterministic packaging, checksum/archive verification and package/source parity all pass.
+R104 completed a read-only public/read-surface audit before correction. Correction validation confirmed two real defects: uncovered frontend/cross-file direct database reads could collapse failure into empty/404 partial state, and podcast feed/RSS could project unlisted series/episodes without the normal object-level authorization policy. Both are corrected in `1.2.15-rc1`. The originally frozen caption-cache item was then proven to be already mitigated by the pre-existing R78 response guard, so it was closed as a false positive without stacking a second cache filter. Exact-head QA is required before R105 begins.
+
+`1.2.11-rc1` remains the historical R81–R100 candidate. `1.2.12-rc1` is the historical R101 correction candidate. `1.2.13-rc1` is the exact-head-green R102 correction candidate. `1.2.14-rc1` is the exact-head-green R103 correction candidate. `1.2.15-rc1` is the current R104 correction candidate and must not be treated as Automated-QA Green until its exact-head PHP 8.3/8.4 release QA, deterministic packaging, checksum/archive verification and package/source parity all pass.
 
 ## Completion boundary
 

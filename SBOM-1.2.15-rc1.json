@@ -1,0 +1,26 @@
+{
+  "bomFormat": "Sabri-Public-SBOM",
+  "specVersion": "1.0",
+  "component": {
+    "name": "video-wall-and-live-broadcasting",
+    "version": "1.2.15-rc1",
+    "type": "wordpress-plugin"
+  },
+  "runtime": {
+    "wordpress": ">=7.0",
+    "php": ">=8.3"
+  },
+  "schemas": {
+    "base": "1.1.0",
+    "extension": "1.1.0",
+    "future": "1.2.0"
+  },
+  "bundledThirdPartyRuntimeLibraries": [],
+  "externalServiceAdapters": [
+    "local",
+    "youtube",
+    "vimeo",
+    "custom"
+  ],
+  "notes": "R104 correction candidate: immediate direct-read failure propagation on uncovered frontend/cross-file surfaces; podcast feed/RSS object-level unlisted authorization; pre-existing R78 caption-cache mitigation validated without duplicate patch stacking. Repository/package QA remains distinct from staging, live deployment and operational acceptance."
+}

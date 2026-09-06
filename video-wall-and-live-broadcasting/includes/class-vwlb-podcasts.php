@@ -92,15 +92,11 @@ final class VWLB_Podcasts {
 	}
 
 	public static function public_episode_dto($id){
-		global $wpdb;if(!VWLB_Helpers::is_public_id((string)$id))return null;$ep=self::episode($id,false);if(!$ep)return null;$asset=VWLB_Repository::find('media_assets',$ep['asset_id']);$der=VWLB_Helpers::json($asset['derivatives_json']??'{}');
-		$series_public='';if(!empty($ep['series_id']))$series_public=(string)$wpdb->get_var($wpdb->prepare('SELECT public_id FROM '.VWLB_Helpers::table('podcast_series').' WHERE id=%d LIMIT 1',(int)$ep['series_id']));
-		return array(
-			'id'=>$ep['public_id'],'series_public_id'=>$series_public,'title'=>$ep['title'],'slug'=>$ep['slug'],
-			'description'=>$ep['description'],'language'=>$ep['language'],'duration_seconds'=>(int)$ep['duration_seconds'],
-			'rights_status'=>$ep['rights_status'],'visibility'=>$ep['visibility'],'published_at'=>VWLB_Helpers::iso_utc($ep['published_at']),
-			'audio_url'=>esc_url_raw($der['audio_only']??$der['mp3']??$der['mp4_low']??''),
-			'download_available'=>(bool)$ep['download_allowed'],'transcript'=>($ep['transcript_status']??'')==='published'?(string)($ep['transcript_text']??''):'','chapters'=>VWLB_Extensions::chapters('podcast',$ep['id']),
-		);
+		global $wpdb;if(!VWLB_Helpers::is_public_id((string)$id))return null;$wpdb->last_error='';$ep=self::episode($id,false);if(''!==(string)$wpdb->last_error)return VWLB_Helpers::error('vwlb_database_read_failed',__('Podcast episode state could not be verified safely.',VWLB_TEXT_DOMAIN),503);if(!$ep)return null;
+		$asset=VWLB_Repository::find('media_assets',$ep['asset_id']);if(VWLB_Repository::read_failed())return VWLB_Helpers::error('vwlb_database_read_failed',__('Podcast media state could not be verified safely.',VWLB_TEXT_DOMAIN),503);$der=VWLB_Helpers::json($asset['derivatives_json']??'{}');
+		$series_public='';if(!empty($ep['series_id'])){$series_public=VWLB_DB::read_var($wpdb->prepare('SELECT public_id FROM '.VWLB_Helpers::table('podcast_series').' WHERE id=%d LIMIT 1',(int)$ep['series_id']),'podcast_series_projection');if(is_wp_error($series_public))return $series_public;$series_public=(string)$series_public;}
+		$chapters=VWLB_Extensions::chapters('podcast',$ep['id']);if(is_wp_error($chapters))return $chapters;
+		return array('id'=>$ep['public_id'],'series_public_id'=>$series_public,'title'=>$ep['title'],'slug'=>$ep['slug'],'description'=>$ep['description'],'language'=>$ep['language'],'duration_seconds'=>(int)$ep['duration_seconds'],'rights_status'=>$ep['rights_status'],'visibility'=>$ep['visibility'],'published_at'=>VWLB_Helpers::iso_utc($ep['published_at']),'audio_url'=>esc_url_raw($der['audio_only']??$der['mp3']??$der['mp4_low']??''),'download_available'=>(bool)$ep['download_allowed'],'transcript'=>($ep['transcript_status']??'')==='published'?(string)($ep['transcript_text']??''):'','chapters'=>$chapters);
 	}
 
 
@@ -131,10 +127,10 @@ final class VWLB_Podcasts {
 	}
 
 	public static function feed($series_id){
-		global $wpdb;$series=$wpdb->get_row($wpdb->prepare('SELECT * FROM '.VWLB_Helpers::table('podcast_series').' WHERE (id=%d OR public_id=%s) AND status=%s AND visibility IN (%s,%s) AND deleted_at IS NULL LIMIT 1',absint($series_id),VWLB_Helpers::text($series_id,64),'published','public','unlisted'),ARRAY_A);
-		if(!$series)return VWLB_Helpers::error('vwlb_not_found',__('Podcast series not found.',VWLB_TEXT_DOMAIN),404);
-		$episodes=$wpdb->get_results($wpdb->prepare('SELECT public_id,title,slug,description,language,duration_seconds,published_at,asset_id FROM '.VWLB_Helpers::table('podcast_episodes').' WHERE series_id=%d AND status=%s AND visibility IN (%s,%s) AND deleted_at IS NULL ORDER BY published_at DESC,id DESC LIMIT 200',$series['id'],'published','public','unlisted'),ARRAY_A);
-		$items=array();foreach($episodes as $ep){$asset=VWLB_Repository::find('media_assets',$ep['asset_id']);$der=VWLB_Helpers::json($asset['derivatives_json']??'{}');$items[]=array('id'=>$ep['public_id'],'title'=>$ep['title'],'description'=>$ep['description'],'published_at'=>VWLB_Helpers::iso_utc($ep['published_at']),'duration_seconds'=>(int)$ep['duration_seconds'],'audio_url'=>esc_url_raw($der['audio_only']??$der['mp3']??''));}
-		return array('contract'=>'File10PodcastFeed.v1','series'=>array('id'=>$series['public_id'],'title'=>$series['title'],'description'=>$series['description'],'language'=>$series['language']),'episodes'=>$items,'rss_ready'=>true,'canonical_owner'=>'File 10');
+		global $wpdb;$series=VWLB_DB::read_row($wpdb->prepare('SELECT * FROM '.VWLB_Helpers::table('podcast_series').' WHERE (id=%d OR public_id=%s) AND status=%s AND deleted_at IS NULL LIMIT 1',absint($series_id),VWLB_Helpers::text($series_id,64),'published'),'podcast_feed_series');if(is_wp_error($series))return $series;
+		if(!$series||!VWLB_Security::can_view($series,'podcast_feed'))return VWLB_Helpers::error('vwlb_not_found',__('Podcast series not found.',VWLB_TEXT_DOMAIN),404);
+		$episodes=VWLB_DB::read_results($wpdb->prepare('SELECT * FROM '.VWLB_Helpers::table('podcast_episodes').' WHERE series_id=%d AND status=%s AND deleted_at IS NULL ORDER BY published_at DESC,id DESC LIMIT 200',$series['id'],'published'),'podcast_feed_episodes');if(is_wp_error($episodes))return $episodes;
+		$items=array();foreach($episodes as $ep){if(!VWLB_Security::can_view($ep,'podcast_feed'))continue;$asset=VWLB_Repository::find('media_assets',$ep['asset_id']);if(VWLB_Repository::read_failed())return VWLB_Helpers::error('vwlb_database_read_failed',__('Podcast media state could not be verified safely.',VWLB_TEXT_DOMAIN),503);if(!$asset)continue;$der=VWLB_Helpers::json($asset['derivatives_json']??'{}');$items[]=array('id'=>$ep['public_id'],'title'=>$ep['title'],'description'=>$ep['description'],'published_at'=>VWLB_Helpers::iso_utc($ep['published_at']),'duration_seconds'=>(int)$ep['duration_seconds'],'audio_url'=>esc_url_raw($der['audio_only']??$der['mp3']??''));}
+		return array('contract'=>'File10PodcastFeed.v1','series'=>array('id'=>$series['public_id'],'title'=>$series['title'],'description'=>$series['description'],'language'=>$series['language'],'visibility'=>$series['visibility']),'episodes'=>$items,'rss_ready'=>true,'canonical_owner'=>'File 10');
 	}
 }

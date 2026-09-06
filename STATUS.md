@@ -1,19 +1,16 @@
-# File 10 Status — 1.2.14-rc1
+# File 10 Status — 1.2.15-rc1
 
 **Classification:** repository/source correction candidate in the sequential R101–R120 review cycle begun 2026-09-06.
 
 - Cycle baseline exact HEAD: `9a2c317d664b3c0d56797afbf1934f6c55479aaa` (`1.2.11-rc1`).
 - Review method: complete one round read-only → freeze that round's findings → correct all proven findings together → full regression/release QA → only then begin the next round.
-- R101 frozen finding: Future P0 production-studio mutations existed, but the canonical REST/UI surface had no reload-safe owner-scoped read of current sources, scenes, guests, live policy and simulcast targets. A broadcaster reloading the studio therefore could not reconstruct its current File 10 state through the canonical public-ID contract.
-- R101 correction: added an object-authorized, private/no-store production-state GET surface; redacted internal IDs/credential references; mapped scene membership to opaque source IDs; fail-closed on DB verification failure; and added progressive production-state rendering in the File 10 studio UI.
-- R101 exact-head QA: `03f9e29e65eac7421f70ea7e01845f4e0e8d46a4`, File 10 Release QA run `34045547009`, PHP 8.3/8.4 green before R102 began.
-- R102 frozen finding: public route/body boundaries still admitted native numeric identifiers in several object and foreign-reference paths, public caption/podcast DTOs leaked native IDs, and playback enrichment used a redacted DTO ID and therefore queried chapters/tracks with object ID zero.
-- R102 correction: require prefixed opaque IDs on public paths, resolve public foreign references internally, reject raw ID fields, redact caption/podcast native IDs, and re-resolve playback internals before enrichment.
-- R102 exact-head QA: `895c2d66a35a7b9430379a8eff8bc65aaf2d340c`, File 10 Release QA run `34064117765`, PHP 8.3/8.4 green before R103 began.
-- R103 frozen findings: incomplete base/extension/Future column/index schema proof; 10,000-row legacy migration truncation; non-REST native-ID public entry paths; podcast public DTO undefined DB handle; and Video Wall thumbnail DTO/template mismatch.
-- R103 correction: strict schema column/index proof, checkpointed complete legacy migration, opaque-ID frontend/query/shortcode guards, podcast public DTO repair and thumbnail URL consumption.
-- Coded/reviewed candidate: `1.2.14-rc1` on `fix/file10-r101-r120-sequential-2026-09-06` after the R103 correction.
-- Automated-QA Green: R101 and R102 established; R103 exact-head QA must be established after the correction and is not preclaimed here.
+- R101 exact-head QA: `03f9e29e65eac7421f70ea7e01845f4e0e8d46a4`, run `34045547009`, PHP 8.3/8.4 green.
+- R102 exact-head QA: `895c2d66a35a7b9430379a8eff8bc65aaf2d340c`, run `34064117765`, PHP 8.3/8.4 green.
+- R103 exact-head QA: `e0a7ae7efba4c2287dc57c3978e4ef9953ef3aa3`, run `34064836972`, PHP 8.3/8.4 green before R104 began.
+- R104 review baseline: `e0a7ae7efba4c2287dc57c3978e4ef9953ef3aa3`; findings frozen in `docs/FILE-10-R104-FROZEN-FINDINGS-2026-09-07.md` before correction.
+- R104 correction validation: direct-read truth defect confirmed on frontend/cross-file helper surfaces and corrected with immediate typed DB-read propagation; podcast feed/RSS unlisted authorization defect confirmed and corrected; the caption-cache finding was invalidated because `VWLB_R78_Public_Delivery_Guard::caption_cache()` already overrides non-public caption responses to private/no-store, so no duplicate patch was added.
+- Coded/reviewed candidate: `1.2.15-rc1` on `fix/file10-r101-r120-sequential-2026-09-06` after the R104 correction.
+- Automated-QA Green: R101–R103 established; R104 exact-head QA must be established before R105 begins.
 - Staging-Accepted: not established.
 - Live-Deployed: not established.
 - Operational: not established.
