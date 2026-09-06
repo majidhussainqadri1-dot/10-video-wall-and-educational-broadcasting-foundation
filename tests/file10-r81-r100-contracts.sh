@@ -3,6 +3,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 P="$ROOT/video-wall-and-live-broadcasting"
 LEGACY="$ROOT/video-wall/video-wall.php"
+LEDGER="$ROOT/docs/FILE-10-R81-R100-REVIEW-2026-08-30.md"
 fail(){ echo "FAIL r81-r100: $*" >&2; exit 1; }
 need(){ grep -R -F -- "$1" "$2" >/dev/null || fail "$3"; }
 reject(){ ! grep -R -F -- "$1" "$2" >/dev/null || fail "$3"; }
@@ -38,9 +39,10 @@ need "VWLB_R97_Privacy_Storage_Erasure_Guard::register" "$P/video-wall-and-live-
 need "WHERE owner_id=%d ORDER BY id ASC LIMIT %d" "$P/includes/class-vwlb-r97-privacy-storage-erasure-guard.php" r97-all-status
 need "LOCK_EX|LOCK_NB" "$P/includes/class-vwlb-r97-privacy-storage-erasure-guard.php" r97-lock
 need "VWLB_R50_Privacy_Proof::erase" "$P/includes/class-vwlb-r97-privacy-storage-erasure-guard.php" r97-proof-chain
-# R100 is now immutable historical evidence; current candidate identity is tested by later-round contracts.
+# R100 — immutable historical evidence; later cycles may advance the current candidate identity.
 need '"version": "1.2.11-rc1"' "$ROOT/SBOM-1.2.11-rc1.json" r100-historical-sbom-version
 need "R81-R100 sequential corrective cycle" "$ROOT/SBOM-1.2.11-rc1.json" r100-historical-sbom-boundary
-need "R81–R100" "$ROOT/docs/FILE-10-R81-R100-REVIEW-2026-08-30.md" r100-historical-ledger
-need "R81, R84, R85, R86, R91, R94, R97, R100" "$ROOT/docs/FILE-10-R81-R100-REVIEW-2026-08-30.md" r100-historical-defect-ledger
+need "R81–R100" "$LEDGER" r100-historical-ledger
+# Every historically defect-bearing round must retain its own frozen ledger section.
+for round in 81 84 85 86 91 94 97 100; do need "## R${round} —" "$LEDGER" "r${round}-historical-ledger-section"; done
 printf '%s\n' 'File 10 R81-R100 historical sequential contracts PASS'
