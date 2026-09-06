@@ -21,6 +21,9 @@ import pathlib, sys
 src, dst, version = sys.argv[1:]
 text = pathlib.Path(src).read_text()
 text = text.replace('1.2.8-rc1', version)
+text = text.replace('need "video-wall-and-live-broadcasting-'+version+'.zip" "$ROOT/tools/build-package.sh" r20-build-version', 'need \'video-wall-and-live-broadcasting-${VERSION}.zip\' "$ROOT/tools/build-package.sh" r20-build-version')
+text = text.replace('need "Version: '+version+'" "$ROOT/tests/static-contracts.sh" r20-static-version', 'need \'grep -F "Version: $VERSION"\' "$ROOT/tests/static-contracts.sh" r20-static-version')
+text = text.replace('need "Version: '+version+'" "$ROOT/tests/plan-completion-contracts.sh" r20-plan-version', 'need \'need "Version: $VERSION"\' "$ROOT/tests/plan-completion-contracts.sh" r20-plan-version')
 text = text.replace('round `R59` completed', 'sequential cycle rounds `R81–R100` completed at repository source-review level')
 text = text.replace('R60 remains pending', 'R100 found final release-identity/traceability defects')
 pathlib.Path(dst).write_text(text)
