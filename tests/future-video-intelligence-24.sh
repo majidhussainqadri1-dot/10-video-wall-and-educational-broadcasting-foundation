@@ -64,7 +64,7 @@ need "VideoTimestampCorrectionPublished" "$F" timestamp-correction-event
 need "live_polls" "$F" live-polls
 need "knowledge_check" "$F" knowledge-check
 need "'not_diagnostic'=>true" "$F" no-diagnostic-poll
-need "/live-polls/(?P<id>[A-Za-z0-9_-]+)/answers" "$R" poll-answer-endpoint
+need "/live-polls/(?P<id>[a-z][a-z0-9]*_[a-z0-9]+)/answers" "$R" poll-answer-endpoint
 
 # 22: consent expiry/withdrawal must restrict media and trigger derivative purge.
 need "consent_links" "$F" consent-links
