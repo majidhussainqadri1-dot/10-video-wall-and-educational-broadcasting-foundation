@@ -43,6 +43,6 @@ need "VWLB_R50_Privacy_Proof::erase" "$P/includes/class-vwlb-r97-privacy-storage
 need '"version": "1.2.11-rc1"' "$ROOT/SBOM-1.2.11-rc1.json" r100-historical-sbom-version
 need "R81-R100 sequential corrective cycle" "$ROOT/SBOM-1.2.11-rc1.json" r100-historical-sbom-boundary
 need "R81–R100" "$LEDGER" r100-historical-ledger
-# Every historically defect-bearing round must retain its own frozen ledger section.
-for round in 81 84 85 86 91 94 97 100; do need "## R${round} —" "$LEDGER" "r${round}-historical-ledger-section"; done
+# Every historically defect-bearing round must retain its own frozen ledger section. Do not bind evidence to punctuation/style after the round number.
+for round in 81 84 85 86 91 94 97 100; do need "## R${round}" "$LEDGER" "r${round}-historical-ledger-section"; done
 printf '%s\n' 'File 10 R81-R100 historical sequential contracts PASS'
