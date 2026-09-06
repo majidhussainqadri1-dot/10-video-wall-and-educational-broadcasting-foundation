@@ -2,11 +2,15 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 P="$ROOT/video-wall-and-live-broadcasting"
+MAIN="$P/video-wall-and-live-broadcasting.php"
 fail(){ echo "FAIL plan-completion: $*" >&2; exit 1; }
 need(){ grep -R -F -- "$1" "$2" >/dev/null || fail "$3"; }
-need "Version: 1.2.11-rc1" "$P/video-wall-and-live-broadcasting.php" version
-need "Requires at least: 7.0" "$P/video-wall-and-live-broadcasting.php" wordpress-baseline
-need "Requires PHP: 8.3" "$P/video-wall-and-live-broadcasting.php" php-baseline
+VERSION="$(sed -n "s/.*define( 'VWLB_VERSION', '\([^']*\)' ).*/\1/p" "$MAIN" | head -n1)"
+[[ -n "$VERSION" ]] || fail version-constant
+need "Version: $VERSION" "$MAIN" version
+need "Stable tag: $VERSION" "$P/readme.txt" stable-tag
+need "Requires at least: 7.0" "$MAIN" wordpress-baseline
+need "Requires PHP: 8.3" "$MAIN" php-baseline
 need "video-wall-live-broadcasting/v1" "$P/includes/class-vwlb-contracts.php" canonical-api
 for id in F10-CEN-01 AJ-15 AJ-16 AJ-17 CV-107 CV-108 CV-109 CV-110 CV-111 CV-112 CV-113 CV-114 CV-115 CV-116 CV-117 CV-118 CV-125 CV-127 CV-128 CV-242 CV-250 CV-252 CV-262 CV-263 CV-264 CV-265 CV-266 CV-269 CV-276 CV-277 CV-278 CV-280 CV-283 CV-284 CV-285; do need "$id" "$P/includes/class-vwlb-contracts.php" "$id"; done
 for id in $(seq -w 1 24); do need "F10-FUT-0${id}" "$P/includes/class-vwlb-contracts.php" "F10-FUT-$id"; done
@@ -37,4 +41,4 @@ need "vwlb_step_up_verified',false" "$P/includes/class-vwlb-security.php" fail-c
 need "vwlb_object_scope_authorized',false" "$P/includes/class-vwlb-security.php" object-scope
 bash "$ROOT/tests/future-video-intelligence-24.sh"
 ! grep -R -E "(AKIA[0-9A-Z]{16}|ghp_[A-Za-z0-9]{30,}|BEGIN (RSA|OPENSSH) PRIVATE KEY)" "$P" >/dev/null || fail secret-pattern
-printf '%s\n' 'plan completion contracts PASS'
+printf '%s\n' "plan completion contracts PASS ($VERSION)"
