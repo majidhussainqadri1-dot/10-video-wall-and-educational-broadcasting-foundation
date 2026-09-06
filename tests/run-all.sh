@@ -41,6 +41,9 @@ text = text.replace('1.2.4-rc1', version)
 text = text.replace('if(!is_wp_error(\\$published))', 'if(is_wp_error(\\$published))return \\$published')
 text = text.replace('"$P/includes/class-vwlb-live.php" r21-credential-write', '"$P/includes/class-vwlb-r46-stream-credential-durability.php" r21-credential-write')
 text = text.replace('need "wp_safe_remote_post" "$P/includes/class-vwlb-providers.php" r29-safe-remote-post', 'need "VWLB_Helpers::remote_url" "$P/includes/class-vwlb-providers.php" r29-safe-remote-url')
+text = text.replace('need "VWLB_Repository::read_failed()" "$P/includes/class-vwlb-rest.php" r30-rest-read-failure', 'need "vwlb_repository_read_failed" "$P/includes/class-vwlb-r65-repository-read-guard.php" r30-rest-read-failure')
+text = text.replace('need "VWLB_Repository::read_failed()" "$P/includes/class-vwlb-frontend.php" r30-frontend-read-failure', 'need "VWLB_Repository::read_failed()" "$P/includes/class-vwlb-plugin.php" r30-frontend-read-failure')
+text = text.replace('need "vwlb_public_read_unavailable" "$P/includes/class-vwlb-rest.php" r30-public-error', 'need "vwlb_repository_read_failed" "$P/includes/class-vwlb-r65-repository-read-guard.php" r30-public-error')
 pathlib.Path(dst).write_text(text)
 PY
   bash "$tmp"; rm -f "$tmp"
