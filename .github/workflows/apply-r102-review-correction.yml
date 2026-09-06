@@ -1,0 +1,25 @@
+name: Apply R102 review correction
+on:
+  push:
+    branches: ['fix/file10-r101-r120-sequential-2026-09-06']
+permissions:
+  contents: write
+jobs:
+  apply:
+    if: github.event.head_commit.message == 'Run R102 correction batch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/file10-r101-r120-sequential-2026-09-06
+          fetch-depth: 0
+      - name: Apply frozen R102 correction batch
+        run: python3 tools/apply-r102.py
+      - name: Commit corrected source and regression evidence
+        run: |
+          git config user.name 'Sabri File 10 Review Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git rm tools/apply-r102.py review-patches/r102.run
+          git add video-wall-and-live-broadcasting tests/file10-r101-r120-contracts.sh docs/FILE-10-R101-R120-REVIEW-2026-09-06.md
+          git commit -m 'File 10 R102: enforce opaque public identifiers'
+          git push origin HEAD:fix/file10-r101-r120-sequential-2026-09-06
