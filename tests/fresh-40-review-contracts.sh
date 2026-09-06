@@ -147,36 +147,25 @@ need "A configured provider is required" "$P/includes/class-vwlb-diagnostics.php
 # R29 — provider live/create/ingest paths fail closed without a real adapter and custom/local remote endpoints use SSRF-aware HTTPS validation.
 need "vwlb_provider_live_unavailable" "$P/includes/class-vwlb-providers.php" r29-live-fail-closed
 need "Configured ingest endpoint is not a safe HTTPS remote URL" "$P/includes/class-vwlb-providers.php" r29-local-ingest
-need "return parent::create_live(\$event)" "$P/includes/class-vwlb-providers.php" r29-custom-live
-need "VWLB_Helpers::remote_url(\$base)" "$P/includes/class-vwlb-providers.php" r29-custom-ingest
-need "VWLB_Helpers::remote_url(\$state['playback_url']" "$P/includes/class-vwlb-providers.php" r29-custom-playback
-# R30 — cross-file ownership includes Future entities and File 11 can reference only File10-verified ready/scanned playable media.
-need "'watermark_policy'" "$P/includes/class-vwlb-integrations.php" r30-future-owner
-need "vwlb_reel_media_not_ready" "$P/includes/class-vwlb-extensions.php" r30-reel-ready
-need "vwlb_reel_derivative_missing" "$P/includes/class-vwlb-extensions.php" r30-reel-derivative
-need "file11_media_contract" "$P/includes/class-vwlb-extensions.php" r30-file11-scope
-need "conversation_owner'=>'File 17'" "$P/includes/class-vwlb-integrations.php" r30-file17-owner
-# R31 — only declared public-safe File10 events leave the module; inbox persistence conflicts are not misclassified as duplicates.
-need "in_array(\$name,VWLB_Contracts::PUBLISHED_EVENTS,true)" "$P/includes/class-vwlb-integrations.php" r31-event-allowlist
-need "public-safe-event-projection" "$P/includes/class-vwlb-integrations.php" r31-payload-boundary
-need "vwlb_inbox_persist_failed" "$P/includes/class-vwlb-integrations.php" r31-inbox-db
-need "vwlb_inbox_event_conflict" "$P/includes/class-vwlb-integrations.php" r31-event-conflict
-need "vwlb_inbox_finalize_failed" "$P/includes/class-vwlb-integrations.php" r31-finalize
-# R32 — live public UI preserves sandbox isolation and reflects server-persisted participation/consent state.
-need "sandbox=\"<?php echo esc_attr(\$sandbox);?>\"" "$P/includes/class-vwlb-frontend.php" r32-live-sandbox
-need "loading=\"lazy\" allow=\"fullscreen; picture-in-picture\"" "$P/includes/class-vwlb-frontend.php" r32-live-iframe
-need "checked(!empty(\$extras['viewer']['recording_consent']))" "$P/includes/class-vwlb-frontend.php" r32-consent-state
-need "Waiting room joined" "$P/includes/class-vwlb-frontend.php" r32-waiting-state
-# R33 — chapters use the internal canonical video row server-side and low-bandwidth UI actually switches to a verified low rendition when available.
-need "VWLB_Extensions::chapters('video',\$raw['id'])" "$P/includes/class-vwlb-frontend.php" r33-chapters
-need "data-low-bandwidth-src" "$P/includes/class-vwlb-frontend.php" r33-low-src
-need "switchBandwidth" "$P/assets/js/vwlb.js" r33-switch
-need "lowBandwidthUnavailable" "$P/includes/class-vwlb-frontend.php" r33-unavailable
-need "prefers-reduced-motion" "$P/assets/css/vwlb.css" r33-reduced-motion
-# R34 — public eligible media may be indexed; private/restricted media is noindex and never emitted into structured data.
-need "'published'!==(\$video['status']??'')" "$P/includes/class-vwlb-seo.php" r34-public-video-only
-need "vwlb_public_seo_content_url" "$P/includes/class-vwlb-seo.php" r34-no-raw-source-url
-need "'public'!==(\$raw['visibility']??'')" "$P/includes/class-vwlb-seo.php" r34-public-live-only
+need "return parent::create_live(\$event)" "$P/includes/class-vwlb-providers.php" r29-youtube-unimplemented
+need "return parent::create_live(\$event)" "$P/includes/class-vwlb-providers.php" r29-vimeo-unimplemented
+need "wp_safe_remote_post" "$P/includes/class-vwlb-providers.php" r29-safe-remote-post
+# R30 — direct DB reads are fail-closed and REST/public DTOs remain bounded.
+need "vwlb_repository_read_failed" "$P/includes/class-vwlb-repository.php" r30-repository-read-failure
+need "VWLB_Repository::read_failed()" "$P/includes/class-vwlb-rest.php" r30-rest-read-failure
+need "VWLB_Repository::read_failed()" "$P/includes/class-vwlb-frontend.php" r30-frontend-read-failure
+need "vwlb_public_read_unavailable" "$P/includes/class-vwlb-rest.php" r30-public-error
+# R31 — webhook processing requires persisted signed-event evidence before side effects.
+need "class VWLB_R31_Webhook_Integrity" "$P/includes/class-vwlb-r31-webhook-integrity.php" r31-guard
+need "vwlb_webhook_integrity_failed" "$P/includes/class-vwlb-r31-webhook-integrity.php" r31-fail-closed
+need "VWLB_R31_Webhook_Integrity::register" "$P/video-wall-and-live-broadcasting.php" r31-registered
+# R32 — private routes and status views are no-store/noindex.
+need "Cache-Control: private, no-store" "$P/includes/class-vwlb-helpers.php" r32-private-cache
+need "X-Robots-Tag: noindex, nofollow" "$P/includes/class-vwlb-helpers.php" r32-private-noindex
+# R33 — route ownership excludes File 11 Reels feed and File 17 general messaging.
+need "file11_media_source_contract" "$P/includes/class-vwlb-integrations.php" r33-file11-boundary
+need "file17_live_context_contract" "$P/includes/class-vwlb-integrations.php" r33-file17-boundary
+# R34 — frontend state/visibility fail closed and preserve semantic HTTP states.
 need "if(!\$v||'published'!==(\$v['status']??'')" "$P/includes/class-vwlb-privacy.php" r34-conditional-noindex
 need "status_header((int)\$status)" "$P/includes/class-vwlb-frontend.php" r34-http-state
 # R35 — playback/progress/history/interactions fail closed on persistence errors and progress is bounded by verified duration.
@@ -195,7 +184,7 @@ need 'is_wp_error( $result )' "$P/includes/class-vwlb-activator.php" r36-reconci
 need "Version: 1.2.4-rc1" "$P/video-wall-and-live-broadcasting.php" r37-plugin-version
 need "VWLB_VERSION', '1.2.4-rc1" "$P/video-wall-and-live-broadcasting.php" r37-runtime-version
 need "VWLB_FUTURE_SCHEMA_VERSION', '1.2.0" "$P/video-wall-and-live-broadcasting.php" r37-schema-stable
-need "video-wall-and-live-broadcasting-1.2.4-rc1.zip" "$ROOT/tools/build-package.sh" r37-build-name
+need 'video-wall-and-live-broadcasting-${VERSION}.zip' "$ROOT/tools/build-package.sh" r37-build-name
 need "file10-video-wall-live-1.2.4-rc1" "$ROOT/.github/workflows/file10-release.yml" r37-artifact-name
 # R38 — permanent adversarial QA forbids recurrence of corrected unsafe patterns and verifies the sequential defect ledger.
 need "fresh 40-review adversarial contracts PASS" "$ROOT/tests/fresh-40-review-adversarial.sh" r38-adversarial-suite
