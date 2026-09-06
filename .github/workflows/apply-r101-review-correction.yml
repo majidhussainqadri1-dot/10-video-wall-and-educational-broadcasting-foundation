@@ -6,7 +6,7 @@ permissions:
   contents: write
 jobs:
   apply:
-    if: github.event.head_commit.message == 'Stage R101 correction runner'
+    if: github.event.head_commit.message == 'Run R101 source correction batch v2'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -17,12 +17,12 @@ jobs:
         run: |
           cat review-patches/r101.part.* > /tmp/r101.patch
           git apply --check /tmp/r101.patch
-      - name: Apply R101 correction as one source batch
+      - name: Apply R101 source correction without workflow mutation
         run: |
           git apply /tmp/r101.patch
-          git rm review-patches/r101.part.* .github/workflows/apply-r101-review-correction.yml
+          git checkout HEAD -- .github/workflows/file10-release.yml
           git config user.name 'Sabri File 10 Review Bot'
           git config user.email 'actions@users.noreply.github.com'
-          git add -A
+          git add MANIFEST.md STATUS.md SBOM-1.2.12-rc1.json docs/FILE-10-R101-R120-REVIEW-2026-09-06.md tests/file10-r101-r120-contracts.sh video-wall-and-live-broadcasting
           git commit -m 'File 10 R101: restore reload-safe production studio state'
           git push origin HEAD:fix/file10-r101-r120-sequential-2026-09-06
