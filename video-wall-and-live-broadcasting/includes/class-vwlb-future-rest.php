@@ -6,34 +6,34 @@ final class VWLB_Future_REST {
 	public function register() {
 		foreach ( VWLB_Contracts::namespaces() as $n ) {
 			$this->route($n,'/future/capabilities','GET','capabilities','public');
-			$this->route($n,'/live-events/(?P<id>[A-Za-z0-9_-]+)/production/state','GET','production_state','broadcast');
-			$this->route($n,'/live-events/(?P<id>[A-Za-z0-9_-]+)/production/sources','POST','source_save','broadcast');
-			$this->route($n,'/live-events/(?P<id>[A-Za-z0-9_-]+)/production/scenes','POST','scene_save','broadcast');
-			$this->route($n,'/live-events/(?P<id>[A-Za-z0-9_-]+)/production/scenes/(?P<scene>[A-Za-z0-9_-]+)/program','POST','scene_program','broadcast');
-			$this->route($n,'/live-events/(?P<id>[A-Za-z0-9_-]+)/guests','POST','guest_invite','broadcast');
-			$this->route($n,'/broadcast-guests/(?P<id>[A-Za-z0-9_-]+)/accept','POST','guest_accept','login');
-			$this->route($n,'/broadcast-guests/(?P<id>[A-Za-z0-9_-]+)/revoke','POST','guest_revoke','broadcast');
-			$this->route($n,'/live-events/(?P<id>[A-Za-z0-9_-]+)/future-config','POST','live_config','broadcast');
-			$this->route($n,'/live-events/(?P<id>[A-Za-z0-9_-]+)/future-config/apply','POST','live_config_apply','operate');
-			$this->route($n,'/live-events/(?P<id>[A-Za-z0-9_-]+)/simulcast-targets','POST','simulcast_save','broadcast');
-			$this->route($n,'/live-events/(?P<id>[A-Za-z0-9_-]+)/simulcast-targets/(?P<target>[A-Za-z0-9_-]+)/transition','POST','simulcast_transition','operate');
-			$this->route($n,'/live-events/(?P<id>[A-Za-z0-9_-]+)/health','GET','health','operate');
-			$this->route($n,'/live-events/(?P<id>[A-Za-z0-9_-]+)/health','POST','health_record','operate');
-			$this->route($n,'/media-tracks/(?P<object_type>video|live)/(?P<id>[A-Za-z0-9_-]+)','POST','track_create','publish_or_broadcast');
-			$this->route($n,'/media-tracks/(?P<id>[A-Za-z0-9_-]+)/transition','POST','track_transition','review');
-			$this->route($n,'/media-tracks/(?P<object_type>video|live)/(?P<id>[A-Za-z0-9_-]+)/generate','POST','track_generate','publish_or_broadcast');
-			$this->route($n,'/videos/(?P<id>[A-Za-z0-9_-]+)/annotations','GET','annotations','public');
-			$this->route($n,'/videos/(?P<id>[A-Za-z0-9_-]+)/annotations','POST','annotation_create','publish');
-			$this->route($n,'/video-annotations/(?P<id>[A-Za-z0-9_-]+)/transition','POST','annotation_transition','review');
-			$this->route($n,'/videos/(?P<id>[A-Za-z0-9_-]+)/intelligence/suggest','POST','annotation_suggest','publish');
-			$this->route($n,'/videos/(?P<id>[A-Za-z0-9_-]+)/transcript-index','POST','transcript_index','review');
-			$this->route($n,'/videos/(?P<id>[A-Za-z0-9_-]+)/search-inside','GET','transcript_search','public');
-			$this->route($n,'/live-events/(?P<id>[A-Za-z0-9_-]+)/polls','POST','poll_create','broadcast');
-			$this->route($n,'/live-polls/(?P<id>[A-Za-z0-9_-]+)','GET','poll_get','public');
-			$this->route($n,'/live-polls/(?P<id>[A-Za-z0-9_-]+)/answers','POST','poll_answer','login');
-			$this->route($n,'/videos/(?P<id>[A-Za-z0-9_-]+)/consent-links','POST','consent_save','review');
-			$this->route($n,'/watermarks/(?P<object_type>video|live)/(?P<id>[A-Za-z0-9_-]+)','POST','watermark_save','publish_or_broadcast');
-			$this->route($n,'/watermarks/(?P<object_type>video|live)/(?P<id>[A-Za-z0-9_-]+)/grant','POST','watermark_grant','public');
+			$this->route($n,'/live-events/(?P<id>[a-z][a-z0-9]*_[a-z0-9]+)/production/state','GET','production_state','broadcast');
+			$this->route($n,'/live-events/(?P<id>[a-z][a-z0-9]*_[a-z0-9]+)/production/sources','POST','source_save','broadcast');
+			$this->route($n,'/live-events/(?P<id>[a-z][a-z0-9]*_[a-z0-9]+)/production/scenes','POST','scene_save','broadcast');
+			$this->route($n,'/live-events/(?P<id>[a-z][a-z0-9]*_[a-z0-9]+)/production/scenes/(?P<scene>[a-z][a-z0-9]*_[a-z0-9]+)/program','POST','scene_program','broadcast');
+			$this->route($n,'/live-events/(?P<id>[a-z][a-z0-9]*_[a-z0-9]+)/guests','POST','guest_invite','broadcast');
+			$this->route($n,'/broadcast-guests/(?P<id>[a-z][a-z0-9]*_[a-z0-9]+)/accept','POST','guest_accept','login');
+			$this->route($n,'/broadcast-guests/(?P<id>[a-z][a-z0-9]*_[a-z0-9]+)/revoke','POST','guest_revoke','broadcast');
+			$this->route($n,'/live-events/(?P<id>[a-z][a-z0-9]*_[a-z0-9]+)/future-config','POST','live_config','broadcast');
+			$this->route($n,'/live-events/(?P<id>[a-z][a-z0-9]*_[a-z0-9]+)/future-config/apply','POST','live_config_apply','operate');
+			$this->route($n,'/live-events/(?P<id>[a-z][a-z0-9]*_[a-z0-9]+)/simulcast-targets','POST','simulcast_save','broadcast');
+			$this->route($n,'/live-events/(?P<id>[a-z][a-z0-9]*_[a-z0-9]+)/simulcast-targets/(?P<target>[a-z][a-z0-9]*_[a-z0-9]+)/transition','POST','simulcast_transition','operate');
+			$this->route($n,'/live-events/(?P<id>[a-z][a-z0-9]*_[a-z0-9]+)/health','GET','health','operate');
+			$this->route($n,'/live-events/(?P<id>[a-z][a-z0-9]*_[a-z0-9]+)/health','POST','health_record','operate');
+			$this->route($n,'/media-tracks/(?P<object_type>video|live)/(?P<id>[a-z][a-z0-9]*_[a-z0-9]+)','POST','track_create','publish_or_broadcast');
+			$this->route($n,'/media-tracks/(?P<id>[a-z][a-z0-9]*_[a-z0-9]+)/transition','POST','track_transition','review');
+			$this->route($n,'/media-tracks/(?P<object_type>video|live)/(?P<id>[a-z][a-z0-9]*_[a-z0-9]+)/generate','POST','track_generate','publish_or_broadcast');
+			$this->route($n,'/videos/(?P<id>[a-z][a-z0-9]*_[a-z0-9]+)/annotations','GET','annotations','public');
+			$this->route($n,'/videos/(?P<id>[a-z][a-z0-9]*_[a-z0-9]+)/annotations','POST','annotation_create','publish');
+			$this->route($n,'/video-annotations/(?P<id>[a-z][a-z0-9]*_[a-z0-9]+)/transition','POST','annotation_transition','review');
+			$this->route($n,'/videos/(?P<id>[a-z][a-z0-9]*_[a-z0-9]+)/intelligence/suggest','POST','annotation_suggest','publish');
+			$this->route($n,'/videos/(?P<id>[a-z][a-z0-9]*_[a-z0-9]+)/transcript-index','POST','transcript_index','review');
+			$this->route($n,'/videos/(?P<id>[a-z][a-z0-9]*_[a-z0-9]+)/search-inside','GET','transcript_search','public');
+			$this->route($n,'/live-events/(?P<id>[a-z][a-z0-9]*_[a-z0-9]+)/polls','POST','poll_create','broadcast');
+			$this->route($n,'/live-polls/(?P<id>[a-z][a-z0-9]*_[a-z0-9]+)','GET','poll_get','public');
+			$this->route($n,'/live-polls/(?P<id>[a-z][a-z0-9]*_[a-z0-9]+)/answers','POST','poll_answer','login');
+			$this->route($n,'/videos/(?P<id>[a-z][a-z0-9]*_[a-z0-9]+)/consent-links','POST','consent_save','review');
+			$this->route($n,'/watermarks/(?P<object_type>video|live)/(?P<id>[a-z][a-z0-9]*_[a-z0-9]+)','POST','watermark_save','publish_or_broadcast');
+			$this->route($n,'/watermarks/(?P<object_type>video|live)/(?P<id>[a-z][a-z0-9]*_[a-z0-9]+)/grant','POST','watermark_grant','public');
 		}
 	}
 
@@ -56,7 +56,7 @@ final class VWLB_Future_REST {
 	private function row_id_from_public($table,$public_id){
 		$allowed=array('production_sources','production_scenes','simulcast_targets','media_tracks');
 		if(!in_array($table,$allowed,true))return 0;
-		global $wpdb;$t=VWLB_Helpers::table($table);$public_id=VWLB_Helpers::text($public_id,64);if(!$public_id)return 0;
+		global $wpdb;$t=VWLB_Helpers::table($table);$public_id=VWLB_Helpers::text($public_id,64);if(!$public_id||!VWLB_Helpers::is_public_id($public_id))return 0;
 		return (int)$wpdb->get_var($wpdb->prepare("SELECT id FROM $t WHERE public_id=%s LIMIT 1",$public_id));
 	}
 	private function normalize_public_update($table,$data){

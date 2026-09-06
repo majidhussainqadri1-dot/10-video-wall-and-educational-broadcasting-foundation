@@ -15,7 +15,7 @@ final class VWLB_Media {
 		global $wpdb;$now=VWLB_Helpers::now();$public=VWLB_Helpers::public_id('asset');
 		$wpdb->insert(VWLB_Helpers::table('media_assets'),array(
 			'public_id'=>$public,'owner_id'=>get_current_user_id(),'source_object_type'=>sanitize_key($data['source_object_type']??'video'),
-			'source_object_id'=>absint($data['source_object_id']??0),'media_class'=>$media_class,'provider'=>$provider,'checksum'=>$checksum,
+			'source_object_id'=>0,'media_class'=>$media_class,'provider'=>$provider,'checksum'=>$checksum,
 			'mime'=>$mime,'bytes'=>$bytes,'status'=>'initiated','scan_status'=>'pending',
 			'rights_status'=>VWLB_Helpers::enum($data['rights_status']??'declared',array('declared','verified','disputed','restricted'),'declared'),
 			'storage_json'=>VWLB_Helpers::json_encode(array('upload_session'=>VWLB_Helpers::public_id('upload'),'expires_at'=>gmdate('c',time()+HOUR_IN_SECONDS))),

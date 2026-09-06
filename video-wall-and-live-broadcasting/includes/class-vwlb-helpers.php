@@ -5,6 +5,7 @@ final class VWLB_Helpers {
 	public static function table( $name ) { global $wpdb; return $wpdb->prefix . 'vwlb_' . sanitize_key( $name ); }
 	public static function now() { return current_time( 'mysql', true ); }
 	public static function public_id( $prefix ) { return sanitize_key( $prefix ) . '_' . strtolower( wp_generate_password( 24, false, false ) ); }
+	public static function is_public_id( $value ) { return is_string($value) && (bool) preg_match('/^[a-z][a-z0-9]*_[a-z0-9]+$/', $value); }
 	public static function trace_id() { return 'f10_' . strtolower( wp_generate_password( 20, false, false ) ); }
 	public static function enum( $value, $allowed, $default = '' ) { $value = sanitize_key( (string) $value ); return in_array( $value, $allowed, true ) ? $value : $default; }
 	public static function text( $value, $max = 191 ) { return mb_substr( sanitize_text_field( (string) $value ), 0, $max ); }

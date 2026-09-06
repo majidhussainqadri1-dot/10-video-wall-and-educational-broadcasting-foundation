@@ -1,4 +1,4 @@
-# File 10 Status — 1.2.12-rc1
+# File 10 Status — 1.2.13-rc1
 
 **Classification:** repository/source correction candidate in the sequential R101–R120 review cycle begun 2026-09-06.
 
@@ -6,8 +6,11 @@
 - Review method: complete one round read-only → freeze that round's findings → correct all proven findings together → full regression/release QA → only then begin the next round.
 - R101 frozen finding: Future P0 production-studio mutations existed, but the canonical REST/UI surface had no reload-safe owner-scoped read of current sources, scenes, guests, live policy and simulcast targets. A broadcaster reloading the studio therefore could not reconstruct its current File 10 state through the canonical public-ID contract.
 - R101 correction: added an object-authorized, private/no-store production-state GET surface; redacted internal IDs/credential references; mapped scene membership to opaque source IDs; fail-closed on DB verification failure; and added progressive production-state rendering in the File 10 studio UI.
-- Coded/reviewed candidate: `1.2.12-rc1` on `fix/file10-r101-r120-sequential-2026-09-06` after R101 correction.
-- Automated-QA Green: must be established by the exact-head workflow after the R101 correction; not preclaimed here.
+- R101 exact-head QA: `03f9e29e65eac7421f70ea7e01845f4e0e8d46a4`, File 10 Release QA run `34045547009`, PHP 8.3/8.4 green before R102 began.
+- R102 frozen finding: public route/body boundaries still admitted native numeric identifiers in several object and foreign-reference paths, public caption/podcast DTOs leaked native IDs, and playback enrichment used a redacted DTO ID and therefore queried chapters/tracks with object ID zero.
+- R102 correction: require prefixed opaque IDs on public paths, resolve public foreign references internally, reject raw ID fields, redact caption/podcast native IDs, and re-resolve playback internals before enrichment.
+- Coded/reviewed candidate: `1.2.13-rc1` on `fix/file10-r101-r120-sequential-2026-09-06` after the R102 correction.
+- Automated-QA Green: R101 established; R102 exact-head QA must be established after the correction and is not preclaimed here.
 - Staging-Accepted: not established.
 - Live-Deployed: not established.
 - Operational: not established.

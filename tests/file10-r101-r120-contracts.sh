@@ -20,4 +20,19 @@ body=m.group(1)
 for forbidden in ("'user_id'=>", "'live_event_id'=>", "'credential_ref'=>"):
     assert forbidden not in body, f'raw/internal field leaked in production state: {forbidden}'
 PY
+
+# R102 — every public route/reference must stay on the opaque public-ID boundary.
+grep -F "function is_public_id" "$P/includes/class-vwlb-helpers.php" >/dev/null
+grep -F "(?P<id>[a-z][a-z0-9]*_[a-z0-9]+)" "$P/includes/class-vwlb-rest.php" >/dev/null
+grep -F "(?P<id>[a-z][a-z0-9]*_[a-z0-9]+)" "$P/includes/class-vwlb-extended-rest.php" >/dev/null
+grep -F "(?P<id>[a-z][a-z0-9]*_[a-z0-9]+)" "$P/includes/class-vwlb-future-rest.php" >/dev/null
+grep -F "video_public_ids" "$P/includes/class-vwlb-rest.php" >/dev/null
+grep -F "video_public_id" "$P/includes/class-vwlb-rest.php" >/dev/null
+grep -F "object_public_id" "$P/includes/class-vwlb-extended-rest.php" >/dev/null
+grep -F "target_public_id" "$P/includes/class-vwlb-moderation.php" >/dev/null
+! grep -F "return array('id'=>\$id,'public_id'=>\$public,'slug'=>\$slug" "$P/includes/class-vwlb-podcasts.php" >/dev/null
+! grep -F "'series_id'=>(int)\$ep['series_id']" "$P/includes/class-vwlb-podcasts.php" >/dev/null
+grep -F "public_id'=>\$public,'status'=>\$status,'version'=>\$version" "$P/includes/class-vwlb-videos.php" >/dev/null
+grep -F "\$internal=\$video?(int)\$video['id']:0" "$P/includes/class-vwlb-rest.php" >/dev/null
+
 echo 'R101-R120 contracts PASS'

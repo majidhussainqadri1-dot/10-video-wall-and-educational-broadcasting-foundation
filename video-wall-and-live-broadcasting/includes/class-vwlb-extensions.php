@@ -598,7 +598,7 @@ final class VWLB_Extensions {
 		global $wpdb;$uid=get_current_user_id();$videos=$wpdb->get_results($wpdb->prepare('SELECT public_id,title,status,visibility,view_count,like_count,dislike_count,updated_at FROM '.VWLB_Helpers::table('videos').' WHERE owner_id=%d AND deleted_at IS NULL ORDER BY id DESC LIMIT 100',$uid),ARRAY_A);
 		$live=$wpdb->get_results($wpdb->prepare('SELECT public_id,title,status,scheduled_start,visibility,updated_at FROM '.VWLB_Helpers::table('live_events').' WHERE owner_id=%d AND deleted_at IS NULL ORDER BY id DESC LIMIT 100',$uid),ARRAY_A);
 		$jobs=$wpdb->get_results($wpdb->prepare('SELECT j.public_id,j.job_type,j.status,j.attempts,j.error_code,j.updated_at FROM '.VWLB_Helpers::table('processing_jobs').' j INNER JOIN '.VWLB_Helpers::table('media_assets').' a ON a.id=j.asset_id WHERE a.owner_id=%d ORDER BY j.id DESC LIMIT 100',$uid),ARRAY_A);
-		$rights=$wpdb->get_results($wpdb->prepare('SELECT public_id,target_type,target_id,status,rights_basis,decision_reason,updated_at FROM '.VWLB_Helpers::table('takedowns').' WHERE claimant_id=%d ORDER BY id DESC LIMIT 100',$uid),ARRAY_A);
+		$rights=$wpdb->get_results($wpdb->prepare('SELECT public_id,target_type,target_id,status,rights_basis,decision_reason,updated_at FROM '.VWLB_Helpers::table('takedowns').' WHERE claimant_id=%d ORDER BY id DESC LIMIT 100',$uid),ARRAY_A);foreach($rights as &$case){$entity='video'===($case['target_type']??'')?'videos':'live_events';$target=VWLB_Repository::find($entity,(int)$case['target_id'],true);$case['target_public_id']=$target['public_id']??'';unset($case['target_id']);}unset($case);
 		return array('videos'=>$videos,'live'=>$live,'jobs'=>$jobs,'copyright'=>$rights,'insights'=>self::creator_insights(30),'comments'=>apply_filters('vwlb_creator_comment_projection',array(),$uid),'canonical_owner'=>'File 10','comments_owner'=>'File 21/shared interaction contract');
 	}
 
@@ -771,7 +771,7 @@ final class VWLB_Extensions {
 		if($method==='POST'&&preg_match('#/videos/([A-Za-z0-9_-]+)/progress$#',$route,$m)&&is_array($data)&&!empty($data['completed'])){$v=VWLB_Repository::find('videos',$m[1]);if($v&&is_user_logged_in()){$k='vwlb_completed_metric_'.$v['id'];if(!get_user_meta(get_current_user_id(),$k,true)){update_user_meta(get_current_user_id(),$k,1);self::increment_metric($v['owner_id'],'video',$v['id'],'completions');}}}
 		if($method==='POST'&&preg_match('#/videos/([A-Za-z0-9_-]+)/interactions$#',$route,$m)&&is_array($data)&&($data['interaction']??'')==='save'&&!empty($data['active'])){$v=VWLB_Repository::find('videos',$m[1]);if($v)self::increment_metric($v['owner_id'],'video',$v['id'],'saves');}
 		if($method==='GET'&&preg_match('#/media/([A-Za-z0-9_-]+)/contract$#',$route,$m)){$v=VWLB_Repository::find('videos',$m[1]);if($v)self::increment_metric($v['owner_id'],'video',$v['id'],'source_opens');}
-		if($method==='POST'&&str_ends_with($route,'/moderation/reports')){$body=$request->get_json_params();if(is_array($body)&&($body['target_type']??'')==='video'){$v=VWLB_Repository::find('videos',$body['target_id']??0);if($v)self::increment_metric($v['owner_id'],'video',$v['id'],'harm_reports');}}
+		if($method==='POST'&&str_ends_with($route,'/moderation/reports')){$body=$request->get_json_params();if(is_array($body)&&($body['target_type']??'')==='video'){$v=VWLB_Repository::find('videos',$body['target_public_id']??'');if($v)self::increment_metric($v['owner_id'],'video',$v['id'],'harm_reports');}}
 		return $response;
 	}
 

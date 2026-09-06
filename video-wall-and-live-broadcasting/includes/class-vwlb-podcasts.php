@@ -42,7 +42,7 @@ final class VWLB_Podcasts {
 		));
 		if(!$ok)return VWLB_Helpers::error('vwlb_database_error',__('Podcast series could not be created.',VWLB_TEXT_DOMAIN),500);
 		$id=(int)$wpdb->insert_id;VWLB_Helpers::audit('podcast_series',$id,'create','','draft');
-		return array('id'=>$id,'public_id'=>$public,'slug'=>$slug,'status'=>'draft','version'=>1);
+		return array('public_id'=>$public,'slug'=>$slug,'status'=>'draft','version'=>1);
 	}
 
 	public static function create_episode($data){
@@ -66,7 +66,7 @@ final class VWLB_Podcasts {
 		));
 		if(!$ok)return VWLB_Helpers::error('vwlb_database_error',__('Podcast episode could not be created.',VWLB_TEXT_DOMAIN),500);
 		$id=(int)$wpdb->insert_id;VWLB_Helpers::audit('podcast_episode',$id,'create','','draft');
-		return array('id'=>$id,'public_id'=>$public,'slug'=>$slug,'status'=>'draft','version'=>1);
+		return array('public_id'=>$public,'slug'=>$slug,'status'=>'draft','version'=>1);
 	}
 
 	public static function publish_episode($id,$expected_version){
@@ -93,8 +93,9 @@ final class VWLB_Podcasts {
 
 	public static function public_episode_dto($id){
 		$ep=self::episode($id,false);if(!$ep)return null;$asset=VWLB_Repository::find('media_assets',$ep['asset_id']);$der=VWLB_Helpers::json($asset['derivatives_json']??'{}');
+		$series_public='';if(!empty($ep['series_id']))$series_public=(string)$wpdb->get_var($wpdb->prepare('SELECT public_id FROM '.VWLB_Helpers::table('podcast_series').' WHERE id=%d LIMIT 1',(int)$ep['series_id']));
 		return array(
-			'id'=>$ep['public_id'],'series_id'=>(int)$ep['series_id'],'title'=>$ep['title'],'slug'=>$ep['slug'],
+			'id'=>$ep['public_id'],'series_public_id'=>$series_public,'title'=>$ep['title'],'slug'=>$ep['slug'],
 			'description'=>$ep['description'],'language'=>$ep['language'],'duration_seconds'=>(int)$ep['duration_seconds'],
 			'rights_status'=>$ep['rights_status'],'visibility'=>$ep['visibility'],'published_at'=>VWLB_Helpers::iso_utc($ep['published_at']),
 			'audio_url'=>esc_url_raw($der['audio_only']??$der['mp3']??$der['mp4_low']??''),
