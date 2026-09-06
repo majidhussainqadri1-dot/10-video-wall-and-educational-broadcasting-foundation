@@ -58,4 +58,31 @@
       finally { if (button) button.disabled = false; }
     });
   });
+
+
+  document.querySelectorAll('[data-vwlb-production-studio]').forEach(async (root) => {
+    const liveId = root.getAttribute('data-vwlb-production-studio');
+    const output = root.querySelector('[data-vwlb-production-state]');
+    if (!liveId || !output) return;
+    try {
+      const state = await api(`/live-events/${encodeURIComponent(liveId)}/production/state`);
+      const sources = Array.isArray(state.sources) ? state.sources : [];
+      const scenes = Array.isArray(state.scenes) ? state.scenes : [];
+      const guests = Array.isArray(state.guests) ? state.guests : [];
+      const targets = Array.isArray(state.simulcast_targets) ? state.simulcast_targets : [];
+      output.textContent = '';
+      const list = document.createElement('dl'); list.className = 'vwlb-production-state';
+      [['Sources', sources.length], ['Scenes', scenes.length], ['Guests', guests.length], ['Simulcast targets', targets.length]].forEach(([label, value]) => {
+        const dt = document.createElement('dt'); dt.textContent = label;
+        const dd = document.createElement('dd'); dd.textContent = String(value);
+        list.append(dt, dd);
+      });
+      if (state.config) {
+        const dt = document.createElement('dt'); dt.textContent = 'Latency mode';
+        const dd = document.createElement('dd'); dd.textContent = String(state.config.latency_mode || 'standard');
+        list.append(dt, dd);
+      }
+      output.appendChild(list);
+    } catch (e) { output.textContent = e.message; }
+  });
 })();

@@ -34,7 +34,8 @@ final class VWLB_Future_Frontend {
 		</section><?php return ob_get_clean();
 	}
 	public function production_studio(){
-		$this->enqueue();if(!VWLB_Security::can(VWLB_Contracts::CAP_BROADCAST,null,'future_production_studio'))return '';
-		return '<section class="vwlb-future-studio" data-vwlb-production-studio><h2>'.esc_html__('Advanced Live Production',VWLB_TEXT_DOMAIN).'</h2><p>'.esc_html__('Multi-camera scenes, guest/co-host access, screen/slides sources, DVR/latency policy, SRT/WebRTC adapters, simulcast, redundant recording and health telemetry are available through the File 10 canonical REST contracts.',VWLB_TEXT_DOMAIN).'</p><div class="vwlb-status" role="status" aria-live="polite"></div></section>';
+		$this->enqueue();if(!VWLB_Security::can(VWLB_Contracts::CAP_BROADCAST,null,'future_production_studio'))return '';$id=$this->live_id();if(!$id)return '';
+		$event=VWLB_Repository::find('live_events',$id);if(!$event||!VWLB_Security::can(VWLB_Contracts::CAP_BROADCAST,$event,'future_production_studio'))return '';
+		return '<section class="vwlb-future-studio" data-vwlb-production-studio="'.esc_attr($event['public_id']).'"><h2>'.esc_html__('Advanced Live Production',VWLB_TEXT_DOMAIN).'</h2><p>'.esc_html__('Multi-camera scenes, guest/co-host access, screen/slides sources, DVR/latency policy, SRT/WebRTC adapters, simulcast, redundant recording and health telemetry are managed through File 10.',VWLB_TEXT_DOMAIN).'</p><div data-vwlb-production-state aria-live="polite">'.esc_html__('Loading production state…',VWLB_TEXT_DOMAIN).'</div><div class="vwlb-status" role="status" aria-live="polite"></div></section>';
 	}
 }

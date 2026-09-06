@@ -1,17 +1,13 @@
-# File 10 Status — 1.2.11-rc1
+# File 10 Status — 1.2.12-rc1
 
-**Classification:** repository/source correction candidate after completion of the sequential R81–R100 review cycle on 2026-08-30.
+**Classification:** repository/source correction candidate in the sequential R101–R120 review cycle begun 2026-09-06.
 
-- Prior cycle baseline exact HEAD: `7a6ff440cb54730dd6824698856b25a397978d32` (`1.2.9-rc1`).
-- Cycle baseline exact HEAD: `7a6ff440cb54730dd6824698856b25a397978d32`.
-- Review method: complete one round first → freeze that round's findings → correct all proven findings from that round together → full regression/release QA → only then begin the next round.
-- R81–R100 completed at review/correction level. Defect-bearing rounds: R81, R84, R85, R86, R91, R94, R97, R100. Clean rounds: R82, R83, R87, R88, R89, R90, R92, R93, R95, R96, R98, R99.
-- First ten (`R81–R90`) defect-bearing rounds: R81, R84, R85, R86.
-- R100 found final release-identity/traceability defects: material R81–R99 source changes still reused immutable candidate identity `1.2.10-rc1`, while workflow, builder, current-version tests, manifest/status/readme and current SBOM still described the older R61–R80 candidate. The R100 correction advances the source candidate to `1.2.11-rc1`, preserves schema versions, retains the historical `1.2.10-rc1` SBOM and adds current-cycle traceability.
-- Specified: complete by governing plans at repository specification level.
-- Coded/reviewed candidate: `1.2.11-rc1` on Draft PR #9.
-- Packaged: only an artifact generated from the exact final reviewed head is valid as the current candidate package.
-- Automated-QA Green: not preclaimed by this source file; the exact-head PHP 8.3/8.4 workflow after R100 must establish it.
+- Cycle baseline exact HEAD: `9a2c317d664b3c0d56797afbf1934f6c55479aaa` (`1.2.11-rc1`).
+- Review method: complete one round read-only → freeze that round's findings → correct all proven findings together → full regression/release QA → only then begin the next round.
+- R101 frozen finding: Future P0 production-studio mutations existed, but the canonical REST/UI surface had no reload-safe owner-scoped read of current sources, scenes, guests, live policy and simulcast targets. A broadcaster reloading the studio therefore could not reconstruct its current File 10 state through the canonical public-ID contract.
+- R101 correction: added an object-authorized, private/no-store production-state GET surface; redacted internal IDs/credential references; mapped scene membership to opaque source IDs; fail-closed on DB verification failure; and added progressive production-state rendering in the File 10 studio UI.
+- Coded/reviewed candidate: `1.2.12-rc1` on `fix/file10-r101-r120-sequential-2026-09-06` after R101 correction.
+- Automated-QA Green: must be established by the exact-head workflow after the R101 correction; not preclaimed here.
 - Staging-Accepted: not established.
 - Live-Deployed: not established.
 - Operational: not established.

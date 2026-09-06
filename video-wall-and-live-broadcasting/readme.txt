@@ -3,7 +3,7 @@ Contributors: sabrihomeopathy
 Requires at least: 7.0
 Tested up to: 7.0.1
 Requires PHP: 8.3
-Stable tag: 1.2.11-rc1
+Stable tag: 1.2.12-rc1
 License: GPLv2 or later
 
 File 10 canonical owner for recorded video and live broadcasting in the Sabri Social Homeopathy Platform.
@@ -40,7 +40,7 @@ Keyboard-visible focus, approximate 44px controls, semantic status regions, capt
 == Installation ==
 
 1. Back up the approved staging environment and verify restoration.
-2. Upload `video-wall-and-live-broadcasting-1.2.11-rc1.zip` to WordPress staging.
+2. Upload `video-wall-and-live-broadcasting-1.2.12-rc1.zip` to WordPress staging.
 3. Activate the plugin; schema, capabilities, pages and cron jobs are reconciled with activation compensation evidence.
 4. Configure File 00 identity claims/capabilities and approved provider adapters.
 5. Run Video & Live diagnostics.
@@ -56,7 +56,7 @@ Source code, deterministic packaging and automated checks do not prove Hostinger
 
 == Changelog ==
 
-= 1.2.11-rc1 =
+= 1.2.12-rc1 =
 * Complete the sequential R81-R100 source-review cycle under Review → Findings Freeze → batch correction → full retest discipline.
 * Correct canonical-owner duplication, DB-failure route truth, privacy anonymization uniqueness, signed unlisted delivery, emergency-end provider uncertainty and private-upload erasure propagation.
 * Close final candidate identity/traceability drift with a fresh immutable package identity while retaining the 1.2.10-rc1 R61-R80 evidence as historical.
