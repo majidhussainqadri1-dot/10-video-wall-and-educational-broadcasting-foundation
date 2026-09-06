@@ -55,6 +55,7 @@ import pathlib, sys
 src, dst, version = sys.argv[1:]
 text = pathlib.Path(src).read_text()
 text = text.replace('1.2.4-rc1', version)
+text = text.replace('[A-Za-z0-9_-]+', '[a-z][a-z0-9]*_[a-z0-9]+')
 text = text.replace('if(!is_wp_error(\\$published))', 'if(is_wp_error(\\$published))return \\$published')
 text = text.replace('"$P/includes/class-vwlb-live.php" r21-credential-write', '"$P/includes/class-vwlb-r46-stream-credential-durability.php" r21-credential-write')
 text = text.replace('need "wp_safe_remote_post" "$P/includes/class-vwlb-providers.php" r29-safe-remote-post', 'need "VWLB_Helpers::remote_url" "$P/includes/class-vwlb-providers.php" r29-safe-remote-url')
