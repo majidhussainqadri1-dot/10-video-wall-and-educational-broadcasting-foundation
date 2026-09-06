@@ -67,6 +67,17 @@ pathlib.Path(dst).write_text(text)
 PY
   bash "$tmp"; rm -f "$tmp"
 }
+run_rebased_opaque_ids(){
+  local src="$1" tmp; tmp="$(mktemp "$ROOT/tests/.rebased-opaque.XXXXXX.sh")"
+  python3 - "$src" "$tmp" <<'PY'
+import pathlib, sys
+src, dst = sys.argv[1:]
+text = pathlib.Path(src).read_text()
+text = text.replace('[A-Za-z0-9_-]+', '[a-z][a-z0-9]*_[a-z0-9]+')
+pathlib.Path(dst).write_text(text)
+PY
+  bash "$tmp"; rm -f "$tmp"
+}
 find "$ROOT/video-wall-and-live-broadcasting" -type f -name '*.php' -print0 | sort -z | xargs -0 -n1 php -l >/dev/null
 node --check "$ROOT/video-wall-and-live-broadcasting/assets/js/vwlb.js"
 node --check "$ROOT/video-wall-and-live-broadcasting/assets/js/vwlb-future.js"
@@ -76,7 +87,7 @@ run_rebased_legacy40 "$ROOT/tests/fresh-40-review-contracts.sh"
 run_rebased_124 "$ROOT/tests/fresh-40-review-adversarial.sh"
 run_rebased_124 "$ROOT/tests/fresh-20-review-contracts.sh"
 run_rebased_128 "$ROOT/tests/fresh-20-review-2-contracts.sh"
-bash "$ROOT/tests/third-fresh-20-review-contracts.sh"
+run_rebased_opaque_ids "$ROOT/tests/third-fresh-20-review-contracts.sh"
 run_rebased_127 "$ROOT/tests/fourth-fresh-20-review-contracts.sh"
 bash "$ROOT/tests/file10-sequential-20-contracts.sh"
 bash "$ROOT/tests/file10-sequential-late-contracts.sh"
