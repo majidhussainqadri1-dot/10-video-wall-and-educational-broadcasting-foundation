@@ -6,20 +6,22 @@ permissions:
   contents: write
 jobs:
   apply:
-    if: github.event.head_commit.message == 'Run R103 correction batch'
+    if: github.event.head_commit.message == 'Run R103 correction batch v2'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           ref: fix/file10-r101-r120-sequential-2026-09-06
           fetch-depth: 0
+      - name: Respect workflow permission boundary
+        run: python3 tools/fix-r103-runner.py
       - name: Apply final frozen R103 correction batch
         run: python3 tools/apply-r103.py
       - name: Commit corrected source, regression contracts and identity
         run: |
           git config user.name 'Sabri File 10 Review Bot'
           git config user.email 'actions@users.noreply.github.com'
-          git rm -f tools/apply-r103.py
-          git add video-wall-and-live-broadcasting tests/file10-r101-r120-contracts.sh tests/run-all.sh .github/workflows/file10-release.yml README.md STATUS.md MANIFEST.md SBOM-1.2.14-rc1.json docs/FILE-10-R103-FROZEN-FINDINGS-2026-09-07.md
+          git rm -f tools/apply-r103.py tools/fix-r103-runner.py review-patches/r103.run review-patches/r103.run2
+          git add video-wall-and-live-broadcasting tests/file10-r101-r120-contracts.sh tests/run-all.sh README.md STATUS.md MANIFEST.md SBOM-1.2.14-rc1.json docs/FILE-10-R103-FROZEN-FINDINGS-2026-09-07.md
           git commit -m 'File 10 R103: close schema migration and frontend public boundaries'
           git push origin HEAD:fix/file10-r101-r120-sequential-2026-09-06
