@@ -2,7 +2,17 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 CURRENT_VERSION='1.2.12-rc1'
-run_rebased_124(){ local src="$1" tmp; tmp="$(mktemp "$ROOT/tests/.rebased.XXXXXX.sh")"; sed "s/1\\.2\\.4-rc1/${CURRENT_VERSION}/g" "$src" > "$tmp"; bash "$tmp"; rm -f "$tmp"; }
+run_rebased_124(){
+  local src="$1" tmp; tmp="$(mktemp "$ROOT/tests/.rebased.XXXXXX.sh")"
+  python3 - "$src" "$tmp" "$CURRENT_VERSION" <<'PY'
+import pathlib, sys
+src, dst, version = sys.argv[1:]
+text = pathlib.Path(src).read_text().replace('1.2.4-rc1', version)
+text = text.replace('need video-wall-and-live-broadcasting-'+version+'.zip "$ROOT/tools/build-package.sh" r19-build-artifact', 'need \'video-wall-and-live-broadcasting-${VERSION}.zip\' "$ROOT/tools/build-package.sh" r19-build-artifact')
+pathlib.Path(dst).write_text(text)
+PY
+  bash "$tmp"; rm -f "$tmp"
+}
 run_rebased_127(){ local src="$1" tmp; tmp="$(mktemp "$ROOT/tests/.rebased127.XXXXXX.sh")"; sed "s/1\\.2\\.7-rc1/${CURRENT_VERSION}/g" "$src" > "$tmp"; bash "$tmp"; rm -f "$tmp"; }
 run_rebased_128(){
   local src="$1" tmp; tmp="$(mktemp "$ROOT/tests/.rebased128.XXXXXX.sh")"
