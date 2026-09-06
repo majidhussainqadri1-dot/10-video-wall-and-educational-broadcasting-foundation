@@ -2,8 +2,11 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 P="$ROOT/video-wall-and-live-broadcasting"
+MAIN="$P/video-wall-and-live-broadcasting.php"
 fail(){ echo "FAIL r60: $*" >&2; exit 1; }
 need(){ grep -R -F -- "$1" "$2" >/dev/null || fail "$3"; }
+VERSION="$(sed -n "s/.*define( 'VWLB_VERSION', '\([^']*\)' ).*/\1/p" "$MAIN" | head -n1)"
+[[ -n "$VERSION" ]] || fail current-version-missing
 
 # R60 historical hardening remains required; current immutable release identity may advance in later completed cycles.
 need "vwlb_evidence_option_read_failed" "$P/includes/class-vwlb-r30-evidence-privacy.php" evidence-db-read
@@ -26,6 +29,6 @@ need "safe_recount" "$P/includes/class-vwlb-r60-final-hardening.php" guarded-rec
 need "vwlb_repair_postcheck_unverified" "$P/includes/class-vwlb-r60-final-hardening.php" repair-postcheck
 need "vwlb_r60_activation_snapshot" "$P/uninstall.php" purge-activation-snapshot
 need "vwlb_r60_external_guard_" "$P/uninstall.php" purge-external-guards
-need "Version: 1.2.11-rc1" "$P/video-wall-and-live-broadcasting.php" current-version
-need "define( 'VWLB_VERSION', '1.2.11-rc1' );" "$P/video-wall-and-live-broadcasting.php" current-version-constant
-printf '%s\n' 'File 10 R60 retained contracts PASS'
+need "Version: $VERSION" "$MAIN" current-version
+need "define( 'VWLB_VERSION', '$VERSION' );" "$MAIN" current-version-constant
+printf '%s\n' "File 10 R60 retained contracts PASS ($VERSION)"
