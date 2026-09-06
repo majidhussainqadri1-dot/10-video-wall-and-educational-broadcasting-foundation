@@ -14,7 +14,7 @@ grep -F '/production/state' "$P/assets/js/vwlb-future.js" >/dev/null
 python3 - "$P/includes/class-vwlb-future-rest.php" <<'PY'
 import pathlib,re,sys
 text=pathlib.Path(sys.argv[1]).read_text()
-m=re.search(r'public static function production_state\s*\([^)]*\)\s*\{(.*?)\n\t\}',text,re.S)
+m=re.search(r'public function production_state\s*\([^)]*\)\s*\{(.*?)\n\t\}',text,re.S)
 assert m, 'production_state missing'
 body=m.group(1)
 for forbidden in ("'user_id'=>", "'live_event_id'=>", "'credential_ref'=>"):
