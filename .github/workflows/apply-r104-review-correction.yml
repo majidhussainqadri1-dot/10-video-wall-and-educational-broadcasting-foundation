@@ -6,20 +6,22 @@ permissions:
   contents: write
 jobs:
   apply:
-    if: github.event.head_commit.message == 'Run R104 correction batch'
+    if: github.event.head_commit.message == 'Run R104 correction batch v2'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           ref: fix/file10-r101-r120-sequential-2026-09-06
           fetch-depth: 0
+      - name: Repair correction runner boundary
+        run: python3 tools/fix-r104-runner.py
       - name: Apply frozen R104 correction batch
         run: python3 tools/apply-r104.py
       - name: Commit corrected source, contracts and evidence
         run: |
           git config user.name 'Sabri File 10 Review Bot'
           git config user.email 'actions@users.noreply.github.com'
-          git rm -f tools/apply-r104.py review-patches/r104.run
+          git rm -f tools/apply-r104.py tools/fix-r104-runner.py review-patches/r104.run review-patches/r104.run2
           git add video-wall-and-live-broadcasting tests/file10-r101-r120-contracts.sh tests/run-all.sh README.md STATUS.md MANIFEST.md SBOM-1.2.15-rc1.json docs/FILE-10-R104-CORRECTION-2026-09-07.md
           git commit -m 'File 10 R104: correct public read truth and podcast authorization'
           git push origin HEAD:fix/file10-r101-r120-sequential-2026-09-06
