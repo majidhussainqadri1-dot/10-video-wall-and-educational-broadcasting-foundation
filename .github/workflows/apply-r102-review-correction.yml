@@ -6,7 +6,7 @@ permissions:
   contents: write
 jobs:
   apply:
-    if: github.event.head_commit.message == 'Run R102 correction batch'
+    if: github.event.head_commit.message == 'Run R102 correction batch v2'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -14,12 +14,15 @@ jobs:
           ref: fix/file10-r101-r120-sequential-2026-09-06
           fetch-depth: 0
       - name: Apply frozen R102 correction batch
-        run: python3 tools/apply-r102.py
+        run: |
+          python3 tools/fix-r102-script.py
+          python3 tools/apply-r102.py
+          python3 tools/apply-r102-version.py
       - name: Commit corrected source and regression evidence
         run: |
           git config user.name 'Sabri File 10 Review Bot'
           git config user.email 'actions@users.noreply.github.com'
-          git rm tools/apply-r102.py review-patches/r102.run
-          git add video-wall-and-live-broadcasting tests/file10-r101-r120-contracts.sh docs/FILE-10-R101-R120-REVIEW-2026-09-06.md
+          git rm tools/apply-r102.py tools/fix-r102-script.py tools/apply-r102-version.py review-patches/r102.run review-patches/r102.run2
+          git add video-wall-and-live-broadcasting tests/file10-r101-r120-contracts.sh tests/run-all.sh tests/static-contracts.sh docs/FILE-10-R101-R120-REVIEW-2026-09-06.md MANIFEST.md STATUS.md SBOM-1.2.13-rc1.json
           git commit -m 'File 10 R102: enforce opaque public identifiers'
           git push origin HEAD:fix/file10-r101-r120-sequential-2026-09-06
