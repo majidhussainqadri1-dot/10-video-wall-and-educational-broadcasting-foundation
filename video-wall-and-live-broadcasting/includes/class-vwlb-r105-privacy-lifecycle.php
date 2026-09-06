@@ -1,0 +1,87 @@
+<?php
+/** R105: complete File 10 privacy export/erasure propagation, retained-evidence anonymization and scoped legal-hold enforcement. */
+defined('ABSPATH') || exit;
+final class VWLB_R105_Privacy_Lifecycle {
+	const PAGE_SIZE=100;
+	const EVIDENCE_PAGE_SIZE=200;
+	const CURSOR_PREFIX='vwlb_r105_privacy_cursor_';
+	const SUBJECT_KEYS=array('user_id','member_id','actor_id','owner_id','reporter_id','reviewer_id','claimant_id','subject_user_id','blocked_user_id','created_by','updated_by','invited_by','guest_user_id');
+	public static function register(){
+		add_filter('wp_privacy_personal_data_exporters',array(__CLASS__,'exporters'),120);
+		add_filter('wp_privacy_personal_data_erasers',array(__CLASS__,'erasers'),120);
+		add_filter('sabri_contract_registry',array(__CLASS__,'contracts'),120);
+	}
+	public static function contracts($registry){
+		$registry=is_array($registry)?$registry:array();
+		$registry['file10.privacy-legal-hold.v1']=array(
+			'owner'=>'File 10','assurance_supplier'=>'File 24 or another approved compliance authority',
+			'query'=>'apply_filters(vwlb_privacy_legal_hold_decision, null, user_id, scope, context)',
+			'rule'=>'File 10 validates and enforces every hold. An active hold must be scope-bounded, carry a lawful basis/reference and future expiry; invalid or unreadable active-hold evidence fails closed. A hold never authorizes public disclosure or raw-secret export.'
+		);return $registry;
+	}
+	public static function exporters($exporters){$exporters['vwlb-attribution']=array('exporter_friendly_name'=>__('Video Wall professional and safety attribution',VWLB_TEXT_DOMAIN),'callback'=>array(__CLASS__,'export'));return $exporters;}
+	public static function erasers($erasers){$erasers['vwlb']=array('eraser_friendly_name'=>__('Video Wall and Live Broadcasting',VWLB_TEXT_DOMAIN),'callback'=>array(__CLASS__,'erase'));return $erasers;}
+	private static function hold($uid,$scope){
+		$raw=apply_filters('vwlb_privacy_legal_hold_decision',null,(int)$uid,sanitize_key($scope),array('contract'=>'File10PrivacyLegalHold.v1','consumer'=>'File 10 privacy erasure'));
+		if(null===$raw||false===$raw)return false;if(!is_array($raw))return VWLB_Helpers::error('vwlb_privacy_hold_unverifiable',__('Privacy legal-hold state could not be verified safely.',VWLB_TEXT_DOMAIN),503,array('scope'=>$scope));
+		if(empty($raw['active']))return false;$scopes=array_values(array_unique(array_map('sanitize_key',(array)($raw['scopes']??array()))));$scope=sanitize_key($scope);if(!in_array('all',$scopes,true)&&!in_array($scope,$scopes,true))return false;
+		$basis=VWLB_Helpers::text($raw['lawful_basis']??'',191);$reference=VWLB_Helpers::text($raw['reference']??'',191);$expires=VWLB_Helpers::datetime($raw['expires_at']??null);
+		if(!$basis||!$reference||!$expires||strtotime($expires.' UTC')<=time())return VWLB_Helpers::error('vwlb_privacy_hold_unverifiable',__('An asserted privacy legal hold is incomplete, expired or unverifiable.',VWLB_TEXT_DOMAIN),503,array('scope'=>$scope));
+		return array('scope'=>$scope,'lawful_basis'=>$basis,'reference_hash'=>hash('sha256',$reference),'expires_at'=>$expires);
+	}
+	private static function role_item($group,$label,$id,$role,$row){$data=array(array('name'=>__('Attribution role',VWLB_TEXT_DOMAIN),'value'=>$role));foreach((array)$row as $k=>$v){if(in_array($k,array('id','owner_id','user_id','created_by','updated_by','reviewed_by','reporter_id','reviewer_id','claimant_id','invited_by','object_id','target_id','live_event_id','video_id','asset_id','poll_id','option_id','credential_hash','token_hash','evidence_json','metadata_json','scope_json','policy_json','payload_json','provider_ref','credential_ref','private_filename','claimant_contact_hash'),true))continue;if(!is_scalar($v)&&null!==$v)continue;$data[]=array('name'=>ucwords(str_replace('_',' ',$k)),'value'=>null===$v?'':(string)$v);}return array('group_id'=>$group,'group_label'=>$label,'item_id'=>$id,'data'=>$data);}
+	private static function export_rows($uid,$table,$column,$fields,$group,$label,$role,$limit,$offset){global $wpdb;$query=$wpdb->prepare("SELECT $fields FROM ".VWLB_Helpers::table($table)." WHERE $column=%d ORDER BY id ASC LIMIT %d OFFSET %d",(int)$uid,(int)$limit,(int)$offset);$rows=VWLB_DB::read_results($query,'privacy_export_'.$table.'_'.$column);if(is_wp_error($rows))return $rows;$items=array();foreach($rows as $i=>$row)$items[]=self::role_item($group,$label,$group.'-'.($offset+$i+1),$role,$row);return array('items'=>$items,'count'=>count($rows));}
+	public static function export($email,$page=1){
+		$user=get_user_by('email',$email);if(!$user)return array('data'=>array(),'done'=>true);$uid=(int)$user->ID;$limit=self::PAGE_SIZE;$offset=(max(1,(int)$page)-1)*$limit;$data=array();$max=0;
+		$specs=array(
+			array('moderation','reporter_id','public_id,reason,action,status,severity,created_at,updated_at,closed_at','vwlb-moderation-reporter',__('Moderation reports',VWLB_TEXT_DOMAIN),'reporter'),
+			array('moderation','reviewer_id','public_id,reason,action,status,severity,created_at,updated_at,closed_at','vwlb-moderation-reviewer',__('Moderation review attribution',VWLB_TEXT_DOMAIN),'reviewer'),
+			array('takedowns','claimant_id','public_id,rights_basis,status,created_at,updated_at,closed_at','vwlb-takedown-claimant',__('Copyright/takedown claims',VWLB_TEXT_DOMAIN),'claimant'),
+			array('takedowns','reviewer_id','public_id,rights_basis,status,created_at,updated_at,closed_at','vwlb-takedown-reviewer',__('Copyright/takedown review attribution',VWLB_TEXT_DOMAIN),'reviewer'),
+			array('captions','created_by','public_id,language,kind,source,format,status,version,created_at,updated_at','vwlb-caption-created',__('Caption attribution',VWLB_TEXT_DOMAIN),'creator'),
+			array('captions','reviewed_by','public_id,language,kind,source,format,status,version,created_at,updated_at','vwlb-caption-reviewed',__('Caption review attribution',VWLB_TEXT_DOMAIN),'reviewer'),
+			array('production_sources','owner_id','public_id,source_type,label,state,version,created_at,updated_at','vwlb-production-source',__('Production-source attribution',VWLB_TEXT_DOMAIN),'owner'),
+			array('production_scenes','owner_id','public_id,title,state,is_program,version,created_at,updated_at','vwlb-production-scene',__('Production-scene attribution',VWLB_TEXT_DOMAIN),'owner'),
+			array('simulcast_targets','created_by','public_id,platform,status,version,created_at,updated_at','vwlb-simulcast',__('Simulcast attribution',VWLB_TEXT_DOMAIN),'creator'),
+			array('media_tracks','created_by','public_id,object_type,track_type,language,source,status,version,created_at,updated_at','vwlb-track-created',__('Media-track attribution',VWLB_TEXT_DOMAIN),'creator'),
+			array('media_tracks','reviewed_by','public_id,object_type,track_type,language,source,status,version,created_at,updated_at','vwlb-track-reviewed',__('Media-track review attribution',VWLB_TEXT_DOMAIN),'reviewer'),
+			array('video_annotations','created_by','public_id,kind,start_ms,end_ms,title,source_owner,source_ref,status,version,created_at,updated_at','vwlb-annotation-created',__('Video-annotation attribution',VWLB_TEXT_DOMAIN),'creator'),
+			array('video_annotations','reviewed_by','public_id,kind,start_ms,end_ms,title,source_owner,source_ref,status,version,created_at,updated_at','vwlb-annotation-reviewed',__('Video-annotation review attribution',VWLB_TEXT_DOMAIN),'reviewer'),
+			array('live_polls','created_by','public_id,question,poll_type,status,opens_at,closes_at,version,created_at,updated_at','vwlb-poll-created',__('Live-poll attribution',VWLB_TEXT_DOMAIN),'creator'),
+			array('consent_links','created_by','consent_ref,subject_ref,status,expires_at,withdrawn_at,version,created_at,updated_at','vwlb-consent-link',__('Consent-link attribution',VWLB_TEXT_DOMAIN),'creator'),
+			array('watermark_policies','updated_by','object_type,mode,status,version,created_at,updated_at','vwlb-watermark',__('Watermark-policy attribution',VWLB_TEXT_DOMAIN),'updater'),
+			array('stream_credentials','created_by','public_id,provider,scope,status,expires_at,rotated_at,revoked_at,created_at,last_used_at','vwlb-stream-credential',__('Stream-credential attribution',VWLB_TEXT_DOMAIN),'creator'),
+			array('creator_metrics_daily','owner_id','metric_date,object_type,views,completions,saves,source_opens,meaningful_comments,harm_reports,updated_at','vwlb-creator-metrics',__('Creator aggregate metrics',VWLB_TEXT_DOMAIN),'owner'),
+			array('audit','actor_id','public_id,object_type,action,previous_state,new_state,purpose,created_at','vwlb-audit-attribution',__('Audit attribution',VWLB_TEXT_DOMAIN),'actor')
+		);
+		foreach($specs as $s){$result=self::export_rows($uid,$s[0],$s[1],$s[2],$s[3],$s[4],$s[5],$limit,$offset);if(is_wp_error($result)){do_action('vwlb_operational_failure','privacy',$result->get_error_code(),array('phase'=>'r105-export','table'=>$s[0]));return $result;}$max=max($max,$result['count']);$data=array_merge($data,$result['items']);}
+		return array('data'=>$data,'done'=>$max<$limit);
+	}
+	private static function cursor_key($uid,$scope){return self::CURSOR_PREFIX.sanitize_key($scope).'_'.substr(hash_hmac('sha256',(string)(int)$uid,wp_salt('nonce')),0,32);}
+	private static function cursor_get($uid,$scope){return max(0,(int)get_option(self::cursor_key($uid,$scope),0));}
+	private static function cursor_set($uid,$scope,$value){$key=self::cursor_key($uid,$scope);$value=max(0,(int)$value);if(!$value){$deleted=delete_option($key);return $deleted||false===get_option($key,false);}return update_option($key,$value,false)||(int)get_option($key,0)===$value;}
+	private static function is_subject_key($key){return in_array(sanitize_key((string)$key),self::SUBJECT_KEYS,true);}
+	private static function payload_mentions($value,$uid){if(!is_array($value))return false;foreach($value as $k=>$v){if(is_array($v)){if(self::payload_mentions($v,$uid))return true;continue;}if(self::is_subject_key($k)&&(string)$v===(string)(int)$uid)return true;}return false;}
+	private static function scrub_payload($value,$uid){if(!is_array($value))return $value;foreach($value as $k=>$v){if(is_array($v))$value[$k]=self::scrub_payload($v,$uid);elseif(self::is_subject_key($k)&&(string)$v===(string)(int)$uid)$value[$k]=0;}return $value;}
+	private static function audit_mentions($row,$uid){if((int)($row['actor_id']??0)===(int)$uid)return true;if(in_array(sanitize_key($row['object_type']??''),array('history','user','member'),true)&&(string)($row['object_id']??'')===(string)(int)$uid)return true;return self::payload_mentions(VWLB_Helpers::json($row['meta_json']??'{}'),$uid);}
+	private static function scrub_audit($row,$uid){if((int)($row['actor_id']??0)===(int)$uid)$row['actor_id']=0;if(in_array(sanitize_key($row['object_type']??''),array('history','user','member'),true)&&(string)($row['object_id']??'')===(string)(int)$uid)$row['object_id']='erased_'.substr(hash_hmac('sha256',(string)(int)$uid,wp_salt('nonce')),0,24);$row['meta_json']=VWLB_Helpers::json_encode(self::scrub_payload(VWLB_Helpers::json($row['meta_json']??'{}'),$uid));return $row;}
+	private static function process_canonical($uid,$kind,&$retained){
+		global $wpdb;$kind=sanitize_key($kind);$hold=self::hold($uid,$kind);if(is_wp_error($hold))return $hold;$table=VWLB_Helpers::table($kind);$cursor=self::cursor_get($uid,'canonical_'.$kind);$needle='%'.$wpdb->esc_like((string)(int)$uid).'%';
+		if('audit'===$kind)$query=$wpdb->prepare("SELECT id,object_type,object_id,actor_id,meta_json FROM $table WHERE id>%d AND (actor_id=%d OR object_id=%s OR meta_json LIKE %s) ORDER BY id ASC LIMIT %d",$cursor,(int)$uid,(string)(int)$uid,$needle,self::EVIDENCE_PAGE_SIZE);
+		else $query=$wpdb->prepare("SELECT id,payload_json FROM $table WHERE id>%d AND payload_json LIKE %s ORDER BY id ASC LIMIT %d",$cursor,$needle,self::EVIDENCE_PAGE_SIZE);
+		$rows=VWLB_DB::read_results($query,'r105_'.$kind.'_evidence');if(is_wp_error($rows))return $rows;$last=$cursor;
+		foreach($rows as $row){$last=max($last,(int)$row['id']);$mentions='audit'===$kind?self::audit_mentions($row,$uid):self::payload_mentions(VWLB_Helpers::json($row['payload_json']??'{}'),$uid);if(!$mentions)continue;if($hold){$retained=true;continue;}if('audit'===$kind){$clean=self::scrub_audit($row,$uid);$changed=$wpdb->update($table,array('object_id'=>$clean['object_id'],'actor_id'=>$clean['actor_id'],'meta_json'=>$clean['meta_json']),array('id'=>$row['id']),array('%s','%d','%s'),array('%d'));}else{$clean=VWLB_Helpers::json_encode(self::scrub_payload(VWLB_Helpers::json($row['payload_json']??'{}'),$uid));$changed=$wpdb->update($table,array('payload_json'=>$clean),array('id'=>$row['id']),array('%s'),array('%d'));}if(false===$changed)return VWLB_Helpers::error('vwlb_privacy_evidence_anonymize_failed',__('Retained File 10 evidence could not be anonymized safely.',VWLB_TEXT_DOMAIN),503,array('kind'=>$kind));}
+		$done=count($rows)<self::EVIDENCE_PAGE_SIZE;if(!self::cursor_set($uid,'canonical_'.$kind,$done?0:$last))return VWLB_Helpers::error('vwlb_privacy_cursor_persist_failed',__('Privacy evidence cursor could not be persisted safely.',VWLB_TEXT_DOMAIN),503,array('kind'=>$kind));return $done;
+	}
+	private static function fallback_mentions($kind,$row,$uid){if('audit'===$kind)return self::audit_mentions($row,$uid);return self::payload_mentions(VWLB_Helpers::json($row['payload_json']??'{}'),$uid);}
+	private static function scrub_fallback($kind,$row,$uid){if('audit'===$kind)return self::scrub_audit($row,$uid);$row['payload_json']=VWLB_Helpers::json_encode(self::scrub_payload(VWLB_Helpers::json($row['payload_json']??'{}'),$uid));return $row;}
+	private static function process_fallback($uid,$kind,&$retained){
+		global $wpdb;$kind=sanitize_key($kind);$scope='fallback_'.$kind;$hold=self::hold($uid,$scope);if(is_wp_error($hold))return $hold;$prefix='audit'===$kind?VWLB_Review_Hardening::AUDIT_FALLBACK_PREFIX:VWLB_Review_Hardening::OUTBOX_FALLBACK_PREFIX;$cursor=self::cursor_get($uid,$scope);$like=$wpdb->esc_like($prefix).'%';$query=$wpdb->prepare("SELECT option_id,option_name,option_value FROM {$wpdb->options} WHERE option_name LIKE %s AND option_id>%d ORDER BY option_id ASC LIMIT %d",$like,$cursor,self::EVIDENCE_PAGE_SIZE);$rows=VWLB_DB::read_results($query,'r105_'.$scope);if(is_wp_error($rows))return $rows;$last=$cursor;
+		foreach($rows as $option){$last=max($last,(int)$option['option_id']);$stored=maybe_unserialize($option['option_value']);$row=VWLB_Helpers::decrypt_evidence_fallback($stored,$kind);if(is_wp_error($row))return $row;if(!self::fallback_mentions($kind,$row,$uid))continue;if($hold){$retained=true;continue;}$clean=self::scrub_fallback($kind,$row,$uid);$encrypted=VWLB_Helpers::encrypt_evidence_fallback($kind,$clean);if(is_wp_error($encrypted))return $encrypted;$saved=update_option($option['option_name'],$encrypted,false);if(!$saved){$existing=get_option($option['option_name'],null);$decoded=VWLB_Helpers::decrypt_evidence_fallback($existing,$kind);if(is_wp_error($decoded)||$decoded!==$clean)return VWLB_Helpers::error('vwlb_privacy_fallback_anonymize_failed',__('Encrypted retained evidence could not be anonymized safely.',VWLB_TEXT_DOMAIN),503,array('kind'=>$kind));}}
+		$done=count($rows)<self::EVIDENCE_PAGE_SIZE;if(!self::cursor_set($uid,$scope,$done?0:$last))return VWLB_Helpers::error('vwlb_privacy_cursor_persist_failed',__('Privacy fallback cursor could not be persisted safely.',VWLB_TEXT_DOMAIN),503,array('kind'=>$kind));return $done;
+	}
+	private static function evidence_pass($uid,&$retained){$all=true;foreach(array('audit','outbox') as $kind){$canonical=self::process_canonical($uid,$kind,$retained);if(is_wp_error($canonical))return $canonical;$fallback=self::process_fallback($uid,$kind,$retained);if(is_wp_error($fallback))return $fallback;$all=$all&&$canonical&&$fallback;}return $all;}
+	public static function erase($email,$page=1){
+		$user=get_user_by('email',$email);if(!$user)return array('items_removed'=>false,'items_retained'=>false,'messages'=>array(),'done'=>true);$base=VWLB_R97_Privacy_Storage_Erasure_Guard::erase($email,$page);if(!is_array($base)||empty($base['done']))return $base;$retained=!empty($base['items_retained']);$pass=self::evidence_pass((int)$user->ID,$retained);if(is_wp_error($pass)){do_action('vwlb_operational_failure','privacy',$pass->get_error_code(),array('phase'=>'r105-evidence-erasure'));$messages=(array)($base['messages']??array());$messages[]=$pass->get_error_message();return array('items_removed'=>!empty($base['items_removed']),'items_retained'=>true,'messages'=>$messages,'done'=>false);}if(!$pass){$messages=(array)($base['messages']??array());$messages[]=__('File 10 anonymized one bounded retained-evidence batch; additional evidence remains for the next eraser pass.',VWLB_TEXT_DOMAIN);return array('items_removed'=>true,'items_retained'=>true,'messages'=>$messages,'done'=>false);}$messages=(array)($base['messages']??array());if($retained)$messages[]=__('Some integrity evidence remains only under a validated, scope-bounded legal hold; other eligible identity references were anonymized.',VWLB_TEXT_DOMAIN);else$messages[]=__('Retained audit/outbox evidence and encrypted fallbacks were checked and eligible subject identifiers were anonymized.',VWLB_TEXT_DOMAIN);return array('items_removed'=>!empty($base['items_removed'])||true,'items_retained'=>$retained,'messages'=>$messages,'done'=>true);
+	}
+}
