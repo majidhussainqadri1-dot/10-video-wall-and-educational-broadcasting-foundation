@@ -38,17 +38,9 @@ need "VWLB_R97_Privacy_Storage_Erasure_Guard::register" "$P/video-wall-and-live-
 need "WHERE owner_id=%d ORDER BY id ASC LIMIT %d" "$P/includes/class-vwlb-r97-privacy-storage-erasure-guard.php" r97-all-status
 need "LOCK_EX|LOCK_NB" "$P/includes/class-vwlb-r97-privacy-storage-erasure-guard.php" r97-lock
 need "VWLB_R50_Privacy_Proof::erase" "$P/includes/class-vwlb-r97-privacy-storage-erasure-guard.php" r97-proof-chain
-# R100 — current immutable release/package identity and 20-round traceability closure.
-need "Version: 1.2.11-rc1" "$P/video-wall-and-live-broadcasting.php" r100-version
-need "define( 'VWLB_VERSION', '1.2.11-rc1' );" "$P/video-wall-and-live-broadcasting.php" r100-constant
-need "Stable tag: 1.2.11-rc1" "$P/readme.txt" r100-stable
-need "video-wall-and-live-broadcasting-1.2.11-rc1.zip" "$ROOT/.github/workflows/file10-release.yml" r100-workflow-package
-need "file10-video-wall-live-1.2.11-rc1" "$ROOT/.github/workflows/file10-release.yml" r100-workflow-artifact
-need "video-wall-and-live-broadcasting-1.2.11-rc1.zip" "$ROOT/tools/build-package.sh" r100-builder
-need "CURRENT_VERSION='1.2.11-rc1'" "$ROOT/tests/run-all.sh" r100-suite-version
-need "# File 10 Release Candidate Manifest — 1.2.11-rc1" "$ROOT/MANIFEST.md" r100-manifest-version
-need 'Review boundary: sequential cycle rounds `R81–R100` completed at repository source-review level.' "$ROOT/MANIFEST.md" r100-manifest-boundary
-need 'R81, R84, R85, R86, R91, R94, R97, R100' "$ROOT/MANIFEST.md" r100-defect-ledger
-need '"version": "1.2.11-rc1"' "$ROOT/SBOM-1.2.11-rc1.json" r100-sbom-version
-need "R81-R100 sequential corrective cycle" "$ROOT/SBOM-1.2.11-rc1.json" r100-sbom-boundary
-printf '%s\n' 'File 10 R81-R100 sequential contracts PASS'
+# R100 is now immutable historical evidence; current candidate identity is tested by later-round contracts.
+need '"version": "1.2.11-rc1"' "$ROOT/SBOM-1.2.11-rc1.json" r100-historical-sbom-version
+need "R81-R100 sequential corrective cycle" "$ROOT/SBOM-1.2.11-rc1.json" r100-historical-sbom-boundary
+need "R81–R100" "$ROOT/docs/FILE-10-R81-R100-REVIEW-2026-08-30.md" r100-historical-ledger
+need "R81, R84, R85, R86, R91, R94, R97, R100" "$ROOT/docs/FILE-10-R81-R100-REVIEW-2026-08-30.md" r100-historical-defect-ledger
+printf '%s\n' 'File 10 R81-R100 historical sequential contracts PASS'
