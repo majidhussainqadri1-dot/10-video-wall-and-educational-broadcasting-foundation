@@ -57,6 +57,11 @@ Source code, deterministic packaging and automated checks do not prove Hostinger
 == Changelog ==
 
 = 1.2.12-rc1 =
+* R101: add reload-safe, owner-scoped production-studio state retrieval through opaque public identifiers.
+* Fail closed when production state cannot be verified, keep the response private/no-store, and exclude native IDs and credential references.
+* Bind the production studio UI to an authorized live event and progressively render current sources, scenes, guests, simulcast targets and latency state.
+
+= 1.2.11-rc1 =
 * Complete the sequential R81-R100 source-review cycle under Review → Findings Freeze → batch correction → full retest discipline.
 * Correct canonical-owner duplication, DB-failure route truth, privacy anonymization uniqueness, signed unlisted delivery, emergency-end provider uncertainty and private-upload erasure propagation.
 * Close final candidate identity/traceability drift with a fresh immutable package identity while retaining the 1.2.10-rc1 R61-R80 evidence as historical.
