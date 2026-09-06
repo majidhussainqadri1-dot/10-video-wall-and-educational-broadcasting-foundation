@@ -37,9 +37,11 @@ import pathlib, sys
 src, dst, version = sys.argv[1:]
 text = pathlib.Path(src).read_text()
 text = text.replace('1.2.7-rc1', version)
-text = text.replace('Cycle baseline exact HEAD: `83558aea2e581e6f7b76084e21695989254704b7`', 'Cycle baseline exact HEAD: `7a6ff440cb54730dd6824698856b25a397978d32`')
-text = text.replace('Review boundary: final sequential cycle round `R40`', 'Review boundary: sequential cycle rounds `R81–R100` completed at repository source-review level')
-text = text.replace('R40 found additional package/release-hygiene defects', 'R100 found final release-identity/traceability defects')
+text = text.replace('need "video-wall-and-live-broadcasting-'+version+'.zip" "$ROOT/tools/build-package.sh" r39-builder-default', 'need \'video-wall-and-live-broadcasting-${VERSION}.zip\' "$ROOT/tools/build-package.sh" r39-builder-default')
+text = text.replace('need \'"version": "'+version+'"\' "$ROOT/SBOM-1.2.7-rc1.json" r39-sbom', 'need \'"version": "1.2.7-rc1"\' "$ROOT/SBOM-1.2.7-rc1.json" r39-sbom')
+text = text.replace('Cycle baseline exact HEAD: `83558aea2e581e6f7b76084e21695989254704b7`', 'Cycle baseline exact HEAD: `9a2c317d664b3c0d56797afbf1934f6c55479aaa`')
+text = text.replace('Review boundary: final sequential cycle round `R40`', 'Current review boundary: R101–R120 sequential cycle')
+text = text.replace('R40 found additional package/release-hygiene defects', 'R101 frozen finding:')
 pathlib.Path(dst).write_text(text)
 PY
   bash "$tmp"; rm -f "$tmp"
