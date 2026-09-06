@@ -3,10 +3,6 @@ from pathlib import Path
 import json
 ROOT=Path(__file__).resolve().parents[1]
 OLD='1.2.12-rc1'; NEW='1.2.13-rc1'
-def rw(path, fn):
-    p=ROOT/path; t=p.read_text(); n=fn(t); 
-    if n==t: raise SystemExit(f'no change for {path}')
-    p.write_text(n)
 def repl(path,old,new,minimum=1):
     p=ROOT/path;t=p.read_text();c=t.count(old)
     if c<minimum: raise SystemExit(f'{path}: expected >= {minimum} of {old!r}, got {c}')
@@ -26,7 +22,7 @@ entry=(f'= {NEW} =\n'
 if marker not in t: raise SystemExit('readme changelog marker missing')
 t=t.replace(marker,entry+marker,1);p.write_text(t)
 repl('tests/run-all.sh',"CURRENT_VERSION='1.2.12-rc1'","CURRENT_VERSION='1.2.13-rc1'",1)
-repl('tests/static-contracts.sh','1.2.12-rc1','1.2.13-rc1',2)
+# tests/static-contracts.sh intentionally derives the current version from the plugin entrypoint.
 
 # Manifest/status truth.
 p=ROOT/'MANIFEST.md'; t=p.read_text(); t=t.replace(OLD,NEW)
