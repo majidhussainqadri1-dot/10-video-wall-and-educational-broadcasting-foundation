@@ -15,5 +15,13 @@ if n!=1: raise SystemExit('caption patch block not found')
 pod=re.compile(r"rep\(pod,\"return array\('id'=>\$id,'public_id'=>\$public,'slug'=>\$slug,'status'=>'draft','version'=>1\);\",\"return array\('public_id'=>\$public,'slug'=>\$slug,'status'=>'draft','version'=>1\);\"\)\nrep\(pod,\"return array\('id'=>\$id,'public_id'=>\$public,'slug'=>\$slug,'status'=>'draft','version'=>1\);\",\"return array\('public_id'=>\$public,'slug'=>\$slug,'status'=>'draft','version'=>1\);\"\)")
 text,n=pod.subn("replace_all(pod,\"return array('id'=>$id,'public_id'=>$public,'slug'=>$slug,'status'=>'draft','version'=>1);\",\"return array('public_id'=>$public,'slug'=>$slug,'status'=>'draft','version'=>1);\",2)",text,count=1)
 if n!=1: raise SystemExit('podcast duplicate-return patch block not found')
+old="""rep('video-wall-and-live-broadcasting/includes/class-vwlb-extensions.php',
+"($body['target_id']??0)",
+"($body['target_public_id']??'')")"""
+new="""rep('video-wall-and-live-broadcasting/includes/class-vwlb-extensions.php',
+"$body['target_id']??0",
+"$body['target_public_id']??''")"""
+if old not in text: raise SystemExit('extensions metric matcher block not found')
+text=text.replace(old,new,1)
 p.write_text(text)
 print('R102 patch script repaired')
