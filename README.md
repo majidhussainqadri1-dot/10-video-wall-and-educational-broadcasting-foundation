@@ -4,7 +4,7 @@ Canonical source repository for **Sabri Social Homeopathy Platform File 10**.
 
 ## Current reviewed candidate
 
-- Runtime: `1.2.11-rc1`
+- Runtime: `1.2.12-rc1`
 - Plugin folder: `video-wall-and-live-broadcasting`
 - Base schema: `1.1.0`
 - Extension schema: `1.1.0`
@@ -18,13 +18,11 @@ File 10 is the canonical owner of recorded video, channels/playlists, media inge
 
 ## Current review boundary
 
-The sequential **R81–R100** corrective-review cycle is complete at repository source-review level. Every round followed the required order: **full review → findings freeze → correction of that round's proven defects → full regression/retest → next round**.
+The sequential **R101–R120** corrective-review cycle is in progress under the mandatory order: **full read-only review → findings freeze → correction of that round's proven defects → full regression/retest → next round**.
 
-First ten defect-bearing rounds (`R81–R90`): **R81, R84, R85, R86**.
+R101 found a reload-safety completeness gap in the Future production studio: mutations existed for production sources, scenes, guests, live policy and simulcast targets, but the canonical REST/UI surface could not reconstruct that persisted state after reload. The R101 correction adds owner-scoped production-state retrieval, opaque public-ID projection, fail-closed DB verification, private/no-store response handling and progressive studio-state rendering.
 
-Defect-bearing rounds (`R81–R100`): **R81, R84, R85, R86, R91, R94, R97, R100**. Clean rounds: **R82, R83, R87, R88, R89, R90, R92, R93, R95, R96, R98, R99**.
-
-R100 closes release-identity and traceability drift after material R81–R99 source corrections by assigning the fresh immutable `1.2.11-rc1` candidate identity, synchronizing runtime/workflow/builder/tests/docs/SBOM metadata and retaining `1.2.10-rc1` as historical R61–R80 evidence.
+`1.2.11-rc1` remains the historical R81–R100 candidate. `1.2.12-rc1` is the current R101 correction candidate and must not be treated as Automated-QA Green until exact-head PHP 8.3/8.4 release QA, deterministic packaging, checksum/archive verification and package/source parity all pass.
 
 ## Completion boundary
 
