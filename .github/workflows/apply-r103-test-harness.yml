@@ -1,0 +1,25 @@
+name: Apply R103 historical test-harness rebase
+on:
+  push:
+    branches: ['fix/file10-r101-r120-sequential-2026-09-06']
+permissions:
+  contents: write
+jobs:
+  apply:
+    if: github.event.head_commit.message == 'Run R103 test-harness rebase'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/file10-r101-r120-sequential-2026-09-06
+          fetch-depth: 0
+      - name: Rebase stale historical assertion
+        run: python3 tools/fix-r103-test-harness.py
+      - name: Commit test-harness correction
+        run: |
+          git config user.name 'Sabri File 10 Review Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git rm -f tools/fix-r103-test-harness.py review-patches/r103-harness.run
+          git add tests/run-all.sh
+          git commit -m 'R103 retest: rebase historical R59 status assertion'
+          git push origin HEAD:fix/file10-r101-r120-sequential-2026-09-06
