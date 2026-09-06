@@ -1,0 +1,26 @@
+{
+  "bomFormat": "Sabri-Public-SBOM",
+  "specVersion": "1.0",
+  "component": {
+    "name": "video-wall-and-live-broadcasting",
+    "version": "1.2.14-rc1",
+    "type": "wordpress-plugin"
+  },
+  "runtime": {
+    "wordpress": ">=7.0",
+    "php": ">=8.3"
+  },
+  "schemas": {
+    "base": "1.1.0",
+    "extension": "1.1.0",
+    "future": "1.2.0"
+  },
+  "bundledThirdPartyRuntimeLibraries": [],
+  "externalServiceAdapters": [
+    "local",
+    "youtube",
+    "vimeo",
+    "custom"
+  ],
+  "notes": "R103 correction candidate: strict schema column/index verification; complete checkpointed legacy migration; opaque non-REST public IDs; podcast DTO and Video Wall thumbnail public-projection repairs. Repository/package QA remains distinct from staging, live deployment and operational acceptance."
+}

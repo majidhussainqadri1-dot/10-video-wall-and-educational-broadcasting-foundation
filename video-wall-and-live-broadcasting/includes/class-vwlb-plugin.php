@@ -42,12 +42,12 @@ final class VWLB_Plugin {
 	public function cron_schedules($s){$s['vwlb_five_minutes']=array('interval'=>300,'display'=>__('Every five minutes',VWLB_TEXT_DOMAIN));return $s;}
 	public function rewrite(){
 		add_rewrite_rule('^videos/?$','index.php?vwlb_route=wall','top');
-		add_rewrite_rule('^video/([A-Za-z0-9_-]+)/([^/]+)/?$','index.php?vwlb_video_id=$matches[1]','top');
-		add_rewrite_rule('^live/([A-Za-z0-9_-]+)/?$','index.php?vwlb_live_id=$matches[1]','top');
+		add_rewrite_rule('^video/([a-z][a-z0-9]*_[a-z0-9]+)/([^/]+)/?$','index.php?vwlb_video_id=$matches[1]','top');
+		add_rewrite_rule('^live/([a-z][a-z0-9]*_[a-z0-9]+)/?$','index.php?vwlb_live_id=$matches[1]','top');
 		add_rewrite_rule('^channel/([A-Za-z0-9_-]+)/?$','index.php?vwlb_channel_slug=$matches[1]','top');
 		add_rewrite_rule('^studio/video/?$','index.php?vwlb_route=studio_video','top');
 		add_rewrite_rule('^studio/live/?$','index.php?vwlb_route=studio_live','top');
-		add_rewrite_rule('^podcast/([A-Za-z0-9_-]+)/?$','index.php?vwlb_podcast_id=$matches[1]','top');
+		add_rewrite_rule('^podcast/([a-z][a-z0-9]*_[a-z0-9]+)/?$','index.php?vwlb_podcast_id=$matches[1]','top');
 	}
 	public function query_vars($vars){foreach(array('vwlb_video_id','vwlb_live_id','vwlb_channel_slug','vwlb_podcast_id','vwlb_route') as $v)$vars[]=$v;return $vars;}
 	public function serve_raw_caption($served,$result,$request,$server){
@@ -59,10 +59,10 @@ final class VWLB_Plugin {
 	private function unavailable_route_error(){return VWLB_Helpers::error('vwlb_frontend_state_unreadable',__('The requested media page could not be verified because its database state is temporarily unavailable.',VWLB_TEXT_DOMAIN),503);}
 	private function route_visible(){
 		VWLB_Repository::reset_read_failure();
-		if($id=get_query_var('vwlb_video_id')){$row=VWLB_Repository::find('videos',$id);if(VWLB_Repository::read_failed())return $this->unavailable_route_error();return $row&&VWLB_Security::can_view($row);}
-		if($id=get_query_var('vwlb_live_id')){$row=VWLB_Repository::find('live_events',$id);if(VWLB_Repository::read_failed())return $this->unavailable_route_error();return $row&&VWLB_Security::can_view($row);}
+		if($id=get_query_var('vwlb_video_id')){if(!VWLB_Helpers::is_public_id((string)$id))return false;$row=VWLB_Repository::find('videos',$id);if(VWLB_Repository::read_failed())return $this->unavailable_route_error();return $row&&VWLB_Security::can_view($row);}
+		if($id=get_query_var('vwlb_live_id')){if(!VWLB_Helpers::is_public_id((string)$id))return false;$row=VWLB_Repository::find('live_events',$id);if(VWLB_Repository::read_failed())return $this->unavailable_route_error();return $row&&VWLB_Security::can_view($row);}
 		if($slug=get_query_var('vwlb_channel_slug')){global $wpdb;$wpdb->last_error='';$row=$wpdb->get_row($wpdb->prepare('SELECT * FROM '.VWLB_Helpers::table('channels').' WHERE slug=%s LIMIT 1',VWLB_Helpers::text($slug,191)),ARRAY_A);if(''!==(string)$wpdb->last_error)return $this->unavailable_route_error();return $row&&'active'===($row['status']??'')&&('public'===($row['visibility']??'')||VWLB_Security::can(VWLB_Contracts::CAP_PUBLISH,$row,'channel_route'));}
-		if($id=get_query_var('vwlb_podcast_id')){$dto=VWLB_Podcasts::public_episode_dto($id);if(VWLB_Repository::read_failed())return $this->unavailable_route_error();return (bool)$dto;}
+		if($id=get_query_var('vwlb_podcast_id')){if(!VWLB_Helpers::is_public_id((string)$id))return false;$dto=VWLB_Podcasts::public_episode_dto($id);if(VWLB_Repository::read_failed())return $this->unavailable_route_error();return (bool)$dto;}
 		return true;
 	}
 	public function route_template($template){if(get_query_var('vwlb_video_id')||get_query_var('vwlb_live_id')||get_query_var('vwlb_channel_slug')||get_query_var('vwlb_podcast_id')||get_query_var('vwlb_route')){$visible=$this->route_visible();if(is_wp_error($visible)){status_header(503);nocache_headers();$GLOBALS['vwlb_route_unavailable']=true;do_action('vwlb_operational_failure','frontend','vwlb_frontend_route_read_failed',array('route_hash'=>hash('sha256',(string)($_SERVER['REQUEST_URI']??''))));}elseif(!$visible){status_header(404);nocache_headers();}else{status_header(200);}return VWLB_DIR.'templates/route.php';}return $template;}

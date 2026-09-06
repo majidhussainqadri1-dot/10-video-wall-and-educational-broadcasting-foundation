@@ -35,4 +35,22 @@ grep -F "target_public_id" "$P/includes/class-vwlb-moderation.php" >/dev/null
 grep -F "public_id'=>\$public,'status'=>\$status,'version'=>\$version" "$P/includes/class-vwlb-videos.php" >/dev/null
 grep -F "\$internal=\$video?(int)\$video['id']:0" "$P/includes/class-vwlb-rest.php" >/dev/null
 
+
+# R103 — schema/migration completeness and non-REST public opaque-ID boundary.
+grep -F 'SHOW COLUMNS FROM' "$P/includes/class-vwlb-db.php" >/dev/null
+grep -F 'SHOW INDEX FROM' "$P/includes/class-vwlb-db.php" >/dev/null
+grep -F 'vwlb_schema_column_missing' "$P/includes/class-vwlb-db.php" >/dev/null
+grep -F 'vwlb_schema_index_missing' "$P/includes/class-vwlb-db.php" >/dev/null
+grep -F 'vwlb_legacy_migration_cursor' "$P/includes/class-vwlb-compatibility.php" >/dev/null
+grep -F 'WHERE id>%d ORDER BY id ASC LIMIT 500' "$P/includes/class-vwlb-compatibility.php" >/dev/null
+! grep -F 'ORDER BY id ASC LIMIT 10000' "$P/includes/class-vwlb-compatibility.php" >/dev/null
+grep -F '^video/([a-z][a-z0-9]*_[a-z0-9]+)/([^/]+)/?$' "$P/includes/class-vwlb-plugin.php" >/dev/null
+grep -F '^live/([a-z][a-z0-9]*_[a-z0-9]+)/?$' "$P/includes/class-vwlb-plugin.php" >/dev/null
+grep -F '^podcast/([a-z][a-z0-9]*_[a-z0-9]+)/?$' "$P/includes/class-vwlb-plugin.php" >/dev/null
+grep -F "is_public_id((string)\$id)" "$P/includes/class-vwlb-plugin.php" >/dev/null
+grep -F "is_public_id((string)\$id)" "$P/includes/class-vwlb-frontend.php" >/dev/null
+grep -F 'global $wpdb;if(!VWLB_Helpers::is_public_id' "$P/includes/class-vwlb-podcasts.php" >/dev/null
+grep -F "item['thumbnail_url']" "$P/includes/class-vwlb-frontend.php" >/dev/null
+! grep -F "item['thumbnail_id']" "$P/includes/class-vwlb-frontend.php" >/dev/null
+
 echo 'R101-R120 contracts PASS'

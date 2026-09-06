@@ -92,7 +92,7 @@ final class VWLB_Podcasts {
 	}
 
 	public static function public_episode_dto($id){
-		$ep=self::episode($id,false);if(!$ep)return null;$asset=VWLB_Repository::find('media_assets',$ep['asset_id']);$der=VWLB_Helpers::json($asset['derivatives_json']??'{}');
+		global $wpdb;if(!VWLB_Helpers::is_public_id((string)$id))return null;$ep=self::episode($id,false);if(!$ep)return null;$asset=VWLB_Repository::find('media_assets',$ep['asset_id']);$der=VWLB_Helpers::json($asset['derivatives_json']??'{}');
 		$series_public='';if(!empty($ep['series_id']))$series_public=(string)$wpdb->get_var($wpdb->prepare('SELECT public_id FROM '.VWLB_Helpers::table('podcast_series').' WHERE id=%d LIMIT 1',(int)$ep['series_id']));
 		return array(
 			'id'=>$ep['public_id'],'series_public_id'=>$series_public,'title'=>$ep['title'],'slug'=>$ep['slug'],

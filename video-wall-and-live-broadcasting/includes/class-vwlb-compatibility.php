@@ -8,25 +8,24 @@ final class VWLB_Compatibility {
 		$wpdb->last_error='';$exists=$wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s',$legacy));
 		if(''!==(string)$wpdb->last_error)return VWLB_Helpers::error('vwlb_legacy_probe_failed',__('Legacy migration source state could not be verified safely.',VWLB_TEXT_DOMAIN),503);
 		if($exists===$legacy){
-			$snapshot=VWLB_DB::snapshot('legacy_options',array('svw_page_map'=>get_option('svw_page_map'),'svw_version'=>get_option('svw_version')));if(is_wp_error($snapshot))return $snapshot;
-			$result=VWLB_DB::transaction(function()use($wpdb,$legacy){
-				$wpdb->last_error='';$rows=$wpdb->get_results("SELECT * FROM $legacy ORDER BY id ASC LIMIT 10000",ARRAY_A);
-				if(''!==(string)$wpdb->last_error)return VWLB_Helpers::error('vwlb_legacy_read_failed',__('Legacy videos could not be read safely.',VWLB_TEXT_DOMAIN),500);
-				foreach((array)$rows as $row){
-					$wpdb->last_error='';$already=$wpdb->get_var($wpdb->prepare('SELECT id FROM '.VWLB_Helpers::table('videos').' WHERE source_url=%s AND title=%s LIMIT 1',$row['video_url']??'',$row['title']??''));
-					if(''!==(string)$wpdb->last_error)return VWLB_Helpers::error('vwlb_legacy_dedupe_read_failed',__('Legacy video deduplication state could not be verified safely.',VWLB_TEXT_DOMAIN),503);
-					if($already)continue;
-					$public=VWLB_Helpers::public_id('vid');
-					$saved=$wpdb->insert(VWLB_Helpers::table('videos'),array('public_id'=>$public,'owner_id'=>absint($row['author_id']??0),'title'=>VWLB_Helpers::text($row['title']??__('Legacy video',VWLB_TEXT_DOMAIN)),'slug'=>sanitize_title(($row['title']??'legacy-video').'-'.substr($public,-6)),'description'=>VWLB_Helpers::textarea($row['description']??''),'provider'=>VWLB_Helpers::enum($row['provider']??'local',array('local','youtube','vimeo'),'local'),'source_url'=>esc_url_raw($row['video_url']??''),'visibility'=>'public','status'=>('publish'===($row['status']??''))?'published':'review','published_at'=>!empty($row['published_at'])?$row['published_at']:null,'rights_status'=>'declared','consent_status'=>'not_patient_case','created_at'=>$row['created_at']??VWLB_Helpers::now(),'updated_at'=>VWLB_Helpers::now()));
-					if(!$saved||!(int)$wpdb->insert_id)return VWLB_Helpers::error('vwlb_legacy_insert_failed',__('A legacy video could not be migrated safely.',VWLB_TEXT_DOMAIN),500);
-				}
-				return true;
-			});
-			if(is_wp_error($result))return $result;
-		}
-		$stamp=VWLB_Helpers::now();$saved=update_option('vwlb_legacy_migration_complete',$stamp,false);
-		if(!$saved&&get_option('vwlb_legacy_migration_complete')!==$stamp)return VWLB_Helpers::error('vwlb_legacy_marker_failed',__('Legacy migration completion could not be recorded durably.',VWLB_TEXT_DOMAIN),500);
-		return true;
+			$cursor=absint(get_option('vwlb_legacy_migration_cursor',0));
+			if(0===$cursor){$snapshot=VWLB_DB::snapshot('legacy_options',array('svw_page_map'=>get_option('svw_page_map'),'svw_version'=>get_option('svw_version')));if(is_wp_error($snapshot))return $snapshot;}
+			for(;;){
+				$result=VWLB_DB::transaction(function()use($wpdb,$legacy,$cursor){
+					$wpdb->last_error='';$rows=$wpdb->get_results($wpdb->prepare("SELECT * FROM $legacy WHERE id>%d ORDER BY id ASC LIMIT 500",$cursor),ARRAY_A);
+					if(''!==(string)$wpdb->last_error)return VWLB_Helpers::error('vwlb_legacy_read_failed',__('Legacy videos could not be read safely.',VWLB_TEXT_DOMAIN),500);
+					$last=$cursor;foreach((array)$rows as $row){$source_id=absint($row['id']??0);if($source_id<=$last)return VWLB_Helpers::error('vwlb_legacy_cursor_invalid',__('Legacy migration source order could not be verified safely.',VWLB_TEXT_DOMAIN),500);$last=$source_id;
+						$wpdb->last_error='';$already=$wpdb->get_var($wpdb->prepare('SELECT id FROM '.VWLB_Helpers::table('videos').' WHERE source_url=%s AND title=%s LIMIT 1',$row['video_url']??'',$row['title']??''));
+						if(''!==(string)$wpdb->last_error)return VWLB_Helpers::error('vwlb_legacy_dedupe_read_failed',__('Legacy video deduplication state could not be verified safely.',VWLB_TEXT_DOMAIN),503);if($already)continue;
+						$public=VWLB_Helpers::public_id('vid');$saved=$wpdb->insert(VWLB_Helpers::table('videos'),array('public_id'=>$public,'owner_id'=>absint($row['author_id']??0),'title'=>VWLB_Helpers::text($row['title']??__('Legacy video',VWLB_TEXT_DOMAIN)),'slug'=>sanitize_title(($row['title']??'legacy-video').'-'.substr($public,-6)),'description'=>VWLB_Helpers::textarea($row['description']??''),'provider'=>VWLB_Helpers::enum($row['provider']??'local',array('local','youtube','vimeo'),'local'),'source_url'=>esc_url_raw($row['video_url']??''),'visibility'=>'public','status'=>('publish'===($row['status']??''))?'published':'review','published_at'=>!empty($row['published_at'])?$row['published_at']:null,'rights_status'=>'declared','consent_status'=>'not_patient_case','created_at'=>$row['created_at']??VWLB_Helpers::now(),'updated_at'=>VWLB_Helpers::now()));
+						if(!$saved||!(int)$wpdb->insert_id)return VWLB_Helpers::error('vwlb_legacy_insert_failed',__('A legacy video could not be migrated safely.',VWLB_TEXT_DOMAIN),500);
+					}
+					return array('last_id'=>$last,'count'=>count((array)$rows));
+				});
+				if(is_wp_error($result))return $result;if(0===(int)$result['count'])break;$cursor=(int)$result['last_id'];$saved=update_option('vwlb_legacy_migration_cursor',$cursor,false);if(!$saved&&(int)get_option('vwlb_legacy_migration_cursor',0)!==$cursor)return VWLB_Helpers::error('vwlb_legacy_cursor_persist_failed',__('Legacy migration checkpoint could not be recorded durably.',VWLB_TEXT_DOMAIN),500);
+			}
+		}else{delete_option('vwlb_legacy_migration_cursor');}
+		delete_option('vwlb_legacy_migration_cursor');$stamp=VWLB_Helpers::now();$saved=update_option('vwlb_legacy_migration_complete',$stamp,false);if(!$saved&&get_option('vwlb_legacy_migration_complete')!==$stamp)return VWLB_Helpers::error('vwlb_legacy_marker_failed',__('Legacy migration completion could not be recorded durably.',VWLB_TEXT_DOMAIN),500);return true;
 	}
 	public static function legacy_notice(){if(current_user_can(VWLB_Contracts::CAP_MANAGE)&&defined('SVW_VERSION'))echo '<div class="notice notice-warning"><p>'.esc_html__('The legacy Video Wall plugin is active. Deactivate it after File 10 migration and staging verification to prevent duplicate routes.',VWLB_TEXT_DOMAIN).'</p></div>';}
 }

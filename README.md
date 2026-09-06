@@ -4,7 +4,7 @@ Canonical source repository for **Sabri Social Homeopathy Platform File 10**.
 
 ## Current reviewed candidate
 
-- Runtime: `1.2.13-rc1`
+- Runtime: `1.2.14-rc1`
 - Plugin folder: `video-wall-and-live-broadcasting`
 - Base schema: `1.1.0`
 - Extension schema: `1.1.0`
@@ -22,9 +22,11 @@ The sequential **R101–R120** corrective-review cycle is in progress under the 
 
 R101 found a reload-safety completeness gap in the Future production studio. Its correction added owner-scoped production-state retrieval, opaque public-ID projection, fail-closed DB verification, private/no-store handling and progressive studio-state rendering. Exact-head File 10 Release QA run `34045547009` was green on PHP 8.3/8.4 at `03f9e29e65eac7421f70ea7e01845f4e0e8d46a4` before R102 began.
 
-R102 found that several public route/body boundaries still admitted native numeric identifiers, some caption/podcast responses leaked native IDs, and playback enrichment attempted to use an internal ID after public DTO redaction. The R102 correction requires prefixed opaque public IDs at public boundaries, resolves public foreign references internally, rejects raw/native ID fields, removes the identified DTO leakage and re-resolves the authorized playback object internally before chapter/track enrichment.
+R102 found that several public route/body boundaries still admitted native numeric identifiers, some caption/podcast responses leaked native IDs, and playback enrichment attempted to use an internal ID after public DTO redaction. The R102 correction requires prefixed opaque public IDs at public boundaries, resolves public foreign references internally, rejects raw/native ID fields, removes the identified DTO leakage and re-resolves the authorized playback object internally before chapter/track enrichment. Exact-head File 10 Release QA run `34064117765` was green on PHP 8.3/8.4 at `895c2d66a35a7b9430379a8eff8bc65aaf2d340c` before R103 began.
 
-`1.2.11-rc1` remains the historical R81–R100 candidate. `1.2.12-rc1` is the historical R101 correction candidate. `1.2.13-rc1` is the current R102 correction candidate and must not be treated as Automated-QA Green until its exact-head PHP 8.3/8.4 release QA, deterministic packaging, checksum/archive verification and package/source parity all pass.
+R103 found incomplete schema-proofing (table existence without required column/index proof), a one-page 10,000-row legacy migration ceiling, non-REST numeric-ID public entry paths, a podcast public DTO database-handle failure and a Video Wall thumbnail DTO/template mismatch. The `1.2.14-rc1` correction candidate closes those five frozen findings; exact-head QA is required before R104 begins.
+
+`1.2.11-rc1` remains the historical R81–R100 candidate. `1.2.12-rc1` is the historical R101 correction candidate. `1.2.13-rc1` is the exact-head-green R102 correction candidate. `1.2.14-rc1` is the current R103 correction candidate and must not be treated as Automated-QA Green until its exact-head PHP 8.3/8.4 release QA, deterministic packaging, checksum/archive verification and package/source parity all pass.
 
 ## Completion boundary
 
