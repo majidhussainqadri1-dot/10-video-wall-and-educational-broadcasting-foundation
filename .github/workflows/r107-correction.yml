@@ -14,7 +14,18 @@ jobs:
         with:
           ref: ${{ github.ref_name }}
       - name: Apply frozen R107 corrections
-        run: python3 tools/r107-apply.py
+        run: |
+          python3 tools/r107-apply.py
+          python3 <<'PY'
+          from pathlib import Path
+          p=Path('tests/file10-r101-r120-contracts.sh')
+          t=p.read_text()
+          t=t.replace('str_ends_with( $key,', 'str_ends_with( \\$key,')
+          t=t.replace('VWLB_Helpers::contains_raw_secret($safe)', 'VWLB_Helpers::contains_raw_secret(\\$safe)')
+          t=t.replace('contains_raw_secret( $value );', 'contains_raw_secret( \\$value );')
+          t=t.replace('$payload[\'video\'][\'id\']', '\\$payload[\'video\'][\'id\']')
+          p.write_text(t)
+          PY
       - name: Validate correction batch
         run: |
           php -l video-wall-and-live-broadcasting/includes/class-vwlb-helpers.php
