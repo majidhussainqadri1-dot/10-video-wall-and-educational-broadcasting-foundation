@@ -1,0 +1,36 @@
+name: R107 correction batch
+on:
+  push:
+    branches:
+      - fix/file10-r101-r120-sequential-2026-09-06
+permissions:
+  contents: write
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+      - name: Apply frozen R107 corrections
+        run: python3 tools/r107-apply.py
+      - name: Validate correction batch
+        run: |
+          php -l video-wall-and-live-broadcasting/includes/class-vwlb-helpers.php
+          php -l video-wall-and-live-broadcasting/includes/class-vwlb-future-adapters.php
+          php -l video-wall-and-live-broadcasting/includes/class-vwlb-sequential-review-hardening.php
+          php -l video-wall-and-live-broadcasting/includes/class-vwlb-future-safety.php
+          php -l video-wall-and-live-broadcasting/includes/class-vwlb-future-intelligence.php
+          php -l video-wall-and-live-broadcasting/includes/class-vwlb-live.php
+          php -l video-wall-and-live-broadcasting/includes/class-vwlb-r46-stream-credential-durability.php
+          php -l video-wall-and-live-broadcasting/includes/class-vwlb-observability.php
+          php -l video-wall-and-live-broadcasting/includes/class-vwlb-future-rest.php
+          bash tests/file10-r101-r120-contracts.sh
+      - name: Commit correction batch
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add video-wall-and-live-broadcasting/includes/class-vwlb-helpers.php video-wall-and-live-broadcasting/includes/class-vwlb-future-adapters.php video-wall-and-live-broadcasting/includes/class-vwlb-sequential-review-hardening.php video-wall-and-live-broadcasting/includes/class-vwlb-future-safety.php video-wall-and-live-broadcasting/includes/class-vwlb-future-intelligence.php video-wall-and-live-broadcasting/includes/class-vwlb-live.php video-wall-and-live-broadcasting/includes/class-vwlb-r46-stream-credential-durability.php video-wall-and-live-broadcasting/includes/class-vwlb-observability.php video-wall-and-live-broadcasting/includes/class-vwlb-future-rest.php tests/file10-r101-r120-contracts.sh
+          git commit -m 'File 10 R107: harden provider secrets and readiness boundaries'
+          git push origin HEAD:fix/file10-r101-r120-sequential-2026-09-06
