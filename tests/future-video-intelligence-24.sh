@@ -5,6 +5,7 @@ P="$ROOT/video-wall-and-live-broadcasting"
 F="$P/includes/class-vwlb-future-intelligence.php"
 A="$P/includes/class-vwlb-future-adapters.php"
 R="$P/includes/class-vwlb-future-rest.php"
+R109="$P/includes/class-vwlb-r109-rights-consent-replay-guard.php"
 fail(){ echo "FAIL future-24: $*" >&2; exit 1; }
 need(){ grep -R -F -- "$1" "$2" >/dev/null || fail "$3"; }
 
@@ -70,7 +71,9 @@ need "/live-polls/(?P<id>[a-z][a-z0-9]*_[a-z0-9]+)/answers" "$R" poll-answer-end
 need "consent_links" "$F" consent-links
 need "consent_auto_restrict" "$F" consent-auto-restrict
 need "vwlb_purge_media_derivative_caches" "$F" consent-cache-purge
-need "reconcile_consent_expiry" "$F" consent-expiry-job
+need "reconcile_consent_expiry" "$R109" consent-expiry-job
+need "CONSENT_CURSOR_OPTION='vwlb_r109_consent_expiry_cursor'" "$R109" consent-expiry-cursor
+need "vwlb_consent_expiry_read_failed" "$R109" consent-expiry-read-failclosed
 
 # 23: optional rights protection with explicit honesty guardrail.
 need "watermark_policies" "$F" watermark-policy

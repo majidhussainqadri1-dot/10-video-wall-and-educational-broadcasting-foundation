@@ -154,6 +154,8 @@ grep -F "id>%d ORDER BY id ASC LIMIT %d" "$P/includes/class-vwlb-r109-rights-con
 grep -F "vwlb_consent_expiry_read_failed" "$P/includes/class-vwlb-r109-rights-consent-replay-guard.php" >/dev/null
 grep -F "remove_action('vwlb_reconcile_states',array('VWLB_Future_Safety','reconcile_consent_expiry'),20)" "$P/includes/class-vwlb-r109-rights-consent-replay-guard.php" >/dev/null
 grep -F "assert_consent_transition($current,$status)" "$P/includes/class-vwlb-future-intelligence.php" >/dev/null
+grep -F "private static function restrict_video_for_consent" "$P/includes/class-vwlb-future-intelligence.php" >/dev/null
+grep -F "consent_auto_restrict" "$P/includes/class-vwlb-future-intelligence.php" >/dev/null
 grep -F "record_consent_change($locked,$id,$before,$status,$ref)" "$P/includes/class-vwlb-future-intelligence.php" >/dev/null
 grep -F "assert_replay($event,$video)" "$P/includes/class-vwlb-live.php" >/dev/null
 grep -F "vwlb_replay_not_authorized" "$P/includes/class-vwlb-r109-rights-consent-replay-guard.php" >/dev/null
