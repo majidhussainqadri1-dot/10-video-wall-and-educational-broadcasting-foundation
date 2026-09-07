@@ -1,0 +1,73 @@
+name: File 10 R109 Regression Repair
+
+on:
+  push:
+    branches:
+      - fix/file10-r101-r120-sequential-2026-09-06
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    if: github.event.head_commit.message == 'R109 regression repair runner'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/file10-r101-r120-sequential-2026-09-06
+          fetch-depth: 0
+      - name: Repair R109 correction regression
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          p = Path('video-wall-and-live-broadcasting/includes/class-vwlb-future-intelligence.php')
+          t = p.read_text()
+          marker = "\n\t/** F10-FUT-023 — optional session-aware forensic watermark payload; no false anti-piracy guarantee. */"
+          helper = """
+
+\tprivate static function restrict_video_for_consent( $video, $reason ) {
+\t\tif(in_array($video['status'],array('removed','restricted'),true))return false;
+\t\t$updated=VWLB_Repository::update_versioned('videos',$video['id'],$video['version'],array('status'=>'restricted'));
+\t\tif(is_wp_error($updated))return $updated;
+\t\tVWLB_Helpers::audit('video',$video['id'],'consent_auto_restrict',$video['status'],'restricted',$reason);
+\t\tVWLB_Helpers::outbox('VideoRestricted','video',$video['id'],array('reason'=>'consent_'.$reason));
+\t\treturn true;
+\t}
+"""
+          if 'private static function restrict_video_for_consent' in t:
+              raise SystemExit('restrict_video_for_consent already exists; refusing duplicate repair')
+          if marker not in t:
+              raise SystemExit('F10-FUT-023 insertion marker missing')
+          p.write_text(t.replace(marker, helper + marker, 1))
+
+          p = Path('tests/future-video-intelligence-24.sh')
+          t = p.read_text()
+          t = t.replace('R="$P/includes/class-vwlb-future-rest.php"\n', 'R="$P/includes/class-vwlb-future-rest.php"\nR109="$P/includes/class-vwlb-r109-rights-consent-replay-guard.php"\n', 1)
+          old = '''need "reconcile_consent_expiry" "$F" consent-expiry-job\n'''
+          new = '''need "reconcile_consent_expiry" "$R109" consent-expiry-job\nneed "CONSENT_CURSOR_OPTION='vwlb_r109_consent_expiry_cursor'" "$R109" consent-expiry-cursor\nneed "vwlb_consent_expiry_read_failed" "$R109" consent-expiry-read-failclosed\n'''
+          if old not in t:
+              raise SystemExit('historical consent reconciliation assertion not found')
+          p.write_text(t.replace(old, new, 1))
+
+          p = Path('tests/file10-r101-r120-contracts.sh')
+          t = p.read_text()
+          anchor = 'grep -F "assert_consent_transition($current,$status)" "$P/includes/class-vwlb-future-intelligence.php" >/dev/null\n'
+          extra = anchor + 'grep -F "private static function restrict_video_for_consent" "$P/includes/class-vwlb-future-intelligence.php" >/dev/null\n' + 'grep -F "consent_auto_restrict" "$P/includes/class-vwlb-future-intelligence.php" >/dev/null\n'
+          if anchor not in t:
+              raise SystemExit('R109 contract insertion anchor missing')
+          p.write_text(t.replace(anchor, extra, 1))
+          PY
+      - name: Validate repair scope
+        run: |
+          git diff --check
+          grep -F "private static function restrict_video_for_consent" video-wall-and-live-broadcasting/includes/class-vwlb-future-intelligence.php
+          grep -F "reconcile_consent_expiry" tests/future-video-intelligence-24.sh
+      - name: Commit repair
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add video-wall-and-live-broadcasting/includes/class-vwlb-future-intelligence.php tests/future-video-intelligence-24.sh tests/file10-r101-r120-contracts.sh
+          git commit -m 'Repair R109 consent restriction regression'
+          git push origin HEAD:fix/file10-r101-r120-sequential-2026-09-06
