@@ -35,7 +35,6 @@ grep -F "target_public_id" "$P/includes/class-vwlb-moderation.php" >/dev/null
 grep -F "public_id'=>\$public,'status'=>\$status,'version'=>\$version" "$P/includes/class-vwlb-videos.php" >/dev/null
 grep -F "\$internal=\$video?(int)\$video['id']:0" "$P/includes/class-vwlb-rest.php" >/dev/null
 
-
 # R103 — schema/migration completeness and non-REST public opaque-ID boundary.
 grep -F 'SHOW COLUMNS FROM' "$P/includes/class-vwlb-db.php" >/dev/null
 grep -F 'SHOW INDEX FROM' "$P/includes/class-vwlb-db.php" >/dev/null
@@ -52,7 +51,6 @@ grep -F "is_public_id((string)\$id)" "$P/includes/class-vwlb-frontend.php" >/dev
 grep -F 'global $wpdb;if(!VWLB_Helpers::is_public_id' "$P/includes/class-vwlb-podcasts.php" >/dev/null
 grep -F "item['thumbnail_url']" "$P/includes/class-vwlb-frontend.php" >/dev/null
 ! grep -F "item['thumbnail_id']" "$P/includes/class-vwlb-frontend.php" >/dev/null
-
 
 # R104 — public/read truth, cache privacy and podcast unlisted authorization.
 grep -F "public static function read_results" "$P/includes/class-vwlb-db.php" >/dev/null
@@ -71,5 +69,25 @@ grep -F "can_view(\$series,'podcast_feed')" "$P/includes/class-vwlb-r78-public-d
 grep -F "can_view(\$ep,'podcast_feed')" "$P/includes/class-vwlb-r78-public-delivery-guard.php" >/dev/null
 grep -F "can_view(\$series,'podcast_feed')" "$P/includes/class-vwlb-podcasts.php" >/dev/null
 grep -F "can_view(\$ep,'podcast_feed')" "$P/includes/class-vwlb-podcasts.php" >/dev/null
+
+# R105 — privacy export/erasure propagation and scoped legal-hold enforcement.
+grep -F "class VWLB_R105_Privacy_Lifecycle" "$P/includes/class-vwlb-r105-privacy-lifecycle.php" >/dev/null
+grep -F "VWLB_R105_Privacy_Lifecycle::register()" "$P/video-wall-and-live-broadcasting.php" >/dev/null
+grep -F "vwlb-attribution" "$P/includes/class-vwlb-r105-privacy-lifecycle.php" >/dev/null
+for token in moderation takedowns captions production_sources production_scenes simulcast_targets media_tracks video_annotations live_polls consent_links watermark_policies stream_credentials creator_metrics_daily audit; do
+  grep -F "array('$token'" "$P/includes/class-vwlb-r105-privacy-lifecycle.php" >/dev/null || { echo "R105 exporter coverage missing: $token" >&2; exit 1; }
+done
+grep -F "vwlb_privacy_legal_hold_decision" "$P/includes/class-vwlb-r105-privacy-lifecycle.php" >/dev/null
+grep -F "lawful_basis" "$P/includes/class-vwlb-r105-privacy-lifecycle.php" >/dev/null
+grep -F "reference_hash" "$P/includes/class-vwlb-r105-privacy-lifecycle.php" >/dev/null
+grep -F "expires_at" "$P/includes/class-vwlb-r105-privacy-lifecycle.php" >/dev/null
+grep -F "process_canonical" "$P/includes/class-vwlb-r105-privacy-lifecycle.php" >/dev/null
+grep -F "process_fallback" "$P/includes/class-vwlb-r105-privacy-lifecycle.php" >/dev/null
+grep -F "decrypt_evidence_fallback" "$P/includes/class-vwlb-r105-privacy-lifecycle.php" >/dev/null
+grep -F "encrypt_evidence_fallback" "$P/includes/class-vwlb-r105-privacy-lifecycle.php" >/dev/null
+grep -F "VWLB_R97_Privacy_Storage_Erasure_Guard::erase" "$P/includes/class-vwlb-r105-privacy-lifecycle.php" >/dev/null
+grep -F "base_retained" "$P/includes/class-vwlb-r105-privacy-lifecycle.php" >/dev/null
+grep -F "held=false" "$P/includes/class-vwlb-r105-privacy-lifecycle.php" >/dev/null
+! grep -F "credential_hash'" "$P/includes/class-vwlb-r105-privacy-lifecycle.php" | grep -F "SELECT" >/dev/null
 
 echo 'R101-R120 contracts PASS'
