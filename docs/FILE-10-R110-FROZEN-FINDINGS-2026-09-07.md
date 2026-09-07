@@ -30,7 +30,7 @@ Required correction: include the current-policy fields required for authorizatio
 
 Required correction: retain the object-level `consent_status` rule where applicable, but run the `consent_links.video_id` history query only for canonical video rows (the video schema is distinguishable by its video-specific rights/access fields), never for podcast/live entities.
 
-## Frozen finding R110-04 — security-sensitive post/before delivery guards can fail open on their own second reads
+## Frozen finding R110-04 — security-sensitive delivery revalidation can fail open or run on an incomplete authorization projection
 
 R65 converts repository read failures to 503 only at its early `rest_request_after_callbacks` priority. Several later delivery guards perform new verification reads after R65 has already completed:
 
@@ -38,8 +38,9 @@ R65 converts repository read failures to 503 only at its early `rest_request_aft
 - R72 re-reads podcast episode/media state before replacing private/non-public podcast audio with a secure grant. A failed second read can leave the original audio response unchanged.
 - R78 re-reads caption/video state after a caption callback that may have set a public cache header. A failed second read can leave sensitive caption content publicly cacheable.
 - R71 performs alternate private-download verification before the canonical callback. If its object/asset verification cannot be proven, falling through to the older callback can permit that callback's raw-derivative path to execute.
+- R78 podcast-feed revalidation selects only `public_id,title,description,duration_seconds,published_at,asset_id` and then calls `VWLB_Security::can_view()` on that incomplete row. Because authorization-significant fields such as `status`, `visibility`, `owner_id`, `rights_status` and `consent_status` are absent, a valid public episode can be evaluated as an unpublished/private object and silently omitted from the hardened feed. This is both a correctness defect and evidence that security revalidation must use a complete policy projection.
 
-Required correction: each security-sensitive alternate/late delivery guard must own fail-closed read truth for every read it performs, including direct `$wpdb` and repository reads. A verification outage or contradictory second-read state must return a service error rather than preserve/fall through to the original delivery. Do not solve this by merely moving R65 later, because that would change mutation/idempotency response ordering.
+Required correction: each security-sensitive alternate/late delivery guard must own fail-closed read truth for every read it performs, including direct `$wpdb` and repository reads. A verification outage or contradictory second-read state must return a service error rather than preserve/fall through to the original delivery. Revalidation queries must include every field consumed by `can_view()` and the current rights/consent policy. Do not solve this by merely moving R65 later, because that would change mutation/idempotency response ordering.
 
 ## Frozen finding R110-05 — media contract treats unlisted delivery as public and canonical internal contract can expose raw derivatives
 
@@ -52,7 +53,7 @@ Required correction: only truly `public` media may receive ordinary public deriv
 - Video SEO detail output was checked and is guarded through `public_video_dto()` / `can_view()`.
 - Live SEO is guarded through `VWLB_Live::state()` / `can_view()`.
 - Future public annotations, transcript search and poll reads call current object-level `can_view()`; no separate R110 authorization defect was established there.
-- Podcast feed/RSS object-level unlisted authorization was already corrected in earlier rounds; R110 concerns only the later revalidation/fail-closed delivery boundary described above.
+- Podcast feed/RSS object-level unlisted authorization was already corrected in earlier rounds; R110's new feed issue is the incomplete late-revalidation projection described in R110-04, not a reopening of the earlier authorization rule.
 
 ## R110 correction gate
 
