@@ -19,7 +19,9 @@ jobs:
           ref: fix/file10-r101-r120-sequential-2026-09-06
           fetch-depth: 0
       - name: Apply frozen R110 corrections
-        run: python3 tools/r110-apply.py
+        run: |
+          python3 tools/r110-prepatch.py
+          python3 tools/r110-apply.py
       - name: Validate correction before commit
         run: |
           git diff --check
