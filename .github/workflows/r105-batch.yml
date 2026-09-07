@@ -1,0 +1,124 @@
+name: R105 correction batch
+on:
+  push:
+    branches: ['fix/file10-r101-r120-sequential-2026-09-06']
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/file10-r101-r120-sequential-2026-09-06
+      - name: Apply frozen R105 correction batch
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 <<'PY'
+          from pathlib import Path
+
+          # Exact current candidate identity in the legacy/rebased test harness.
+          p=Path('tests/run-all.sh')
+          t=p.read_text()
+          t=t.replace("CURRENT_VERSION='1.2.15-rc1'", "CURRENT_VERSION='1.2.16-rc1'")
+          p.write_text(t)
+
+          # Correct R105 retained-vs-held accounting. Core retained evidence and a legal hold are distinct states.
+          p=Path('video-wall-and-live-broadcasting/includes/class-vwlb-r105-privacy-lifecycle.php')
+          t=p.read_text()
+          old="$retained=!empty($base['items_retained']);$pass=self::evidence_pass((int)$user->ID,$retained);"
+          new="$base_retained=!empty($base['items_retained']);$held=false;$pass=self::evidence_pass((int)$user->ID,$held);"
+          if old not in t: raise SystemExit('R105 retained marker not found')
+          t=t.replace(old,new)
+          t=t.replace("if($retained)$messages[]=__('Some integrity evidence remains only under a validated, scope-bounded legal hold; other eligible identity references were anonymized.',VWLB_TEXT_DOMAIN);else$messages[]=__('Retained audit/outbox evidence and encrypted fallbacks were checked and eligible subject identifiers were anonymized.',VWLB_TEXT_DOMAIN);return array('items_removed'=>!empty($base['items_removed'])||true,'items_retained'=>$retained,'messages'=>$messages,'done'=>true);",
+            "if($held)$messages[]=__('Some integrity evidence remains under a validated, scope-bounded legal hold; other eligible identity references were anonymized.',VWLB_TEXT_DOMAIN);else$messages[]=__('Retained audit/outbox evidence and encrypted fallbacks were checked and eligible subject identifiers were anonymized.',VWLB_TEXT_DOMAIN);return array('items_removed'=>true,'items_retained'=>$base_retained||$held,'messages'=>$messages,'done'=>true);")
+          p.write_text(t)
+
+          # R105 release changelog/stable tag.
+          p=Path('video-wall-and-live-broadcasting/readme.txt')
+          t=p.read_text().replace('Stable tag: 1.2.15-rc1','Stable tag: 1.2.16-rc1')
+          marker='== Changelog ==\n\n'
+          entry=("= 1.2.16-rc1 =\n"
+                 "* R105: complete privacy-safe attribution export coverage for File 10 subject-attributable stores while excluding secret/internal fields.\n"
+                 "* Anonymize eligible subject identifiers in retained canonical audit/outbox evidence and encrypted R30 fallbacks with bounded cursor-safe propagation.\n"
+                 "* Add an explicit File10PrivacyLegalHold.v1 scope/basis/reference/expiry contract and distinguish ordinary retained evidence from validated legal-hold retention.\n\n")
+          if entry not in t:
+              if marker not in t: raise SystemExit('readme changelog marker missing')
+              t=t.replace(marker,marker+entry,1)
+          p.write_text(t)
+
+          # Manifest/status identity and R104 closure/R105 pending QA truth.
+          p=Path('MANIFEST.md')
+          t=p.read_text().replace('1.2.15-rc1','1.2.16-rc1')
+          t=t.replace('R101–R103 are exact-head QA-closed; R104 correction candidate narrows direct-read truth failures to uncovered frontend/cross-file surfaces, enforces podcast unlisted authorization, and records the pre-existing R78 caption-cache mitigation as a correction-phase false-positive closure rather than stacking duplicate code.',
+                      'R101–R104 are exact-head QA-closed; R105 privacy/export/erasure/legal-hold findings were frozen read-only on the R104 green baseline and the 1.2.16-rc1 correction candidate is awaiting exact-head release QA before R106 may begin.')
+          if 'R104 exact-head QA:' not in t:
+              t=t.replace('- R103 exact-head QA: `e0a7ae7efba4c2287dc57c3978e4ef9953ef3aa3`, run `34064836972`.\n',
+                          '- R103 exact-head QA: `e0a7ae7efba4c2287dc57c3978e4ef9953ef3aa3`, run `34064836972`.\n- R104 exact-head QA: `79651313324d4a85e5b0b5583c7319a7559d6c16`, run `34066084479`.\n')
+          p.write_text(t)
+
+          p=Path('STATUS.md')
+          t=p.read_text().replace('# File 10 Status — 1.2.15-rc1','# File 10 Status — 1.2.16-rc1')
+          t=t.replace('- Coded/reviewed candidate: `1.2.15-rc1` on `fix/file10-r101-r120-sequential-2026-09-06` after the R104 correction.',
+                      '- Coded/reviewed candidate: `1.2.16-rc1` on `fix/file10-r101-r120-sequential-2026-09-06` after the frozen R105 privacy correction batch.')
+          t=t.replace('- Automated-QA Green: R101–R103 established; R104 exact-head QA must be established before R105 begins.',
+                      '- Automated-QA Green: R101–R104 established; R105 exact-head QA is pending and R106 must not begin until it is green.')
+          if 'R104 exact-head QA:' not in t:
+              t=t.replace('- R104 correction validation: direct-read truth defect confirmed on frontend/cross-file helper surfaces and corrected with immediate typed DB-read propagation; podcast feed/RSS unlisted authorization defect confirmed and corrected; the caption-cache finding was invalidated because `VWLB_R78_Public_Delivery_Guard::caption_cache()` already overrides non-public caption responses to private/no-store, so no duplicate patch was added.\n',
+                          '- R104 correction validation: direct-read truth defect confirmed on frontend/cross-file helper surfaces and corrected with immediate typed DB-read propagation; podcast feed/RSS unlisted authorization defect confirmed and corrected; the caption-cache finding was invalidated because `VWLB_R78_Public_Delivery_Guard::caption_cache()` already overrides non-public caption responses to private/no-store, so no duplicate patch was added.\n- R104 exact-head QA: `79651313324d4a85e5b0b5583c7319a7559d6c16`, run `34066084479`, PHP 8.3/8.4 green.\n- R105 review baseline: `79651313324d4a85e5b0b5583c7319a7559d6c16`; four findings frozen in `docs/FILE-10-R105-FROZEN-FINDINGS-2026-09-07.md` before any R105 correction.\n- R105 correction: privacy-safe attribution exporter, canonical retained-evidence anonymization, encrypted R30 fallback propagation, and explicit scope-bounded legal-hold enforcement contract added; exact-head QA still required.\n')
+          p.write_text(t)
+
+          # Current SBOM identity: preserve schema/component inventory while advancing immutable RC identity.
+          old=Path('SBOM-1.2.15-rc1.json')
+          new=Path('SBOM-1.2.16-rc1.json')
+          if not old.exists(): raise SystemExit('prior SBOM missing')
+          s=old.read_text().replace('1.2.15-rc1','1.2.16-rc1')
+          new.write_text(s)
+
+          # Add R105 regression gate before the terminal PASS marker exactly once.
+          p=Path('tests/file10-r101-r120-contracts.sh')
+          t=p.read_text()
+          block=r'''
+# R105 — privacy export/erasure propagation and scoped legal-hold enforcement.
+grep -F "class VWLB_R105_Privacy_Lifecycle" "$P/includes/class-vwlb-r105-privacy-lifecycle.php" >/dev/null
+grep -F "VWLB_R105_Privacy_Lifecycle::register()" "$P/video-wall-and-live-broadcasting.php" >/dev/null
+grep -F "vwlb-attribution" "$P/includes/class-vwlb-r105-privacy-lifecycle.php" >/dev/null
+for token in moderation takedowns captions production_sources production_scenes simulcast_targets media_tracks video_annotations live_polls consent_links watermark_policies stream_credentials creator_metrics_daily audit; do grep -F "array('$token'" "$P/includes/class-vwlb-r105-privacy-lifecycle.php" >/dev/null || { echo "R105 exporter coverage missing: $token" >&2; exit 1; }; done
+grep -F "vwlb_privacy_legal_hold_decision" "$P/includes/class-vwlb-r105-privacy-lifecycle.php" >/dev/null
+grep -F "lawful_basis" "$P/includes/class-vwlb-r105-privacy-lifecycle.php" >/dev/null
+grep -F "reference_hash" "$P/includes/class-vwlb-r105-privacy-lifecycle.php" >/dev/null
+grep -F "expires_at" "$P/includes/class-vwlb-r105-privacy-lifecycle.php" >/dev/null
+grep -F "process_canonical" "$P/includes/class-vwlb-r105-privacy-lifecycle.php" >/dev/null
+grep -F "process_fallback" "$P/includes/class-vwlb-r105-privacy-lifecycle.php" >/dev/null
+grep -F "decrypt_evidence_fallback" "$P/includes/class-vwlb-r105-privacy-lifecycle.php" >/dev/null
+grep -F "encrypt_evidence_fallback" "$P/includes/class-vwlb-r105-privacy-lifecycle.php" >/dev/null
+grep -F "VWLB_R97_Privacy_Storage_Erasure_Guard::erase" "$P/includes/class-vwlb-r105-privacy-lifecycle.php" >/dev/null
+grep -F "base_retained" "$P/includes/class-vwlb-r105-privacy-lifecycle.php" >/dev/null
+grep -F "held=false" "$P/includes/class-vwlb-r105-privacy-lifecycle.php" >/dev/null
+'''
+          end="echo 'R101-R120 contracts PASS'"
+          if block.strip() not in t:
+              if end not in t: raise SystemExit('R101-R120 terminal marker missing')
+              t=t.replace(end,block+'\n'+end,1)
+          p.write_text(t)
+
+          # Explicit destructive purge also clears interrupted R105 cursor state.
+          p=Path('video-wall-and-live-broadcasting/uninstall.php')
+          t=p.read_text()
+          needle="$wpdb->query($wpdb->prepare(\"DELETE FROM {$wpdb->options} WHERE option_name LIKE %s\",$wpdb->esc_like('vwlb_r60_external_guard_').'%'));"
+          add=needle+"$wpdb->query($wpdb->prepare(\"DELETE FROM {$wpdb->options} WHERE option_name LIKE %s\",$wpdb->esc_like('vwlb_r105_privacy_cursor_').'%'));"
+          if 'vwlb_r105_privacy_cursor_' not in t:
+              if needle not in t: raise SystemExit('uninstall insertion marker missing')
+              t=t.replace(needle,add)
+          p.write_text(t)
+          PY
+
+          php -l video-wall-and-live-broadcasting/includes/class-vwlb-r105-privacy-lifecycle.php
+          php -l video-wall-and-live-broadcasting/uninstall.php
+          bash tests/file10-r101-r120-contracts.sh
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add tests/run-all.sh tests/file10-r101-r120-contracts.sh video-wall-and-live-broadcasting/includes/class-vwlb-r105-privacy-lifecycle.php video-wall-and-live-broadcasting/readme.txt video-wall-and-live-broadcasting/uninstall.php MANIFEST.md STATUS.md SBOM-1.2.16-rc1.json
+          git commit -m 'File 10 R105: complete privacy lifecycle correction surfaces'
+          git push origin HEAD:fix/file10-r101-r120-sequential-2026-09-06
