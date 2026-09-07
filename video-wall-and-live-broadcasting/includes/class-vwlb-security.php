@@ -35,6 +35,7 @@ final class VWLB_Security {
 		$is_video=array_key_exists('published_at',$object);$is_live=array_key_exists('scheduled_start',$object);
 		if($is_video&&'published'!==($object['status']??''))return self::can(VWLB_Contracts::CAP_PUBLISH,$object,$purpose);
 		if($is_live&&!in_array($object['status']??'',array('scheduled','live','interrupted','ended','recording_processing','replay_review','replay_published'),true))return self::can(VWLB_Contracts::CAP_BROADCAST,$object,$purpose);
+		if(class_exists('VWLB_R109_Rights_Consent_Replay_Guard')&&!VWLB_R109_Rights_Consent_Replay_Guard::current_delivery_allowed($object,$purpose))return false;
 		$visibility=$object['visibility']??'private';if('public'===$visibility)return true;$claims=self::claims();
 		if('unlisted'===$visibility){if(self::claims_ready($claims)&&absint($object['owner_id']??0)===get_current_user_id())return true;if(self::claims_ready($claims)&&self::can(VWLB_Contracts::CAP_MANAGE,$object,$purpose))return true;return (bool)apply_filters('vwlb_unlisted_access_authorized',false,$object,$purpose,$claims);}
 		if(!self::claims_ready($claims))return false;

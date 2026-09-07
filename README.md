@@ -4,7 +4,7 @@ Canonical source repository for **Sabri Social Homeopathy Platform File 10**.
 
 ## Current reviewed candidate
 
-- Runtime: `1.2.19-rc1`
+- Runtime: `1.2.20-rc1`
 - Plugin folder: `video-wall-and-live-broadcasting`
 - Base schema: `1.1.0`
 - Extension schema: `1.1.0`
@@ -43,3 +43,6 @@ Repository source, deterministic packaging and green CI establish only source/pa
 
 ### R108 correction candidate
 R108 completed its read-only live-lifecycle/reconciliation review before correction. Six findings were frozen in `docs/FILE-10-R108-FROZEN-FINDINGS-2026-09-07.md`. The correction candidate is `1.2.19-rc1`; exact-head PHP 8.3/8.4 release QA, deterministic packaging, checksum/archive, source/package parity and artifact publication must be green before R109 begins.
+
+### R109 correction candidate
+R109 completed its full read-only rights/takedown/recording-consent/replay review from the exact R108 Green baseline `762361ae9f1b1c8392e0fbce224a15051432952c`. Five findings were frozen in `docs/FILE-10-R109-FROZEN-FINDINGS-2026-09-07.md`. The correction candidate is `1.2.20-rc1`; exact-head PHP 8.3/8.4 release QA, deterministic packaging, checksum/archive, source/package parity and artifact publication must be green before R110 begins.
