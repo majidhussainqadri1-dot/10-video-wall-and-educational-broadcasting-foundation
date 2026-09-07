@@ -1,96 +1,31 @@
 name: R106 correction batch
 on:
   push:
-    branches: ['fix/file10-r101-r120-sequential-2026-09-06']
+    branches:
+      - fix/file10-r101-r120-sequential-2026-09-06
 permissions:
   contents: write
 jobs:
   patch:
+    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: fix/file10-r101-r120-sequential-2026-09-06
+          ref: ${{ github.ref_name }}
       - name: Apply frozen R106 corrections
-        shell: bash
+        run: python3 tools/r106-apply.py
+      - name: Validate correction batch
         run: |
-          set -euo pipefail
-          python3 <<'PY'
-          from pathlib import Path
-
-          # F01: expiry cleanup must coordinate with the canonical writer lock.
-          p=Path('video-wall-and-live-broadcasting/includes/class-vwlb-r76-cleanup-durability.php')
-          t=p.read_text()
-          old="if(is_file($path)&&!@unlink($path)){self::signal('vwlb_upload_cleanup_file_delete_failed',array('session_id'=>(int)$row['id']));continue;}"
-          new="if(is_file($path)){$fp=@fopen($path,'rb');if(!$fp){self::signal('vwlb_upload_cleanup_file_open_failed',array('session_id'=>(int)$row['id']));continue;}if(!flock($fp,LOCK_EX|LOCK_NB)){fclose($fp);self::signal('vwlb_upload_cleanup_file_busy',array('session_id'=>(int)$row['id']));continue;}$deleted=@unlink($path);flock($fp,LOCK_UN);fclose($fp);if(!$deleted&&file_exists($path)){self::signal('vwlb_upload_cleanup_file_delete_failed',array('session_id'=>(int)$row['id']));continue;}}"
-          if old not in t: raise SystemExit('R76 cleanup matcher missing')
-          p.write_text(t.replace(old,new,1))
-
-          # F02a: validation-owned callbacks and hash read failures become fail-closed evidence, never uncaught TypeErrors/throwables.
-          p=Path('video-wall-and-live-broadcasting/includes/class-vwlb-extensions.php')
-          t=p.read_text()
-          old="$sha=hash_file('sha256',$path);if(!empty($asset['checksum'])&&!hash_equals(strtolower((string)$asset['checksum']),$sha))return false;"
-          new="$sha=hash_file('sha256',$path);if(!is_string($sha)||!preg_match('/^[a-f0-9]{64}$/',$sha)){do_action('vwlb_operational_failure','upload','vwlb_asset_checksum_unreadable',array('asset_public_id'=>$asset['public_id']??''));return false;}if(!empty($asset['checksum'])&&!hash_equals(strtolower((string)$asset['checksum']),$sha))return false;"
-          if old not in t: raise SystemExit('extensions hash matcher missing')
-          t=t.replace(old,new,1)
-          old="$scan=apply_filters('vwlb_malware_scan_result',null,$path,$asset);\n\t\t\tif(true===$scan)return true;"
-          new="try{$scan=apply_filters('vwlb_malware_scan_result',null,$path,$asset);}catch(Throwable $e){do_action('vwlb_operational_failure','upload','vwlb_malware_scanner_exception',array('asset_public_id'=>$asset['public_id']??'','exception'=>sanitize_key(get_class($e))));return false;}\n\t\t\tif(true===$scan)return true;"
-          if old not in t: raise SystemExit('scanner matcher missing')
-          t=t.replace(old,new,1)
-          old="$external=apply_filters('vwlb_external_media_validation',null,$asset);\n\t\tif(true===$external||is_array($external)&&in_array(($external['status']??''),array('clean','passed','provider_verified'),true))return true;"
-          new="try{$external=apply_filters('vwlb_external_media_validation',null,$asset);}catch(Throwable $e){do_action('vwlb_operational_failure','upload','vwlb_external_media_validation_exception',array('asset_public_id'=>$asset['public_id']??'','exception'=>sanitize_key(get_class($e))));return false;}\n\t\tif(true===$external||is_array($external)&&in_array(($external['status']??''),array('clean','passed','provider_verified'),true))return true;"
-          if old not in t: raise SystemExit('external validator matcher missing')
-          p.write_text(t.replace(old,new,1))
-
-          # F02b: worker-level containment protects the lease even if another technical-validation extension throws.
-          p=Path('video-wall-and-live-broadcasting/includes/class-vwlb-jobs.php')
-          t=p.read_text()
-          old="if('verify_and_process'==$job['job_type']){\n\t\t\tif(!$asset||!VWLB_Media::verify_magic($asset))$result=VWLB_Helpers::error('vwlb_asset_validation_failed',__('Media validation failed.',VWLB_TEXT_DOMAIN),422);"
-          new="if('verify_and_process'==$job['job_type']){\n\t\t\ttry{$valid=$asset?VWLB_Media::verify_magic($asset):false;}catch(Throwable $e){do_action('vwlb_operational_failure','upload','vwlb_asset_validation_exception',array('asset_public_id'=>$asset['public_id']??'','exception'=>sanitize_key(get_class($e))));$result=VWLB_Helpers::error('vwlb_asset_validation_failed',__('Media validation failed safely and will follow the normal retry policy.',VWLB_TEXT_DOMAIN),503,array('exception'=>sanitize_key(get_class($e))));$valid=false;}\n\t\t\tif(null===$result&&!$valid)$result=VWLB_Helpers::error('vwlb_asset_validation_failed',__('Media validation failed.',VWLB_TEXT_DOMAIN),422);"
-          if old not in t: raise SystemExit('jobs validation matcher missing')
-          p.write_text(t.replace(old,new,1))
-
-          # F03: restore canonical opaque route grammar on the late completion override.
-          p=Path('video-wall-and-live-broadcasting/includes/class-vwlb-sequential-review-hardening.php')
-          t=p.read_text()
-          old="'/media/resumable/(?P<id>[A-Za-z0-9_-]+)/complete',"
-          new="'/media/resumable/(?P<id>[a-z][a-z0-9]*_[a-z0-9]+)/complete',"
-          if old not in t: raise SystemExit('late completion route matcher missing')
-          p.write_text(t.replace(old,new,1))
-
-          # Candidate identity.
-          p=Path('video-wall-and-live-broadcasting/video-wall-and-live-broadcasting.php')
-          t=p.read_text().replace('Version: 1.2.16-rc1','Version: 1.2.17-rc1').replace("define( 'VWLB_VERSION', '1.2.16-rc1' )","define( 'VWLB_VERSION', '1.2.17-rc1' )")
-          p.write_text(t)
-          p=Path('tests/run-all.sh'); p.write_text(p.read_text().replace("CURRENT_VERSION='1.2.16-rc1'","CURRENT_VERSION='1.2.17-rc1'"))
-
-          # R106 regression contracts.
-          p=Path('tests/file10-r101-r120-contracts.sh')
-          t=p.read_text(); marker="echo 'R101-R120 contracts PASS'"
-          block=r'''
-# R106 — upload/scan/transcode safety.
-grep -F "LOCK_EX|LOCK_NB" "$P/includes/class-vwlb-r76-cleanup-durability.php" >/dev/null
-grep -F "vwlb_upload_cleanup_file_busy" "$P/includes/class-vwlb-r76-cleanup-durability.php" >/dev/null
-grep -F "vwlb_asset_checksum_unreadable" "$P/includes/class-vwlb-extensions.php" >/dev/null
-grep -F "vwlb_malware_scanner_exception" "$P/includes/class-vwlb-extensions.php" >/dev/null
-grep -F "vwlb_external_media_validation_exception" "$P/includes/class-vwlb-extensions.php" >/dev/null
-grep -F "vwlb_asset_validation_exception" "$P/includes/class-vwlb-jobs.php" >/dev/null
-grep -F "Media validation failed safely and will follow the normal retry policy." "$P/includes/class-vwlb-jobs.php" >/dev/null
-grep -F "'/media/resumable/(?P<id>[a-z][a-z0-9]*_[a-z0-9]+)/complete'" "$P/includes/class-vwlb-sequential-review-hardening.php" >/dev/null
-! grep -F "'/media/resumable/(?P<id>[A-Za-z0-9_-]+)/complete'" "$P/includes/class-vwlb-sequential-review-hardening.php" >/dev/null
-'''
-          if block.strip() not in t:
-              if marker not in t: raise SystemExit('contract terminal marker missing')
-              t=t.replace(marker,block+'\n'+marker,1)
-          p.write_text(t)
-          PY
           php -l video-wall-and-live-broadcasting/includes/class-vwlb-r76-cleanup-durability.php
           php -l video-wall-and-live-broadcasting/includes/class-vwlb-extensions.php
           php -l video-wall-and-live-broadcasting/includes/class-vwlb-jobs.php
           php -l video-wall-and-live-broadcasting/includes/class-vwlb-sequential-review-hardening.php
           bash tests/file10-r101-r120-contracts.sh
+      - name: Commit correction batch
+        run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add video-wall-and-live-broadcasting/includes/class-vwlb-r76-cleanup-durability.php video-wall-and-live-broadcasting/includes/class-vwlb-extensions.php video-wall-and-live-broadcasting/includes/class-vwlb-jobs.php video-wall-and-live-broadcasting/includes/class-vwlb-sequential-review-hardening.php video-wall-and-live-broadcasting/video-wall-and-live-broadcasting.php tests/run-all.sh tests/file10-r101-r120-contracts.sh
+          git add video-wall-and-live-broadcasting/includes/class-vwlb-r76-cleanup-durability.php video-wall-and-live-broadcasting/includes/class-vwlb-extensions.php video-wall-and-live-broadcasting/includes/class-vwlb-jobs.php video-wall-and-live-broadcasting/includes/class-vwlb-sequential-review-hardening.php tests/file10-r101-r120-contracts.sh
           git commit -m 'File 10 R106: harden upload scan and cleanup safety'
           git push origin HEAD:fix/file10-r101-r120-sequential-2026-09-06
