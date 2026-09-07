@@ -14,7 +14,14 @@ jobs:
         with:
           ref: ${{ github.ref_name }}
       - name: Apply frozen R108 corrections
-        run: python3 tools/r108-apply.py
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('tools/r108-apply.py')
+          t=p.read_text()
+          p.write_text(t.replace("r'''", "'''"))
+          PY
+          python3 tools/r108-apply.py
       - name: Validate correction batch
         run: |
           php -l video-wall-and-live-broadcasting/includes/class-vwlb-live.php
