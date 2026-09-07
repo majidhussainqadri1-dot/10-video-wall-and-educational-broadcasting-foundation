@@ -22,6 +22,7 @@ jobs:
         run: |
           python3 tools/r110-prepatch.py
           python3 tools/r110-apply.py
+          python3 tools/r110-harness-prepatch.py
       - name: Validate correction before commit
         run: |
           git diff --check
@@ -40,12 +41,13 @@ jobs:
             video-wall-and-live-broadcasting/includes/class-vwlb-extensions.php \
             video-wall-and-live-broadcasting/video-wall-and-live-broadcasting.php; do php -l "$f"; done
           bash -n tests/file10-r101-r120-contracts.sh
+          bash -n tests/file10-r21-r40-contracts.sh
           bash tests/file10-r101-r120-contracts.sh
           bash tests/run-all.sh
       - name: Commit R110 correction batch
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add video-wall-and-live-broadcasting tests/file10-r101-r120-contracts.sh tests/run-all.sh SBOM-1.2.21-rc1.json
+          git add video-wall-and-live-broadcasting tests/file10-r101-r120-contracts.sh tests/file10-r21-r40-contracts.sh tests/run-all.sh SBOM-1.2.21-rc1.json
           git commit -m 'Correct R110 public delivery boundaries'
           git push origin HEAD:fix/file10-r101-r120-sequential-2026-09-06
