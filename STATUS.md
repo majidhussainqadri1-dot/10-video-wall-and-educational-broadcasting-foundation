@@ -1,4 +1,4 @@
-# File 10 Status — 1.2.20-rc1
+# File 10 Status — 1.2.21-rc1
 
 **Classification:** repository/source correction candidate in the sequential R101–R120 review cycle begun 2026-09-06.
 
@@ -15,8 +15,13 @@
 - R107 review: completed read-only before correction; five findings frozen covering late REST opaque-ID/playback enrichment, provider compensation exception containment, recursive secret detection, provider-health DB truth, and capability/readiness semantics.
 - R107 correction: applied; candidate identity advanced to `1.2.18-rc1`. Source/package QA at `cdb5aaddb831f61070c0c62c49ee42cf0aa38e48`, run `34087336458`, was green on PHP 8.3/8.4 with complete suite, R101–R120 gate, deterministic package, checksum/archive and source/package parity. Artifact ID `10005650563`; digest `sha256:7607f7c28fb0900991046dfc84538869b9a8b2323fef06030b257cb0bfdfc6b9`.
 - R107 final evidence-recording head `0de65d9956cf3a4c03e3e0c315c09bb70ca8c82f`, run `34087545859`, is Green on PHP 8.3/8.4; R108 began only after that gate.
-- Coded/reviewed candidate: `1.2.20-rc1` on `fix/file10-r101-r120-sequential-2026-09-06`.
-- Automated-QA Green: R101–R108 established. R108 exact-head `762361ae9f1b1c8392e0fbce224a15051432952c`, run `34100057505`, is green on PHP 8.3/8.4 with complete suite/package/parity/artifact gates. R109 correction is coded as `1.2.20-rc1`; its exact-head release QA is pending and R110 remains blocked.
+- R108 exact-head `762361ae9f1b1c8392e0fbce224a15051432952c`, run `34100057505`, is green on PHP 8.3/8.4 with complete suite/package/parity/artifact gates.
+- R109 review: completed read-only after R108 Green; five findings frozen in `docs/FILE-10-R109-FROZEN-FINDINGS-2026-09-07.md`.
+- R109 correction: current rights/consent delivery, consent-expiry fairness/history and replay-lineage gates applied as `1.2.20-rc1`; R110 began only after the R109 Green gate.
+- R110 review: completed read-only before correction; frozen findings cover late public-delivery opaque-ID consistency, public browse current rights/consent revalidation, consent-link scope, fail-closed late authorization reads/projections, and non-public derivative/download delivery boundaries.
+- R110 correction candidate: `1.2.21-rc1`; correction code is being validated against the full historical/current regression suite and exact-head release QA. R111 remains blocked until that gate is fully green.
+- Coded/reviewed candidate: `1.2.21-rc1` on `fix/file10-r101-r120-sequential-2026-09-06`.
+- Automated-QA Green: R101–R109 established; R110 not yet established.
 - Staging-Accepted: not established.
 - Live-Deployed: not established.
 - Operational: not established.
@@ -26,9 +31,3 @@
 - Live verification: not performed.
 
 GitHub, staging and live are distinct realities. Repository source/package evidence does not identify the code currently deployed to the website. Exact deployed code, live DB/schema and migration state remain unverified until separately frozen from the environment.
-
-- R108 review: completed read-only from R107 Green baseline; six findings frozen in `docs/FILE-10-R108-FROZEN-FINDINGS-2026-09-07.md`.
-- R108 correction: applied as `1.2.19-rc1`; exact-head release QA is pending before R109.
-
-- R109 review: completed read-only after R108 Green; five findings frozen in `docs/FILE-10-R109-FROZEN-FINDINGS-2026-09-07.md`.
-- R109 correction: current rights/consent delivery, consent-expiry fairness/history and replay-lineage gates applied as `1.2.20-rc1`; exact-head release QA is pending before R110.
