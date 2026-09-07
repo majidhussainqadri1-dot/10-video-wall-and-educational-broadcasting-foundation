@@ -1,0 +1,53 @@
+<?php
+/** R109: current rights/consent delivery policy, fair consent expiry, immutable consent history and replay lineage. */
+defined('ABSPATH') || exit;
+final class VWLB_R109_Rights_Consent_Replay_Guard {
+	const CONSENT_CURSOR_OPTION='vwlb_r109_consent_expiry_cursor';
+	const PAGE_SIZE=100;
+	private static $policy_read_failed=false;
+
+	public static function register(){
+		remove_action('vwlb_reconcile_states',array('VWLB_Future_Safety','reconcile_consent_expiry'),20);
+		add_action('vwlb_reconcile_states',array(__CLASS__,'reconcile_consent_expiry'),20);
+		add_filter('vwlb_video_publication_gate',array(__CLASS__,'publication_gate'),100,2);
+		add_filter('rest_request_before_callbacks',array(__CLASS__,'rest_before'),4,3);
+		add_filter('rest_request_after_callbacks',array(__CLASS__,'rest_after'),6,3);
+	}
+
+	private static function file10_request($request){if(!$request instanceof WP_REST_Request)return false;$route=(string)$request->get_route();foreach(VWLB_Contracts::namespaces() as $n)if(str_starts_with($route,'/'.$n.'/'))return true;return false;}
+	public static function rest_before($response,$handler,$request){if(null===$response&&self::file10_request($request))self::$policy_read_failed=false;return $response;}
+	public static function rest_after($response,$handler,$request){if(!self::$policy_read_failed||!self::file10_request($request))return $response;return VWLB_Helpers::error('vwlb_rights_consent_unverifiable',__('Current media rights or consent state could not be verified safely.',VWLB_TEXT_DOMAIN),503);}
+	private static function read_failed($context){self::$policy_read_failed=true;do_action('vwlb_operational_failure','rights_consent','vwlb_rights_consent_read_failed',array('context'=>sanitize_key($context)));return false;}
+
+	private static function rights_allow($object,$purpose){
+		if(array_key_exists('rights_status',$object)){$status=sanitize_key((string)($object['rights_status']??''));if($status&&!in_array($status,array('declared','verified'),true))return false;}
+		$rights=VWLB_Helpers::json($object['rights_json']??'{}');if(!$rights)return true;
+		if(!empty($rights['revoked'])||'revoked'===sanitize_key((string)($rights['status']??'')))return false;
+		if(!empty($rights['expires_at'])){$expires=strtotime((string)$rights['expires_at'].' UTC');if(!$expires||$expires<=time())return false;}
+		$access=sanitize_key((string)($rights['access']??''));if(in_array($access,array('denied','revoked','restricted','blocked'),true))return false;
+		$territory=$rights['territory']??($rights['territories']??null);if(null!==$territory&&''!==$territory){$values=array_values(array_filter(array_map('sanitize_key',(array)$territory)));$global=(bool)array_intersect($values,array('worldwide','global','all'));if(!$global){try{$allowed=(bool)apply_filters('vwlb_rights_territory_authorized',false,$object,$values,$purpose);}catch(Throwable $e){do_action('vwlb_operational_failure','rights','vwlb_rights_territory_check_exception',array('exception'=>sanitize_key(get_class($e))));return false;}if(!$allowed)return false;}}
+		return true;
+	}
+	private static function consent_allow($video){
+		if(!array_key_exists('published_at',$video)||empty($video['id']))return true;
+		if(array_key_exists('consent_status',$video)&&!in_array((string)$video['consent_status'],array('not_patient_case','documented','anonymized','approved'),true))return false;
+		global $wpdb;$table=VWLB_Helpers::table('consent_links');$wpdb->last_error='';$blocker=$wpdb->get_var($wpdb->prepare("SELECT id FROM $table WHERE video_id=%d AND (status IN ('expired','withdrawn') OR (status='active' AND expires_at IS NOT NULL AND expires_at<=%s)) ORDER BY id DESC LIMIT 1",(int)$video['id'],VWLB_Helpers::now()));if(''!==(string)$wpdb->last_error)return self::read_failed('video_consent_delivery');return !$blocker;
+	}
+	public static function current_delivery_allowed($object,$purpose='playback'){if(!is_array($object))return false;if(!self::rights_allow($object,$purpose))return false;return self::consent_allow($object);}
+	public static function publication_gate($allowed,$video){return $allowed&&self::current_delivery_allowed($video,'publish_video');}
+
+	public static function assert_consent_transition($current,$next){if(!is_array($current))return true;$from=sanitize_key((string)($current['status']??''));$next=sanitize_key((string)$next);if(in_array($from,array('withdrawn','expired'),true)&&'active'===$next)return VWLB_Helpers::error('vwlb_consent_terminal_history',__('Expired or withdrawn consent cannot be reactivated in place. Record renewed consent under a new consent reference and supersede the old record.',VWLB_TEXT_DOMAIN),409);if('superseded'===$from&&'superseded'!==$next)return VWLB_Helpers::error('vwlb_consent_terminal_history',__('A superseded consent record is immutable.',VWLB_TEXT_DOMAIN),409);return true;}
+	public static function withdrawn_at($current,$next){if(is_array($current)&&!empty($current['withdrawn_at']))return $current['withdrawn_at'];return 'withdrawn'===$next?VWLB_Helpers::now():null;}
+	public static function record_consent_change($video,$consent_id,$before,$after,$ref){VWLB_Helpers::audit('consent_link',$consent_id,'transition',$before,$after,'Versioned patient-case consent changed.',array('video_public_id'=>$video['public_id']??'','consent_ref_hash'=>hash('sha256',(string)$ref),'purpose'=>'patient_case_consent'));if(in_array($after,array('expired','withdrawn'),true))VWLB_Helpers::outbox('VideoConsentRestricted','video',$video['id'],array('public_id'=>$video['public_id']??'','reason'=>'consent_'.$after));}
+
+	private static function persist_cursor($id){$id=max(0,(int)$id);if(0===$id){$deleted=delete_option(self::CONSENT_CURSOR_OPTION);if(!$deleted&&false!==get_option(self::CONSENT_CURSOR_OPTION,false)){do_action('vwlb_operational_failure','consent','vwlb_consent_expiry_cursor_failed',array('phase'=>'reset'));return false;}return true;}$saved=update_option(self::CONSENT_CURSOR_OPTION,$id,false);if(!$saved&&(int)get_option(self::CONSENT_CURSOR_OPTION,0)!==$id){do_action('vwlb_operational_failure','consent','vwlb_consent_expiry_cursor_failed',array('phase'=>'advance'));return false;}return true;}
+	public static function reconcile_consent_expiry(){
+		global $wpdb;$table=VWLB_Helpers::table('consent_links');$after=absint(get_option(self::CONSENT_CURSOR_OPTION,0));$wpdb->last_error='';$rows=$wpdb->get_results($wpdb->prepare("SELECT id FROM $table WHERE status='active' AND expires_at IS NOT NULL AND expires_at<=%s AND id>%d ORDER BY id ASC LIMIT %d",VWLB_Helpers::now(),$after,self::PAGE_SIZE),ARRAY_A);if(''!==(string)$wpdb->last_error){do_action('vwlb_operational_failure','consent','vwlb_consent_expiry_read_failed',array());return;}$rows=is_array($rows)?$rows:array();if(!$rows){if($after)self::persist_cursor(0);return;}$last=$after;
+		foreach($rows as $candidate){$id=(int)$candidate['id'];$last=max($last,$id);$result=VWLB_DB::transaction(function()use($wpdb,$table,$id){$row=$wpdb->get_row($wpdb->prepare("SELECT * FROM $table WHERE id=%d FOR UPDATE",$id),ARRAY_A);if(!$row||'active'!==($row['status']??'')||empty($row['expires_at'])||strtotime($row['expires_at'].' UTC')>time())return array('changed'=>false);$video=VWLB_Repository::find('videos',$row['video_id'],true);if(!$video)return VWLB_Helpers::error('vwlb_consent_video_missing',__('Expired consent could not be reconciled because its video is unavailable.',VWLB_TEXT_DOMAIN),503);$changed=$wpdb->update($table,array('status'=>'expired','version'=>(int)$row['version']+1,'updated_at'=>VWLB_Helpers::now()),array('id'=>$row['id'],'version'=>$row['version'],'status'=>'active'));if(1!==$changed)return VWLB_Helpers::error('vwlb_consent_expiry_conflict',__('Consent expiry changed concurrently.',VWLB_TEXT_DOMAIN),409);$restricted=false;if(!in_array($video['status'],array('restricted','removed'),true)){$updated=VWLB_Repository::update_versioned('videos',$video['id'],$video['version'],array('status'=>'restricted'));if(is_wp_error($updated))return $updated;$restricted=true;VWLB_Helpers::audit('video',$video['id'],'consent_auto_restrict',$video['status'],'restricted','Consent expired.');VWLB_Helpers::outbox('VideoRestricted','video',$video['id'],array('public_id'=>$video['public_id'],'reason'=>'consent_expired'));}self::record_consent_change($video,(int)$row['id'],'active','expired',$row['consent_ref']??'');return array('changed'=>true,'restricted'=>$restricted,'video_public_id'=>$video['public_id']);});if(is_wp_error($result)){do_action('vwlb_operational_failure','consent',$result->get_error_code(),array('consent_id_hash'=>hash('sha256',(string)$id)));continue;}if(!empty($result['changed']))do_action('vwlb_purge_media_derivative_caches',$result['video_public_id'],'consent_expired');}
+		self::persist_cursor(count($rows)<self::PAGE_SIZE?0:$last);
+	}
+
+	public static function assert_replay($event,$video){
+		if(!is_array($event)||!is_array($video))return VWLB_Helpers::error('vwlb_replay_lineage_unverifiable',__('Replay lineage could not be verified.',VWLB_TEXT_DOMAIN),503);$policy=VWLB_Helpers::json($event['recording_policy_json']??'{}');if(empty($policy['record'])||empty($policy['publish_replay']))return VWLB_Helpers::error('vwlb_replay_not_authorized',__('This live event policy does not authorize a published replay.',VWLB_TEXT_DOMAIN),409);if(!self::current_delivery_allowed($video,'publish_replay'))return VWLB_Helpers::error('vwlb_replay_rights_consent_invalid',__('Replay video rights or consent are not currently valid.',VWLB_TEXT_DOMAIN),409);if(!empty($policy['consent_required'])){$proof=VWLB_R73_Recording_Consent_Guard::finalization_proof(true,array('live_event_id'=>$event['id']),array());if(is_wp_error($proof))return $proof;}$recording_asset=absint($event['recording_asset_id']??0);if(!$recording_asset||absint($video['asset_id']??0)!==$recording_asset)return VWLB_Helpers::error('vwlb_replay_lineage_invalid',__('Replay video must be derived from this live event’s canonical recording asset.',VWLB_TEXT_DOMAIN),409);$asset=VWLB_Repository::find('media_assets',$recording_asset);if(!$asset){if(method_exists('VWLB_Repository','read_failed')&&VWLB_Repository::read_failed())return VWLB_Helpers::error('vwlb_replay_lineage_unverifiable',__('Replay recording asset state could not be read safely.',VWLB_TEXT_DOMAIN),503);return VWLB_Helpers::error('vwlb_replay_lineage_invalid',__('Canonical recording asset is unavailable.',VWLB_TEXT_DOMAIN),409);}if('ready'!==($asset['status']??'')||'passed'!==($asset['scan_status']??''))return VWLB_Helpers::error('vwlb_replay_lineage_invalid',__('Canonical recording asset is not ready for replay publication.',VWLB_TEXT_DOMAIN),409);return true;
+	}
+}
