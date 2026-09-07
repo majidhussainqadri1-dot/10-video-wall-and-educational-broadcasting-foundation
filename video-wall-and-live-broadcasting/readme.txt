@@ -3,7 +3,7 @@ Contributors: sabrihomeopathy
 Requires at least: 7.0
 Tested up to: 7.0.1
 Requires PHP: 8.3
-Stable tag: 1.2.15-rc1
+Stable tag: 1.2.16-rc1
 License: GPLv2 or later
 
 File 10 canonical owner for recorded video and live broadcasting in the Sabri Social Homeopathy Platform.
@@ -40,7 +40,7 @@ Keyboard-visible focus, approximate 44px controls, semantic status regions, capt
 == Installation ==
 
 1. Back up the approved staging environment and verify restoration.
-2. Upload `video-wall-and-live-broadcasting-1.2.15-rc1.zip` to WordPress staging.
+2. Upload `video-wall-and-live-broadcasting-1.2.16-rc1.zip` to WordPress staging.
 3. Activate the plugin; schema, capabilities, pages and cron jobs are reconciled with activation compensation evidence.
 4. Configure File 00 identity claims/capabilities and approved provider adapters.
 5. Run Video & Live diagnostics.
@@ -55,6 +55,11 @@ The activation migration reads supported legacy File 10 data when present, store
 Source code, deterministic packaging and automated checks do not prove Hostinger/LiteSpeed runtime, real provider credentials, actual transcoding/live delivery, browser/device accessibility, high-concurrency streaming, backup restoration, rollback, staging acceptance, Founder acceptance or live deployment. Those remain separate evidence gates.
 
 == Changelog ==
+
+= 1.2.16-rc1 =
+* R105: complete privacy-safe attribution export coverage for File 10 subject-attributable stores while excluding secret/internal fields.
+* Anonymize eligible subject identifiers in retained canonical audit/outbox evidence and encrypted R30 fallbacks with bounded cursor-safe propagation.
+* Add an explicit File10PrivacyLegalHold.v1 scope/basis/reference/expiry contract and distinguish ordinary retained evidence from validated legal-hold retention.
 
 = 1.2.15-rc1 =
 * R104: propagate immediate database-read failures on frontend/cross-file read helpers instead of rendering empty/404 partial state.
@@ -84,7 +89,7 @@ Source code, deterministic packaging and automated checks do not prove Hostinger
 = 1.2.10-rc1 =
 * Complete the fresh sequential R61-R80 source-review cycle under Review → Findings Freeze → batch correction → full retest discipline.
 * Harden activation rollback, provider/processor exception containment, repository/direct-DB failure truth, playback and privacy read failures, webhook fairness, resumable completion, private downloads, podcast delivery, recording consent, takedown identity, cleanup fairness, bounded poll integrity and private public-delivery boundaries.
-* Bind forensic watermark grants to verified playback/live viewer sessions and fail closed when session proof is unavailable.
+* Bind forensic watermark grants to verified playback/live viewer session and fail closed when session proof is unavailable.
 * Assign a fresh immutable package identity after deployable corrections and re-enable final exact-head release artifact publication.
 
 = 1.2.9-rc1 =
