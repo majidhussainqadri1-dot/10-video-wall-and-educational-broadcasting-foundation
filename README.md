@@ -4,7 +4,7 @@ Canonical source repository for **Sabri Social Homeopathy Platform File 10**.
 
 ## Current reviewed candidate
 
-- Runtime: `1.2.17-rc1`
+- Runtime: `1.2.18-rc1`
 - Plugin folder: `video-wall-and-live-broadcasting`
 - Base schema: `1.1.0`
 - Extension schema: `1.1.0`
@@ -30,9 +30,11 @@ R104 completed a read-only public/read-surface audit before correction. Two real
 
 R105 completed its full privacy/consent/export/erasure/retention review before correction and froze four findings: exporter/eraser coverage asymmetry, retained canonical audit/outbox subject identifiers, encrypted R30 fallback rehydration risk, and absence of an operative scope-bounded legal-hold enforcement contract. The correction added privacy-safe attribution export coverage, bounded canonical/fallback subject anonymization, `File10PrivacyLegalHold.v1`, separate ordinary-retention/legal-hold accounting, regression contracts and release/purge hygiene. Final evidence revalidation was green at exact head `4c8d9b1a7ccc05f996b6bdb8e49a8939b431d0c1`, File 10 Release QA run `34083167364`, on PHP 8.3/8.4 with complete suite, R101–R120 gate, deterministic package, checksum/archive, source/package parity and artifact publication green.
 
-R106 then completed a full read-only upload/scan/transcode safety review before any correction. Three proven findings were frozen: expired private-upload cleanup could race an in-flight chunk writer; checksum/scanner/external technical-validation failures could escape the processing-worker boundary and strand a claimed job; and a late resumable-completion route override retained permissive public-ID grammar. The correction at source commit `bf88573db6eb205bc8d0e4b362022a894f5bb19f` coordinates cleanup with the writer lock, contains validation failures in the normal retry/dead-letter path, and restores the canonical prefixed opaque public-ID route grammar. Candidate identity is `1.2.17-rc1`; final exact-head R106 release QA is still required before R107 may begin.
+R106 then completed a full read-only upload/scan/transcode safety review before any correction. Three proven findings were frozen: expired private-upload cleanup could race an in-flight chunk writer; checksum/scanner/external technical-validation failures could escape the processing-worker boundary and strand a claimed job; and a late resumable-completion route override retained permissive public-ID grammar. The correction at source commit `bf88573db6eb205bc8d0e4b362022a894f5bb19f` coordinates cleanup with the writer lock, contains validation failures in the normal retry/dead-letter path, and restores the canonical prefixed opaque public-ID route grammar. Candidate identity `1.2.17-rc1` completed R106 exact-head release QA before R107 began.
 
-Historical candidates remain preserved by their immutable version identities. `1.2.17-rc1` is the current R106 repository/source correction candidate and must not be treated as Automated-QA Green until its exact-head PHP 8.3/8.4 release QA, deterministic packaging, checksum/archive verification, package/source parity and artifact publication all pass.
+R107 then completed a full read-only provider/webhook/secrets/readiness review before correction. Five proven findings were frozen: permissive late REST identifier overrides plus stale playback enrichment, incomplete provider-compensation Throwable containment, incomplete raw-secret key detection, stale `$wpdb->last_error` contamination of provider-health availability, and Future capability reporting that did not clearly separate implementation presence from runtime readiness. The correction closes those boundaries and advances the candidate to `1.2.18-rc1`; final exact-head R107 release QA is required before R108 may begin.
+
+Historical candidates remain preserved by their immutable version identities. `1.2.18-rc1` is the current R107 repository/source correction candidate and must not be treated as Automated-QA Green until its exact-head PHP 8.3/8.4 release QA, deterministic packaging, checksum/archive verification, package/source parity and artifact publication all pass.
 
 ## Completion boundary
 

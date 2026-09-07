@@ -1,4 +1,4 @@
-# File 10 Status — 1.2.17-rc1
+# File 10 Status — 1.2.18-rc1
 
 **Classification:** repository/source correction candidate in the sequential R101–R120 review cycle begun 2026-09-06.
 
@@ -11,8 +11,8 @@
 - R105 final evidence revalidation: `4c8d9b1a7ccc05f996b6bdb8e49a8939b431d0c1`, run `34083167364`, PHP 8.3/8.4 green; complete suite, R101–R120 gate, deterministic package, checksum/archive, source/package parity and artifact publication green. Artifact ID `10004334313`; uploaded artifact digest `9282da4838aafcce66bdd50ec42bbf97a412e533a523298396c7dc13d567d1e8`.
 - R106 review: completed read-only before correction; three findings frozen in `docs/FILE-10-R106-FROZEN-FINDINGS-2026-09-07.md`.
 - R106 correction: cleanup now coordinates with the private-upload writer lock; checksum/scanner/external validation failures are contained at the worker boundary and fail through normal retry/dead-letter handling; the late resumable-completion override now enforces canonical prefixed opaque public IDs. Source correction commit: `bf88573db6eb205bc8d0e4b362022a894f5bb19f`.
-- Coded/reviewed candidate: `1.2.17-rc1` on `fix/file10-r101-r120-sequential-2026-09-06`.
-- Automated-QA Green: R101–R105 established. R106 final exact-head release QA is pending; R107 is blocked until R106 is green.
+- Coded/reviewed candidate: `1.2.18-rc1` on `fix/file10-r101-r120-sequential-2026-09-06`.
+- Automated-QA Green: R101–R106 established. R107 final exact-head release QA is pending; R108 is blocked until R107 is green.
 - Staging-Accepted: not established.
 - Live-Deployed: not established.
 - Operational: not established.
@@ -22,3 +22,6 @@
 - Live verification: not performed.
 
 GitHub, staging and live are distinct realities. Repository source/package evidence does not identify the code currently deployed to the website. Exact deployed code, live DB/schema and migration state remain unverified until separately frozen from the environment.
+
+- R107 review: completed read-only before correction; five findings frozen covering late REST opaque-ID/playback enrichment, provider compensation exception containment, recursive secret detection, provider-health DB truth, and capability/readiness semantics.
+- R107 correction: applied; candidate identity advanced to `1.2.18-rc1` for exact-head release QA before R108.
