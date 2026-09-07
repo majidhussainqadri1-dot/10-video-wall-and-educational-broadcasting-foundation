@@ -1,0 +1,37 @@
+name: R108 correction batch
+on:
+  push:
+    branches:
+      - fix/file10-r101-r120-sequential-2026-09-06
+permissions:
+  contents: write
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+      - name: Apply frozen R108 corrections
+        run: python3 tools/r108-apply.py
+      - name: Validate correction batch
+        run: |
+          php -l video-wall-and-live-broadcasting/includes/class-vwlb-live.php
+          php -l video-wall-and-live-broadcasting/includes/class-vwlb-rest.php
+          php -l video-wall-and-live-broadcasting/includes/class-vwlb-jobs.php
+          php -l video-wall-and-live-broadcasting/includes/class-vwlb-integrations.php
+          php -l video-wall-and-live-broadcasting/includes/class-vwlb-future-intelligence.php
+          php -l video-wall-and-live-broadcasting/includes/class-vwlb-review-hardening.php
+          php -l video-wall-and-live-broadcasting/includes/class-vwlb-r94-live-external-uncertainty-guard.php
+          php -l video-wall-and-live-broadcasting/includes/class-vwlb-r46-stream-credential-durability.php
+          php -l video-wall-and-live-broadcasting/includes/class-vwlb-r73-recording-consent-guard.php
+          php -l video-wall-and-live-broadcasting/uninstall.php
+          bash tests/file10-r101-r120-contracts.sh
+      - name: Commit R108 correction batch
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add video-wall-and-live-broadcasting/includes/class-vwlb-live.php video-wall-and-live-broadcasting/includes/class-vwlb-rest.php video-wall-and-live-broadcasting/includes/class-vwlb-jobs.php video-wall-and-live-broadcasting/includes/class-vwlb-integrations.php video-wall-and-live-broadcasting/includes/class-vwlb-future-intelligence.php video-wall-and-live-broadcasting/includes/class-vwlb-review-hardening.php video-wall-and-live-broadcasting/includes/class-vwlb-r94-live-external-uncertainty-guard.php video-wall-and-live-broadcasting/includes/class-vwlb-r46-stream-credential-durability.php video-wall-and-live-broadcasting/includes/class-vwlb-r73-recording-consent-guard.php video-wall-and-live-broadcasting/uninstall.php video-wall-and-live-broadcasting/video-wall-and-live-broadcasting.php video-wall-and-live-broadcasting/readme.txt tests/file10-r101-r120-contracts.sh tests/run-all.sh README.md MANIFEST.md STATUS.md SBOM-1.2.19-rc1.json
+          git commit -m 'File 10 R108: reconcile live lifecycle safely and fairly'
+          git push origin HEAD:fix/file10-r101-r120-sequential-2026-09-06
