@@ -30,6 +30,11 @@ jobs:
           p.write_text(t.replace(old,new,1))
           PY
           python3 tools/r109-apply.py
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('video-wall-and-live-broadcasting/includes/class-vwlb-live.php')
+          p.write_text(p.read_text().rstrip()+'\n')
+          PY
       - name: Commit correction batch
         run: |
           git config user.name 'github-actions[bot]'
