@@ -14,7 +14,7 @@ final class VWLB_Sequential_Review_Hardening {
 		foreach ( VWLB_Contracts::namespaces() as $namespace ) {
 			register_rest_route(
 				$namespace,
-				'/media/resumable/(?P<id>[A-Za-z0-9_-]+)/complete',
+				'/media/resumable/(?P<id>[a-z][a-z0-9]*_[a-z0-9]+)/complete',
 				array(
 					'methods' => 'POST',
 					'callback' => array( __CLASS__, 'complete_resumable' ),

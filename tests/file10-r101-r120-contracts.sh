@@ -90,4 +90,15 @@ grep -F "base_retained" "$P/includes/class-vwlb-r105-privacy-lifecycle.php" >/de
 grep -F "held=false" "$P/includes/class-vwlb-r105-privacy-lifecycle.php" >/dev/null
 ! grep -F "credential_hash'" "$P/includes/class-vwlb-r105-privacy-lifecycle.php" | grep -F "SELECT" >/dev/null
 
+# R106 — upload/scan/transcode safety.
+grep -F "LOCK_EX|LOCK_NB" "$P/includes/class-vwlb-r76-cleanup-durability.php" >/dev/null
+grep -F "vwlb_upload_cleanup_file_busy" "$P/includes/class-vwlb-r76-cleanup-durability.php" >/dev/null
+grep -F "vwlb_asset_checksum_unreadable" "$P/includes/class-vwlb-extensions.php" >/dev/null
+grep -F "vwlb_malware_scanner_exception" "$P/includes/class-vwlb-extensions.php" >/dev/null
+grep -F "vwlb_external_media_validation_exception" "$P/includes/class-vwlb-extensions.php" >/dev/null
+grep -F "vwlb_asset_validation_exception" "$P/includes/class-vwlb-jobs.php" >/dev/null
+grep -F "Media validation failed safely and will follow the normal retry policy." "$P/includes/class-vwlb-jobs.php" >/dev/null
+grep -F "'/media/resumable/(?P<id>[a-z][a-z0-9]*_[a-z0-9]+)/complete'" "$P/includes/class-vwlb-sequential-review-hardening.php" >/dev/null
+! grep -F "'/media/resumable/(?P<id>[A-Za-z0-9_-]+)/complete'" "$P/includes/class-vwlb-sequential-review-hardening.php" >/dev/null
+
 echo 'R101-R120 contracts PASS'

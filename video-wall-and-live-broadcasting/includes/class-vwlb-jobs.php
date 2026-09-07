@@ -16,7 +16,7 @@ final class VWLB_Jobs {
 	private static function run_job($job){
 		global $wpdb;$table=VWLB_Helpers::table('processing_jobs');$asset=$job['asset_id']?VWLB_Repository::find('media_assets',$job['asset_id']):array();$result=null;
 		if('verify_and_process'===$job['job_type']){
-			if(!$asset||!VWLB_Media::verify_magic($asset))$result=VWLB_Helpers::error('vwlb_asset_validation_failed',__('Media validation failed.',VWLB_TEXT_DOMAIN),422);
+			try{$valid=$asset?VWLB_Media::verify_magic($asset):false;}catch(Throwable $e){do_action('vwlb_operational_failure','upload','vwlb_asset_validation_exception',array('asset_public_id'=>$asset['public_id']??'','exception'=>sanitize_key(get_class($e))));$result=VWLB_Helpers::error('vwlb_asset_validation_failed',__('Media validation failed safely and will follow the normal retry policy.',VWLB_TEXT_DOMAIN),503,array('exception'=>sanitize_key(get_class($e))));$valid=false;}if(null===$result&&!$valid)$result=VWLB_Helpers::error('vwlb_asset_validation_failed',__('Media validation failed.',VWLB_TEXT_DOMAIN),422);
 			else{
 				$claimed=$wpdb->update(VWLB_Helpers::table('media_assets'),array('status'=>'transcoding','scan_status'=>'passed','version'=>(int)$asset['version']+1,'updated_at'=>VWLB_Helpers::now()),array('id'=>$asset['id'],'version'=>$asset['version']));
 				if(1!==$claimed)$result=VWLB_Helpers::error('vwlb_asset_version_conflict',__('Media asset changed while processing was claimed.',VWLB_TEXT_DOMAIN),409);

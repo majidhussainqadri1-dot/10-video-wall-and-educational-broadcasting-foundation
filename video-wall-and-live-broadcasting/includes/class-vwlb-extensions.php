@@ -683,15 +683,15 @@ final class VWLB_Extensions {
 		if('private_file'===($storage['driver']??'')){
 			$path=self::upload_path($storage['relative_path']??'');if(is_wp_error($path)||!is_file($path))return false;
 			$size=filesize($path);if(isset($storage['bytes'])&&(int)$storage['bytes']!==$size)return false;
-			$sha=hash_file('sha256',$path);if(!empty($asset['checksum'])&&!hash_equals(strtolower((string)$asset['checksum']),$sha))return false;
+			$sha=hash_file('sha256',$path);if(!is_string($sha)||!preg_match('/^[a-f0-9]{64}$/',$sha)){do_action('vwlb_operational_failure','upload','vwlb_asset_checksum_unreadable',array('asset_public_id'=>$asset['public_id']??''));return false;}if(!empty($asset['checksum'])&&!hash_equals(strtolower((string)$asset['checksum']),$sha))return false;
 			if(class_exists('finfo')&&!empty($asset['mime'])){$f=new finfo(FILEINFO_MIME_TYPE);$det=(string)$f->file($path);if($det&&!self::mime_compatible($asset['mime'],$det))return false;}
-			$scan=apply_filters('vwlb_malware_scan_result',null,$path,$asset);
+			try{$scan=apply_filters('vwlb_malware_scan_result',null,$path,$asset);}catch(Throwable $e){do_action('vwlb_operational_failure','upload','vwlb_malware_scanner_exception',array('asset_public_id'=>$asset['public_id']??'','exception'=>sanitize_key(get_class($e))));return false;}
 			if(true===$scan)return true;
 			if(is_array($scan)&&in_array(($scan['status']??''),array('clean','passed'),true))return true;
 			VWLB_Helpers::audit('asset',$asset['id']??0,'scan_gate',$asset['status']??'','quarantined','Malware scanner did not return a clean result.',array('purpose'=>'upload_security'));
 			return false;
 		}
-		$external=apply_filters('vwlb_external_media_validation',null,$asset);
+		try{$external=apply_filters('vwlb_external_media_validation',null,$asset);}catch(Throwable $e){do_action('vwlb_operational_failure','upload','vwlb_external_media_validation_exception',array('asset_public_id'=>$asset['public_id']??'','exception'=>sanitize_key(get_class($e))));return false;}
 		if(true===$external||is_array($external)&&in_array(($external['status']??''),array('clean','passed','provider_verified'),true))return true;
 		return false;
 	}
