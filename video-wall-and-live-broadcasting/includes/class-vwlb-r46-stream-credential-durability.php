@@ -7,8 +7,7 @@ final class VWLB_R46_Stream_Credential_Durability {
 	private static function ttl($request){$d=$request->get_json_params();return max(300,min(DAY_IN_SECONDS,(int)(is_array($d)?($d['ttl']??21600):21600)));}
 	private static function compensate($event,$ingest,$reason){
 		$context=array('provider'=>$event['provider'],'live_public_id'=>$event['public_id'],'provider_ref'=>VWLB_Helpers::text($ingest['provider_ref']??'',191),'reason'=>sanitize_key($reason));
-		do_action('vwlb_provider_ingest_compensation_requested',$context);
-		try{$result=apply_filters('vwlb_provider_revoke_ingest_result',null,$context);}catch(Throwable $e){$result=null;do_action('vwlb_operational_failure','live','vwlb_provider_ingest_compensation_exception',array('live_public_id'=>$event['public_id'],'provider'=>$event['provider']));}
+		try{do_action('vwlb_provider_ingest_compensation_requested',$context);$result=apply_filters('vwlb_provider_revoke_ingest_result',null,$context);}catch(Throwable $e){$result=null;do_action('vwlb_operational_failure','live','vwlb_provider_ingest_compensation_exception',array('live_public_id'=>$event['public_id'],'provider'=>$event['provider'],'exception'=>sanitize_key(get_class($e))));}
 		$confirmed=true===$result||(is_array($result)&&in_array($result['status']??'',array('revoked','deleted','disabled','rotated'),true));
 		if(!$confirmed)do_action('vwlb_operational_failure','live','vwlb_provider_ingest_reconcile_required',array('live_public_id'=>$event['public_id'],'provider'=>$event['provider'],'provider_ref_hash'=>hash('sha256',(string)($ingest['provider_ref']??''))));
 		return $confirmed;

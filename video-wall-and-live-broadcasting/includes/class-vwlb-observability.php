@@ -28,10 +28,15 @@ final class VWLB_Observability {
 		if(false===$saved)do_action('vwlb_operational_failure','provider_health','vwlb_provider_health_persist_failed',array('provider'=>$provider,'capability'=>$capability));return false!==$saved;
 	}
 	public static function provider_available($provider,$capability){
-		global $wpdb;$provider=sanitize_key($provider);$capability=sanitize_key($capability);$row=$wpdb->get_row($wpdb->prepare('SELECT * FROM '.VWLB_Helpers::table('provider_health').' WHERE provider=%s AND capability=%s',$provider,$capability),ARRAY_A);
+		global $wpdb;$provider=sanitize_key($provider);$capability=sanitize_key($capability);$wpdb->last_error='';$row=$wpdb->get_row($wpdb->prepare('SELECT * FROM '.VWLB_Helpers::table('provider_health').' WHERE provider=%s AND capability=%s',$provider,$capability),ARRAY_A);
 		// R35: absence of a health row is an allowed first-use state, but a failed health query must not be interpreted as healthy.
 		if(''!==(string)$wpdb->last_error){do_action('vwlb_operational_failure','provider_health','vwlb_provider_health_read_failed',array('provider'=>$provider,'capability'=>$capability));return false;}
 		if(!$row)return true;if('down'===$row['state'])return false;if($row['circuit_open_until']&&strtotime($row['circuit_open_until'].' UTC')>time())return false;return true;
+	}
+	public static function provider_readiness($provider,$capability){
+		global $wpdb;$provider=sanitize_key($provider);$capability=sanitize_key($capability);$wpdb->last_error='';$row=$wpdb->get_row($wpdb->prepare('SELECT state,circuit_open_until FROM '.VWLB_Helpers::table('provider_health').' WHERE provider=%s AND capability=%s',$provider,$capability),ARRAY_A);
+		if(''!==(string)$wpdb->last_error){do_action('vwlb_operational_failure','provider_health','vwlb_provider_readiness_read_failed',array('provider'=>$provider,'capability'=>$capability));return 'unverified';}
+		if(!$row)return 'unverified';if('down'===($row['state']??''))return 'unavailable';if(!empty($row['circuit_open_until'])&&strtotime($row['circuit_open_until'].' UTC')>time())return 'unavailable';if('healthy'===($row['state']??''))return 'ready';return 'unverified';
 	}
 	public static function snapshot(){
 		global $wpdb;$jobs=(int)$wpdb->get_var("SELECT COUNT(*) FROM ".VWLB_Helpers::table('processing_jobs')." WHERE status='dead'");$outbox=(int)$wpdb->get_var("SELECT COUNT(*) FROM ".VWLB_Helpers::table('outbox')." WHERE status='dead'");

@@ -101,4 +101,22 @@ grep -F "Media validation failed safely and will follow the normal retry policy.
 grep -F "'/media/resumable/(?P<id>[a-z][a-z0-9]*_[a-z0-9]+)/complete'" "$P/includes/class-vwlb-sequential-review-hardening.php" >/dev/null
 ! grep -F "'/media/resumable/(?P<id>[A-Za-z0-9_-]+)/complete'" "$P/includes/class-vwlb-sequential-review-hardening.php" >/dev/null
 
+# R107 — provider/webhook/secrets/readiness boundaries.
+grep -F "public static function contains_raw_secret" "$P/includes/class-vwlb-helpers.php" >/dev/null
+grep -F "client_secret" "$P/includes/class-vwlb-helpers.php" >/dev/null
+grep -F "str_ends_with( \$key, '_secret' )" "$P/includes/class-vwlb-helpers.php" >/dev/null
+grep -F "VWLB_Helpers::contains_raw_secret(\$safe)" "$P/includes/class-vwlb-future-adapters.php" >/dev/null
+grep -F "return VWLB_Helpers::contains_raw_secret( \$value );" "$P/includes/class-vwlb-future-intelligence.php" >/dev/null
+grep -F "return VWLB_Helpers::contains_raw_secret( \$value );" "$P/includes/class-vwlb-sequential-review-hardening.php" >/dev/null
+! grep -F "[A-Za-z0-9_-]+" "$P/includes/class-vwlb-future-safety.php" >/dev/null
+! grep -E "'/((captions|videos|live-events)/[^']*)\[A-Za-z0-9_-\]\+" "$P/includes/class-vwlb-sequential-review-hardening.php" >/dev/null
+grep -F "Playback enrichment state could not be verified safely." "$P/includes/class-vwlb-future-safety.php" >/dev/null
+! grep -F "\$payload['video']['id']" "$P/includes/class-vwlb-future-safety.php" >/dev/null
+grep -F "vwlb_provider_live_compensation_exception" "$P/includes/class-vwlb-live.php" >/dev/null
+grep -F "try{do_action('vwlb_provider_ingest_compensation_requested'" "$P/includes/class-vwlb-r46-stream-credential-durability.php" >/dev/null
+grep -F "provider_readiness" "$P/includes/class-vwlb-observability.php" >/dev/null
+grep -F "capability_semantics" "$P/includes/class-vwlb-future-rest.php" >/dev/null
+grep -F "implementation_presence_not_runtime_readiness" "$P/includes/class-vwlb-future-rest.php" >/dev/null
+grep -F "runtime_readiness" "$P/includes/class-vwlb-future-rest.php" >/dev/null
+
 echo 'R101-R120 contracts PASS'

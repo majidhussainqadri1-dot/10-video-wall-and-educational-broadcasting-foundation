@@ -306,14 +306,8 @@ final class VWLB_Future_Intelligence {
 	}
 
 	private static function contains_raw_secret( $value ) {
-		if ( ! is_array( $value ) ) return false;
-		foreach ( $value as $key => $child ) {
-			$key = sanitize_key( (string) $key );
-			if ( str_ends_with( $key, '_ref' ) || str_ends_with( $key, '_id' ) ) { if ( is_array($child) && self::contains_raw_secret($child) ) return true; continue; }
-			if ( in_array( $key, array('secret','stream_key','password','api_key','access_token','refresh_token','private_key','token'), true ) ) return true;
-			if ( is_array( $child ) && self::contains_raw_secret( $child ) ) return true;
-		}
-		return false;
+		return VWLB_Helpers::contains_raw_secret( $value );
+
 	}
 
 	/** F10-FUT-001, 003 — multi-camera production sources and screen/slides inputs. */

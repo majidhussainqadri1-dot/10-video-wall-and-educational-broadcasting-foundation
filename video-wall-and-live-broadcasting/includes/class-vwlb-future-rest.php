@@ -98,7 +98,17 @@ final class VWLB_Future_REST {
 		return $value;
 	}
 
-	public function capabilities(){return $this->response(array('requirements'=>VWLB_Future_Intelligence::REQUIREMENTS,'capabilities'=>VWLB_Future_Intelligence::capabilities(array()),'schema'=>VWLB_Future_Intelligence::SCHEMA));}
+	private function runtime_readiness(){
+		$provider_caps=array();$probe=array('upload','playback','processing','live','recording');
+		foreach(VWLB_Providers::all() as $id=>$provider){$id=sanitize_key((string)$id);try{$caps=(array)$provider->capabilities();}catch(Throwable $e){$caps=array();do_action('vwlb_operational_failure','provider','vwlb_future_capability_probe_exception',array('provider'=>$id,'exception'=>sanitize_key(get_class($e))));}
+			foreach($probe as $cap)$provider_caps[$id][$cap]=empty($caps[$cap])?'unavailable':VWLB_Observability::provider_readiness($id,$cap);
+		}
+		$implemented=VWLB_Future_Intelligence::capabilities(array());$features=array_fill_keys($implemented,'unverified');
+		try{$projected=apply_filters('vwlb_future_runtime_capability_readiness',$features,$provider_caps);}catch(Throwable $e){$projected=$features;do_action('vwlb_operational_failure','provider','vwlb_future_runtime_readiness_exception',array('exception'=>sanitize_key(get_class($e))));}
+		$allowed=array('ready','unavailable','unverified');foreach($features as $name=>$default){$value=is_array($projected)?sanitize_key((string)($projected[$name]??$default)):$default;$features[$name]=in_array($value,$allowed,true)?$value:'unverified';}
+		return array('overall'=>'unverified','features'=>$features,'providers'=>$provider_caps,'proof_boundary'=>'ready requires current provider/runtime health evidence; implementation presence alone is not readiness');
+	}
+	public function capabilities(){return $this->response(array('requirements'=>VWLB_Future_Intelligence::REQUIREMENTS,'capabilities'=>VWLB_Future_Intelligence::capabilities(array()),'schema'=>VWLB_Future_Intelligence::SCHEMA,'capability_semantics'=>'implementation_presence_not_runtime_readiness','runtime_readiness'=>$this->runtime_readiness()));}
 	public function production_state(WP_REST_Request $r){
 		$event=VWLB_Repository::find('live_events',$r['id']);if(!$event||!VWLB_Security::can(VWLB_Contracts::CAP_BROADCAST,$event,'future_production_state'))return VWLB_Helpers::error('vwlb_forbidden',__('You cannot view this production studio.',VWLB_TEXT_DOMAIN),403);
 		global $wpdb;$read=function($sql,$args=array())use($wpdb){$query=$args?$wpdb->prepare($sql,...$args):$sql;$rows=$wpdb->get_results($query,ARRAY_A);if($wpdb->last_error)return VWLB_Helpers::error('vwlb_database_error',__('Production studio state could not be verified.',VWLB_TEXT_DOMAIN),503);return is_array($rows)?$rows:array();};

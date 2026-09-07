@@ -24,7 +24,7 @@ final class VWLB_Sequential_Review_Hardening {
 			);
 			register_rest_route(
 				$namespace,
-				'/captions/(?P<id>[A-Za-z0-9_-]+)',
+				'/captions/(?P<id>[a-z][a-z0-9]*_[a-z0-9]+)',
 				array(
 					'methods' => 'GET',
 					'callback' => array( __CLASS__, 'caption_delivery' ),
@@ -34,7 +34,7 @@ final class VWLB_Sequential_Review_Hardening {
 			);
 			register_rest_route(
 				$namespace,
-				'/videos/(?P<id>[A-Za-z0-9_-]+)/annotations',
+				'/videos/(?P<id>[a-z][a-z0-9]*_[a-z0-9]+)/annotations',
 				array(
 					'methods' => 'POST',
 					'callback' => array( __CLASS__, 'create_annotation' ),
@@ -44,7 +44,7 @@ final class VWLB_Sequential_Review_Hardening {
 			);
 			register_rest_route(
 				$namespace,
-				'/live-events/(?P<id>[A-Za-z0-9_-]+)/kill',
+				'/live-events/(?P<id>[a-z][a-z0-9]*_[a-z0-9]+)/kill',
 				array(
 					'methods' => 'POST',
 					'callback' => array( __CLASS__, 'kill_live' ),
@@ -93,13 +93,8 @@ final class VWLB_Sequential_Review_Hardening {
 	}
 
 	private static function contains_raw_secret( $value ) {
-		if ( ! is_array( $value ) ) return false;
-		foreach ( $value as $key => $child ) {
-			$key = sanitize_key( (string) $key );
-			if ( ! str_ends_with( $key, '_ref' ) && in_array( $key, array( 'secret','password','api_key','access_token','refresh_token','private_key','token','stream_key' ), true ) ) return true;
-			if ( is_array( $child ) && self::contains_raw_secret( $child ) ) return true;
-		}
-		return false;
+		return VWLB_Helpers::contains_raw_secret( $value );
+
 	}
 
 	/** R09: a timestamp correction is reviewed at creation, but publication fact is emitted only by the later publish transition. */

@@ -4,8 +4,7 @@ defined( 'ABSPATH' ) || exit;
 final class VWLB_Live {
 	private static function compensate_live_creation($provider_id,$provider_result,$event,$reason){
 		$provider_id=sanitize_key((string)$provider_id);$provider_ref=VWLB_Helpers::text($provider_result['provider_event_ref']??'',191);
-		do_action('vwlb_provider_live_compensation_requested',$provider_id,$provider_result,$event,$reason);
-		$result=apply_filters('vwlb_provider_delete_live_result',null,$provider_id,$provider_result,$event,$reason);
+		try{do_action('vwlb_provider_live_compensation_requested',$provider_id,$provider_result,$event,$reason);$result=apply_filters('vwlb_provider_delete_live_result',null,$provider_id,$provider_result,$event,$reason);}catch(Throwable $e){do_action('vwlb_operational_failure','live','vwlb_provider_live_compensation_exception',array('provider'=>$provider_id,'provider_event_ref_hash'=>$provider_ref?hash('sha256',$provider_ref):'','exception'=>sanitize_key(get_class($e))));return false;}
 		$confirmed=true===$result||(is_array($result)&&in_array(sanitize_key((string)($result['status']??'')),array('deleted','cancelled','disabled','removed','not_found'),true));
 		if($confirmed)return true;
 		do_action('vwlb_operational_failure','live','vwlb_provider_live_reconcile_required',array('provider'=>$provider_id,'provider_event_ref_hash'=>$provider_ref?hash('sha256',$provider_ref):''));

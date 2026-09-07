@@ -9,6 +9,17 @@ final class VWLB_Helpers {
 	public static function trace_id() { return 'f10_' . strtolower( wp_generate_password( 20, false, false ) ); }
 	public static function enum( $value, $allowed, $default = '' ) { $value = sanitize_key( (string) $value ); return in_array( $value, $allowed, true ) ? $value : $default; }
 	public static function text( $value, $max = 191 ) { return mb_substr( sanitize_text_field( (string) $value ), 0, $max ); }
+	public static function contains_raw_secret( $value ) {
+		if ( ! is_array( $value ) ) return false;
+		$exact = array( 'secret','password','api_key','access_key','access_token','refresh_token','private_key','secret_key','signing_key','client_secret','webhook_secret','authorization','bearer','credential','credentials','stream_key','token' );
+		foreach ( $value as $key => $child ) {
+			$key = sanitize_key( (string) $key );
+			$reference = str_ends_with( $key, '_ref' ) || str_ends_with( $key, '_id' );
+			if ( ! $reference && ( in_array( $key, $exact, true ) || str_ends_with( $key, '_secret' ) || str_ends_with( $key, '_token' ) || str_ends_with( $key, '_password' ) ) ) return true;
+			if ( is_array( $child ) && self::contains_raw_secret( $child ) ) return true;
+		}
+		return false;
+	}
 	public static function textarea( $value, $max = 100000 ) { return mb_substr( wp_kses_post( (string) $value ), 0, $max ); }
 	public static function json( $value, $default = array() ) {
 		if ( is_array( $value ) ) { return $value; }
