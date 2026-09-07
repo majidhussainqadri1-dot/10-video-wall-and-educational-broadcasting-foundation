@@ -9,6 +9,14 @@ import pathlib, sys
 src, dst, version = sys.argv[1:]
 text = pathlib.Path(src).read_text().replace('1.2.4-rc1', version)
 text = text.replace('need video-wall-and-live-broadcasting-'+version+'.zip "$ROOT/tools/build-package.sh" r19-build-artifact', 'need \'video-wall-and-live-broadcasting-${VERSION}.zip\' "$ROOT/tools/build-package.sh" r19-build-artifact')
+rebased=[]
+for line in text.splitlines():
+    if line.rstrip().endswith('r08-fresh-live'):
+        line='need "reconcile_provider_observation" "$P/includes/class-vwlb-live.php" r08-fresh-live'
+    elif line.rstrip().endswith('r08-live-cas'):
+        line='need "update_versioned(\'live_events\'" "$P/includes/class-vwlb-live.php" r08-live-cas'
+    rebased.append(line)
+text='\n'.join(rebased)+'\n'
 pathlib.Path(dst).write_text(text)
 PY
   bash "$tmp"; rm -f "$tmp"
