@@ -3,7 +3,7 @@ Contributors: sabrihomeopathy
 Requires at least: 7.0
 Tested up to: 7.0.1
 Requires PHP: 8.3
-Stable tag: 1.2.18-rc1
+Stable tag: 1.2.19-rc1
 License: GPLv2 or later
 
 File 10 canonical owner for recorded video and live broadcasting in the Sabri Social Homeopathy Platform.
@@ -40,7 +40,7 @@ Keyboard-visible focus, approximate 44px controls, semantic status regions, capt
 == Installation ==
 
 1. Back up the approved staging environment and verify restoration.
-2. Upload `video-wall-and-live-broadcasting-1.2.18-rc1.zip` to WordPress staging.
+2. Upload `video-wall-and-live-broadcasting-1.2.19-rc1.zip` to WordPress staging.
 3. Activate the plugin; schema, capabilities, pages and cron jobs are reconciled with activation compensation evidence.
 4. Configure File 00 identity claims/capabilities and approved provider adapters.
 5. Run Video & Live diagnostics.
@@ -55,6 +55,11 @@ The activation migration reads supported legacy File 10 data when present, store
 Source code, deterministic packaging and automated checks do not prove Hostinger/LiteSpeed runtime, real provider credentials, actual transcoding/live delivery, browser/device accessibility, high-concurrency streaming, backup restoration, rollback, staging acceptance, Founder acceptance or live deployment. Those remain separate evidence gates.
 
 == Changelog ==
+
+= 1.2.19-rc1 =
+* R108: remove public caller authority over provider lifecycle evidence and add a canonical verified provider/webhook reconciliation path.
+* Require positive provider confirmation for emergency end before committing matching local state; uncertain provider/local outcomes remain reconciliation-guarded.
+* Make core live and Future redundancy reconciliation DB-failure-aware, Throwable-contained and cursor-fair, and normalize late REST override IDs to the canonical opaque grammar.
 
 = 1.2.18-rc1 =
 * R107: enforce canonical opaque IDs across late REST overrides and re-resolve authorized playback state before enrichment.

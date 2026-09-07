@@ -3,7 +3,7 @@
 defined( 'ABSPATH' ) || exit;
 final class VWLB_R46_Stream_Credential_Durability {
 	public static function register(){add_filter('rest_request_before_callbacks',array(__CLASS__,'intercept_issue'),21,3);}
-	private static function route_matches($request){if(!$request instanceof WP_REST_Request||'POST'!==strtoupper((string)$request->get_method()))return false;$route=(string)$request->get_route();foreach(VWLB_Contracts::namespaces() as $n)if(preg_match('#^/'.preg_quote($n,'#').'/live-events/[A-Za-z0-9_-]+/credentials$#',$route))return true;return false;}
+	private static function route_matches($request){if(!$request instanceof WP_REST_Request||'POST'!==strtoupper((string)$request->get_method()))return false;$route=(string)$request->get_route();foreach(VWLB_Contracts::namespaces() as $n)if(preg_match('#^/'.preg_quote($n,'#').'/live-events/[a-z][a-z0-9]*_[a-z0-9]+/credentials$#',$route))return true;return false;}
 	private static function ttl($request){$d=$request->get_json_params();return max(300,min(DAY_IN_SECONDS,(int)(is_array($d)?($d['ttl']??21600):21600)));}
 	private static function compensate($event,$ingest,$reason){
 		$context=array('provider'=>$event['provider'],'live_public_id'=>$event['public_id'],'provider_ref'=>VWLB_Helpers::text($ingest['provider_ref']??'',191),'reason'=>sanitize_key($reason));

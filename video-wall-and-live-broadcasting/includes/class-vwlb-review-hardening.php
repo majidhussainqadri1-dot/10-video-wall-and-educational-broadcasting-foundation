@@ -70,29 +70,29 @@ final class VWLB_Review_Hardening {
 				array('methods'=>'GET','callback'=>array(__CLASS__,'browse_videos'),'permission_callback'=>'__return_true'),
 				array('methods'=>'POST','callback'=>array(__CLASS__,'create_video'),'permission_callback'=>function(){return VWLB_Security::can(VWLB_Contracts::CAP_SUBMIT);}),
 			),true);
-			register_rest_route($n,'/videos/(?P<id>[A-Za-z0-9_-]+)/captions',array('methods'=>'POST','callback'=>array(__CLASS__,'add_caption'),'permission_callback'=>function(){return VWLB_Security::can(VWLB_Contracts::CAP_SUBMIT);}),true);
-			register_rest_route($n,'/videos/(?P<id>[A-Za-z0-9_-]+)/playback',array('methods'=>'GET','callback'=>array(__CLASS__,'playback'),'permission_callback'=>'__return_true'),true);
+			register_rest_route($n,'/videos/(?P<id>[a-z][a-z0-9]*_[a-z0-9]+)/captions',array('methods'=>'POST','callback'=>array(__CLASS__,'add_caption'),'permission_callback'=>function(){return VWLB_Security::can(VWLB_Contracts::CAP_SUBMIT);}),true);
+			register_rest_route($n,'/videos/(?P<id>[a-z][a-z0-9]*_[a-z0-9]+)/playback',array('methods'=>'GET','callback'=>array(__CLASS__,'playback'),'permission_callback'=>'__return_true'),true);
 			register_rest_route($n,'/playlists',array('methods'=>'POST','callback'=>array(__CLASS__,'create_playlist'),'permission_callback'=>function(){return VWLB_Security::can(VWLB_Contracts::CAP_PUBLISH);}),true);
-			register_rest_route($n,'/playlists/(?P<id>[A-Za-z0-9_-]+)/items',array('methods'=>'PUT','callback'=>array(__CLASS__,'playlist_items'),'permission_callback'=>function(){return VWLB_Security::can(VWLB_Contracts::CAP_PUBLISH);}),true);
+			register_rest_route($n,'/playlists/(?P<id>[a-z][a-z0-9]*_[a-z0-9]+)/items',array('methods'=>'PUT','callback'=>array(__CLASS__,'playlist_items'),'permission_callback'=>function(){return VWLB_Security::can(VWLB_Contracts::CAP_PUBLISH);}),true);
 			register_rest_route($n,'/media/initiate',array('methods'=>'POST','callback'=>array(__CLASS__,'initiate_media'),'permission_callback'=>function(){return VWLB_Security::can(VWLB_Contracts::CAP_SUBMIT);}),true);
 			register_rest_route($n,'/live-events',array(
 				array('methods'=>'GET','callback'=>array(__CLASS__,'browse_live'),'permission_callback'=>'__return_true'),
 				array('methods'=>'POST','callback'=>array(__CLASS__,'schedule_live'),'permission_callback'=>function(){return VWLB_Security::can(VWLB_Contracts::CAP_BROADCAST);}),
 			),true);
-			register_rest_route($n,'/live-events/(?P<id>[A-Za-z0-9_-]+)/credentials',array('methods'=>'POST','callback'=>array(__CLASS__,'issue_credential'),'permission_callback'=>function(){return VWLB_Security::can(VWLB_Contracts::CAP_BROADCAST);}),true);
-			register_rest_route($n,'/live-events/(?P<id>[A-Za-z0-9_-]+)/replay',array('methods'=>'POST','callback'=>array(__CLASS__,'publish_replay'),'permission_callback'=>function(){return VWLB_Security::can(VWLB_Contracts::CAP_PUBLISH);}),true);
+			register_rest_route($n,'/live-events/(?P<id>[a-z][a-z0-9]*_[a-z0-9]+)/credentials',array('methods'=>'POST','callback'=>array(__CLASS__,'issue_credential'),'permission_callback'=>function(){return VWLB_Security::can(VWLB_Contracts::CAP_BROADCAST);}),true);
+			register_rest_route($n,'/live-events/(?P<id>[a-z][a-z0-9]*_[a-z0-9]+)/replay',array('methods'=>'POST','callback'=>array(__CLASS__,'publish_replay'),'permission_callback'=>function(){return VWLB_Security::can(VWLB_Contracts::CAP_PUBLISH);}),true);
 			register_rest_route($n,'/premieres',array('methods'=>'POST','callback'=>array(__CLASS__,'premiere_create'),'permission_callback'=>function(){return VWLB_Security::can(VWLB_Contracts::CAP_PUBLISH);}),true);
 			register_rest_route($n,'/downloads',array('methods'=>'POST','callback'=>array(__CLASS__,'download_token'),'permission_callback'=>function(){return is_user_logged_in();}),true);
 			register_rest_route($n,'/creator/studio',array('methods'=>'GET','callback'=>array(__CLASS__,'creator_studio'),'permission_callback'=>function(){return VWLB_Security::can(VWLB_Contracts::CAP_SUBMIT);}),true);
 			register_rest_route($n,'/podcasts/series',array('methods'=>'POST','callback'=>array(__CLASS__,'podcast_series_create'),'permission_callback'=>function(){return VWLB_Security::can(VWLB_Contracts::CAP_PUBLISH);}),true);
 			register_rest_route($n,'/podcasts/episodes',array('methods'=>'POST','callback'=>array(__CLASS__,'podcast_episode_create'),'permission_callback'=>function(){return VWLB_Security::can(VWLB_Contracts::CAP_SUBMIT);}),true);
-			register_rest_route($n,'/podcasts/episodes/(?P<id>[A-Za-z0-9_-]+)',array('methods'=>'GET','callback'=>array(__CLASS__,'podcast_episode'),'permission_callback'=>'__return_true'),true);
-			register_rest_route($n,'/captions/(?P<id>[A-Za-z0-9_-]+)',array('methods'=>'GET','callback'=>array(__CLASS__,'caption'),'permission_callback'=>'__return_true'),true);
-			register_rest_route($n,'/media/(?P<id>[A-Za-z0-9_-]+)/contract',array('methods'=>'GET','callback'=>array(__CLASS__,'media_contract'),'permission_callback'=>'__return_true'),true);
-			register_rest_route($n,'/downloads/(?P<id>[A-Za-z0-9_-]+)/resolve',array('methods'=>'POST','callback'=>array(__CLASS__,'download_resolve'),'permission_callback'=>function(){return is_user_logged_in();}),true);
-			register_rest_route($n,'/podcasts/series/(?P<id>[A-Za-z0-9_-]+)/feed',array('methods'=>'GET','callback'=>array(__CLASS__,'podcast_feed'),'permission_callback'=>'__return_true'),true);
-			register_rest_route($n,'/podcasts/series/(?P<id>[A-Za-z0-9_-]+)/rss',array('methods'=>'GET','callback'=>array(__CLASS__,'podcast_rss'),'permission_callback'=>'__return_true'),true);
-			register_rest_route($n,'/podcasts/episodes/(?P<id>[A-Za-z0-9_-]+)/publish',array('methods'=>'POST','callback'=>array(__CLASS__,'podcast_publish'),'permission_callback'=>function(){return VWLB_Security::can(VWLB_Contracts::CAP_PUBLISH);}),true);
+			register_rest_route($n,'/podcasts/episodes/(?P<id>[a-z][a-z0-9]*_[a-z0-9]+)',array('methods'=>'GET','callback'=>array(__CLASS__,'podcast_episode'),'permission_callback'=>'__return_true'),true);
+			register_rest_route($n,'/captions/(?P<id>[a-z][a-z0-9]*_[a-z0-9]+)',array('methods'=>'GET','callback'=>array(__CLASS__,'caption'),'permission_callback'=>'__return_true'),true);
+			register_rest_route($n,'/media/(?P<id>[a-z][a-z0-9]*_[a-z0-9]+)/contract',array('methods'=>'GET','callback'=>array(__CLASS__,'media_contract'),'permission_callback'=>'__return_true'),true);
+			register_rest_route($n,'/downloads/(?P<id>[a-z][a-z0-9]*_[a-z0-9]+)/resolve',array('methods'=>'POST','callback'=>array(__CLASS__,'download_resolve'),'permission_callback'=>function(){return is_user_logged_in();}),true);
+			register_rest_route($n,'/podcasts/series/(?P<id>[a-z][a-z0-9]*_[a-z0-9]+)/feed',array('methods'=>'GET','callback'=>array(__CLASS__,'podcast_feed'),'permission_callback'=>'__return_true'),true);
+			register_rest_route($n,'/podcasts/series/(?P<id>[a-z][a-z0-9]*_[a-z0-9]+)/rss',array('methods'=>'GET','callback'=>array(__CLASS__,'podcast_rss'),'permission_callback'=>'__return_true'),true);
+			register_rest_route($n,'/podcasts/episodes/(?P<id>[a-z][a-z0-9]*_[a-z0-9]+)/publish',array('methods'=>'POST','callback'=>array(__CLASS__,'podcast_publish'),'permission_callback'=>function(){return VWLB_Security::can(VWLB_Contracts::CAP_PUBLISH);}),true);
 		}
 	}
 

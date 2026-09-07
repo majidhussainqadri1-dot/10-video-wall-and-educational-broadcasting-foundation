@@ -11,6 +11,7 @@ defined( 'ABSPATH' ) || exit;
 final class VWLB_Future_Intelligence {
 	const OPTION = 'vwlb_future_schema_version';
 	const SCHEMA = '1.2.0';
+	const REDUNDANCY_RECONCILE_CURSOR_OPTION = 'vwlb_r108_redundancy_reconcile_cursor';
 	const REQUIREMENTS = array(
 		'F10-FUT-001','F10-FUT-002','F10-FUT-003','F10-FUT-004','F10-FUT-005','F10-FUT-006',
 		'F10-FUT-007','F10-FUT-008','F10-FUT-009','F10-FUT-010','F10-FUT-011','F10-FUT-012',
@@ -575,8 +576,9 @@ final class VWLB_Future_Intelligence {
 	}
 
 	/** Provider redundancy reconciliation — F10-FUT-008. */
+	private static function persist_redundancy_cursor($id){$id=max(0,(int)$id);if(0===$id){$deleted=delete_option(self::REDUNDANCY_RECONCILE_CURSOR_OPTION);if(!$deleted&&false!==get_option(self::REDUNDANCY_RECONCILE_CURSOR_OPTION,false)){do_action('vwlb_operational_failure','redundancy','vwlb_redundancy_reconcile_cursor_failed',array('phase'=>'reset'));return false;}return true;}$saved=update_option(self::REDUNDANCY_RECONCILE_CURSOR_OPTION,$id,false);if(!$saved&&(int)get_option(self::REDUNDANCY_RECONCILE_CURSOR_OPTION,0)!==$id){do_action('vwlb_operational_failure','redundancy','vwlb_redundancy_reconcile_cursor_failed',array('phase'=>'advance'));return false;}return true;}
 	public static function reconcile_live_redundancy() {
-		global $wpdb;$cfg=VWLB_Helpers::table('future_live_config');$live=VWLB_Helpers::table('live_events');$rows=$wpdb->get_results("SELECT c.*,l.public_id,l.provider,l.status FROM $cfg c INNER JOIN $live l ON l.id=c.live_event_id WHERE l.status IN ('ready','live','interrupted') AND (c.backup_provider<>'' OR c.redundant_recording=1) LIMIT 100",ARRAY_A);foreach($rows as $row){do_action('vwlb_redundancy_reconcile',$row);if(!empty($row['redundant_recording']))do_action('vwlb_redundant_recording_required',$row);}
+		global $wpdb;$cfg=VWLB_Helpers::table('future_live_config');$live=VWLB_Helpers::table('live_events');$after=absint(get_option(self::REDUNDANCY_RECONCILE_CURSOR_OPTION,0));$wpdb->last_error='';$rows=$wpdb->get_results($wpdb->prepare("SELECT c.*,l.public_id,l.provider,l.status FROM $cfg c INNER JOIN $live l ON l.id=c.live_event_id WHERE l.status IN ('ready','live','interrupted') AND (c.backup_provider<>'' OR c.redundant_recording=1) AND c.id>%d ORDER BY c.id ASC LIMIT 100",$after),ARRAY_A);if(''!==(string)$wpdb->last_error){do_action('vwlb_operational_failure','redundancy','vwlb_redundancy_reconcile_read_failed',array());return;}$rows=is_array($rows)?$rows:array();if(!$rows){if($after)self::persist_redundancy_cursor(0);return;}$last=$after;foreach($rows as $row){$last=max($last,(int)($row['id']??0));try{do_action('vwlb_redundancy_reconcile',$row);if(!empty($row['redundant_recording']))do_action('vwlb_redundant_recording_required',$row);}catch(Throwable $e){do_action('vwlb_operational_failure','redundancy','vwlb_redundancy_reconcile_exception',array('live_public_id'=>$row['public_id']??'','provider'=>$row['provider']??'','exception'=>sanitize_key(get_class($e))));}}self::persist_redundancy_cursor(count($rows)<100?0:$last);
 	}
 
 	public static function cleanup() {

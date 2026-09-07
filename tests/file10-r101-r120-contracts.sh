@@ -119,4 +119,25 @@ grep -F "capability_semantics" "$P/includes/class-vwlb-future-rest.php" >/dev/nu
 grep -F "implementation_presence_not_runtime_readiness" "$P/includes/class-vwlb-future-rest.php" >/dev/null
 grep -F "runtime_readiness" "$P/includes/class-vwlb-future-rest.php" >/dev/null
 
+# R108 — live lifecycle/emergency/reconciliation/concurrency/idempotency.
+grep -F "vwlb_provider_proof_forbidden" "$P/includes/class-vwlb-rest.php" >/dev/null
+! grep -F "d['provider_proof']??array()" "$P/includes/class-vwlb-rest.php" >/dev/null
+grep -F "reconcile_provider_observation" "$P/includes/class-vwlb-live.php" >/dev/null
+grep -F "vwlb_provider_live_reconcile_observation" "$P/includes/class-vwlb-jobs.php" >/dev/null
+grep -F "vwlb_provider_live_webhook_observation" "$P/includes/class-vwlb-integrations.php" >/dev/null
+grep -F "vwlb_verified_live_reconcile_failed" "$P/includes/class-vwlb-integrations.php" >/dev/null
+grep -F "vwlb_provider_emergency_end_result" "$P/includes/class-vwlb-live.php" >/dev/null
+grep -F "positively confirmed" "$P/includes/class-vwlb-live.php" >/dev/null
+grep -F "provider_confirmed'=>true" "$P/includes/class-vwlb-live.php" >/dev/null
+grep -F "LIVE_RECONCILE_CURSOR_OPTION='vwlb_r108_live_reconcile_cursor'" "$P/includes/class-vwlb-jobs.php" >/dev/null
+grep -F "id>%d ORDER BY id ASC LIMIT 100" "$P/includes/class-vwlb-jobs.php" >/dev/null
+grep -F "vwlb_live_reconcile_cursor_failed" "$P/includes/class-vwlb-jobs.php" >/dev/null
+grep -F "REDUNDANCY_RECONCILE_CURSOR_OPTION = 'vwlb_r108_redundancy_reconcile_cursor'" "$P/includes/class-vwlb-future-intelligence.php" >/dev/null
+grep -F "ORDER BY c.id ASC LIMIT 100" "$P/includes/class-vwlb-future-intelligence.php" >/dev/null
+grep -F "vwlb_redundancy_reconcile_read_failed" "$P/includes/class-vwlb-future-intelligence.php" >/dev/null
+grep -F "vwlb_redundancy_reconcile_exception" "$P/includes/class-vwlb-future-intelligence.php" >/dev/null
+! grep -F "[A-Za-z0-9_-]+" "$P/includes/class-vwlb-review-hardening.php" >/dev/null
+grep -F "vwlb_r108_live_reconcile_cursor" "$P/uninstall.php" >/dev/null
+grep -F "vwlb_r108_redundancy_reconcile_cursor" "$P/uninstall.php" >/dev/null
+
 echo 'R101-R120 contracts PASS'
