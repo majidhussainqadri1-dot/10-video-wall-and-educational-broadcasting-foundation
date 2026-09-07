@@ -63,6 +63,8 @@ text = text.replace('need "VWLB_Repository::read_failed()" "$P/includes/class-vw
 text = text.replace('need "VWLB_Repository::read_failed()" "$P/includes/class-vwlb-frontend.php" r30-frontend-read-failure', 'need "VWLB_Repository::read_failed()" "$P/includes/class-vwlb-plugin.php" r30-frontend-read-failure')
 text = text.replace('need "vwlb_public_read_unavailable" "$P/includes/class-vwlb-rest.php" r30-public-error', 'need "vwlb_repository_read_failed" "$P/includes/class-vwlb-r65-repository-read-guard.php" r30-public-error')
 text = text.replace('need "vwlb_webhook_integrity_failed" "$P/includes/class-vwlb-r31-webhook-integrity.php" r31-fail-closed', 'need "vwlb_webhook_persist_failed" "$P/includes/class-vwlb-r31-webhook-integrity.php" r31-fail-closed')
+text = text.replace('need "safe_proof=array_intersect_key" "$P/includes/class-vwlb-live.php" r22-proof-redaction', 'need "safe=array_intersect_key(\\$observation" "$P/includes/class-vwlb-live.php" r22-proof-redaction')
+text = text.replace('need "array_intersect_key(\\$state" "$P/includes/class-vwlb-jobs.php" r25-provider-redaction', 'need "safe=array_intersect_key(\\$observation" "$P/includes/class-vwlb-live.php" r25-provider-redaction')
 pathlib.Path(dst).write_text(text)
 PY
   bash "$tmp"; rm -f "$tmp"
