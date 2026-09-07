@@ -31,8 +31,8 @@ p.write_text(t.replace(old,new,1))
 # R106-F02b: contain any technical-validation extension throwable at worker boundary.
 p=Path('video-wall-and-live-broadcasting/includes/class-vwlb-jobs.php')
 t=p.read_text()
-old="if('verify_and_process'==$job['job_type']){\n\t\t\tif(!$asset||!VWLB_Media::verify_magic($asset))$result=VWLB_Helpers::error('vwlb_asset_validation_failed',__('Media validation failed.',VWLB_TEXT_DOMAIN),422);"
-new="if('verify_and_process'==$job['job_type']){\n\t\t\ttry{$valid=$asset?VWLB_Media::verify_magic($asset):false;}catch(Throwable $e){do_action('vwlb_operational_failure','upload','vwlb_asset_validation_exception',array('asset_public_id'=>$asset['public_id']??'','exception'=>sanitize_key(get_class($e))));$result=VWLB_Helpers::error('vwlb_asset_validation_failed',__('Media validation failed safely and will follow the normal retry policy.',VWLB_TEXT_DOMAIN),503,array('exception'=>sanitize_key(get_class($e))));$valid=false;}\n\t\t\tif(null===$result&&!$valid)$result=VWLB_Helpers::error('vwlb_asset_validation_failed',__('Media validation failed.',VWLB_TEXT_DOMAIN),422);"
+old="if(!$asset||!VWLB_Media::verify_magic($asset))$result=VWLB_Helpers::error('vwlb_asset_validation_failed',__('Media validation failed.',VWLB_TEXT_DOMAIN),422);"
+new="try{$valid=$asset?VWLB_Media::verify_magic($asset):false;}catch(Throwable $e){do_action('vwlb_operational_failure','upload','vwlb_asset_validation_exception',array('asset_public_id'=>$asset['public_id']??'','exception'=>sanitize_key(get_class($e))));$result=VWLB_Helpers::error('vwlb_asset_validation_failed',__('Media validation failed safely and will follow the normal retry policy.',VWLB_TEXT_DOMAIN),503,array('exception'=>sanitize_key(get_class($e))));$valid=false;}if(null===$result&&!$valid)$result=VWLB_Helpers::error('vwlb_asset_validation_failed',__('Media validation failed.',VWLB_TEXT_DOMAIN),422);"
 if old not in t:
     raise SystemExit('R106 F02 jobs matcher missing')
 p.write_text(t.replace(old,new,1))
