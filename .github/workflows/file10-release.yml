@@ -27,6 +27,8 @@ jobs:
         run: bash ./tests/run-all.sh
       - name: Run R101-R120 sequential regression gate
         run: bash ./tests/file10-r101-r120-contracts.sh
+      - name: Run R118 provenance regression gate
+        run: bash ./tests/file10-r118-contracts.sh
       - name: Build canonical package
         run: bash ./tools/build-package.sh packages/video-wall-and-live-broadcasting-1.2.25-rc1.zip
       - name: Verify checksum and archive
