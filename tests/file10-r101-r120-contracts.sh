@@ -204,7 +204,8 @@ grep -F "class-vwlb-r113-mutation-read-integrity.php" "$P/video-wall-and-live-br
 grep -F "VWLB_R113_Mutation_Read_Integrity::register" "$P/video-wall-and-live-broadcasting.php" >/dev/null
 grep -F "r113_asset_public_resolver" "$P/includes/class-vwlb-r113-mutation-read-integrity.php" >/dev/null
 grep -F "r113_publish_series" "$P/includes/class-vwlb-podcasts.php" >/dev/null
-grep -F "Podcast episode state could not be verified safely" "$P/includes/class-vwlb-podcasts.php" >/dev/null
+grep -F "r119_podcast_episode" "$P/includes/class-vwlb-podcasts.php" >/dev/null
+grep -F 'if(is_wp_error($ep))return $ep' "$P/includes/class-vwlb-podcasts.php" >/dev/null
 grep -F "vwlb_live_mutation_read_failed" "$P/includes/class-vwlb-live.php" >/dev/null
 
 # R114 direct database mutation-read integrity correction
