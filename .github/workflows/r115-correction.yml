@@ -1,0 +1,37 @@
+name: File 10 R115 Correction
+
+on:
+  push:
+    branches:
+      - fix/file10-r101-r120-sequential-2026-09-06
+    paths:
+      - tools/.r115-correction-trigger
+
+permissions:
+  contents: write
+
+jobs:
+  correct:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/file10-r101-r120-sequential-2026-09-06
+          fetch-depth: 0
+      - name: Apply frozen R115 corrections
+        run: python3 tools/r115-apply.py
+      - name: Validate R115 correction
+        run: |
+          git diff --check
+          php -l video-wall-and-live-broadcasting/includes/class-vwlb-db.php
+          php -l video-wall-and-live-broadcasting/includes/class-vwlb-security.php
+          bash -n tests/file10-r115-contracts.sh
+          bash tests/file10-r115-contracts.sh
+          bash tests/run-all.sh
+      - name: Commit R115 correction batch
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add video-wall-and-live-broadcasting/includes/class-vwlb-db.php video-wall-and-live-broadcasting/includes/class-vwlb-security.php tests/file10-r115-contracts.sh
+          git commit -m 'Correct R115 mutation durability boundaries'
+          git push origin HEAD:fix/file10-r101-r120-sequential-2026-09-06
