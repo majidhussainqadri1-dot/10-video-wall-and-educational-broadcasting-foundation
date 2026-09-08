@@ -4,7 +4,7 @@ Canonical source repository for **Sabri Social Homeopathy Platform File 10**.
 
 ## Current reviewed candidate
 
-- Runtime: `1.2.24-rc1`
+- Runtime: `1.2.25-rc1`
 - Plugin folder: `video-wall-and-live-broadcasting`
 - Base schema: `1.1.0`
 - Extension schema: `1.1.0`
@@ -48,4 +48,4 @@ Repository source, deterministic packaging and green CI establish only source/pa
 R111 completed its read-only public REST read-integrity review from the exact R110 Green baseline. Three findings were frozen in `docs/FILE-10-R111-FROZEN-FINDINGS-2026-09-08.md`. The `1.2.22-rc1` correction fails closed on public live-list DB errors and promotes chapter enrichment/read failures to top-level REST errors. Exact-head QA must be Green before R112 begins.
 
 ### R112 correction candidate
-R112 completed its full read-only authenticated creator/operational read-integrity review from the exact R111 Green baseline `4194d1daf1f6b7ef835f11c0448211c6714c464d`. Four findings were frozen in `docs/FILE-10-R112-FROZEN-FINDINGS-2026-09-08.md`. The `1.2.24-rc1` correction fails closed on Creator Studio, observability, podcast series resolution and privileged admin operational reads. Exact-head QA must be Green before R113 begins.
+R112 completed its full read-only authenticated creator/operational read-integrity review from the exact R111 Green baseline `4194d1daf1f6b7ef835f11c0448211c6714c464d`. Four findings were frozen in `docs/FILE-10-R112-FROZEN-FINDINGS-2026-09-08.md`. The `1.2.25-rc1` correction fails closed on Creator Studio, observability, podcast series resolution and privileged admin operational reads. Exact-head QA must be Green before R113 begins.

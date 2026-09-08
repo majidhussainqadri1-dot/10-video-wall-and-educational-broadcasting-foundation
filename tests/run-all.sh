@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-CURRENT_VERSION='1.2.24-rc1'
+CURRENT_VERSION='1.2.25-rc1'
 run_rebased_124(){
   local src="$1" tmp; tmp="$(mktemp "$ROOT/tests/.rebased.XXXXXX.sh")"
   python3 - "$src" "$tmp" "$CURRENT_VERSION" <<'PY'

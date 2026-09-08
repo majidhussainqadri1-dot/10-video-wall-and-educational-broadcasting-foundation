@@ -1,7 +1,7 @@
-# File 10 Release Candidate Manifest — 1.2.24-rc1
+# File 10 Release Candidate Manifest — 1.2.25-rc1
 
 - Plugin folder: `video-wall-and-live-broadcasting`
-- Plugin version: `1.2.24-rc1`
+- Plugin version: `1.2.25-rc1`
 - Base schema: `1.1.0`
 - Extension schema: `1.1.0`
 - Future schema: `1.2.0`
@@ -10,9 +10,9 @@
 - Canonical API: `video-wall-live-broadcasting/v1`
 - Compatibility API: `vwlb/v1`
 - Text domain: `video-wall-live-broadcasting`
-- Package target: `packages/video-wall-and-live-broadcasting-1.2.24-rc1.zip`
+- Package target: `packages/video-wall-and-live-broadcasting-1.2.25-rc1.zip`
 - Checksum target: same filename plus `.sha256`
-- SBOM: `SBOM-1.2.24-rc1.json`
+- SBOM: `SBOM-1.2.25-rc1.json`
 - Prior review boundary: R81–R100 closed at `1.2.11-rc1` on exact reviewed HEAD `9a2c317d664b3c0d56797afbf1934f6c55479aaa`.
 - Current review boundary: R101–R120 sequential cycle; R101–R109 are QA-closed at their recorded exact reviewed heads. R110 review/freeze is complete; its correction candidate is `1.2.22-rc1` and final exact-head release QA is required before R111.
 - R101 exact-head QA: `03f9e29e65eac7421f70ea7e01845f4e0e8d46a4`, run `34045547009`.
@@ -42,6 +42,8 @@ This manifest establishes repository-source/package QA identity only. Staging, d
 - R111 frozen findings: fail-open public live browse DB read; nested chapter-read failure in video detail; nested chapter-read failure in the dedicated chapters endpoint. Correction candidate: `1.2.22-rc1`; exact-head release QA is required before R112.
 
 - R111 exact-head QA Green: `4194d1daf1f6b7ef835f11c0448211c6714c464d`, run `34178262832`, PHP 8.3/8.4 complete suite/package/parity Green; artifact `10037991198`, digest `sha256:c8c90f910d94c7fdb4b5ae591f4edecc1ded063be30fe6887d5e588df294b044`.
-- R112 frozen findings: authenticated Creator Studio fail-open reads/nested errors; observability false-zero/empty DB failure semantics; podcast series resolver DB-failure-to-404 collapse; privileged admin operational views rendering DB failure as zero/no records. Correction candidate: `1.2.24-rc1`; exact-head QA is required before R113.
+- R112 frozen findings: authenticated Creator Studio fail-open reads/nested errors; observability false-zero/empty DB failure semantics; podcast series resolver DB-failure-to-404 collapse; privileged admin operational views rendering DB failure as zero/no records. Correction candidate: `1.2.25-rc1`; exact-head QA is required before R113.
 
-- R113: read-only mutation/preflight integrity review completed and three findings frozen in `docs/FILE-10-R113-FROZEN-FINDINGS-2026-09-08.md`; correction candidate `1.2.24-rc1` requires exact-head Green before R114.
+- R113: read-only mutation/preflight integrity review completed and three findings frozen in `docs/FILE-10-R113-FROZEN-FINDINGS-2026-09-08.md`; correction candidate `1.2.25-rc1` requires exact-head Green before R114.
+
+- R114: read-only direct database mutation-read integrity review completed; five findings frozen in `docs/FILE-10-R114-FROZEN-FINDINGS-2026-09-08.md`; correction candidate `1.2.25-rc1` requires exact-head Green before R115.

@@ -1,4 +1,4 @@
-# File 10 Status — 1.2.24-rc1
+# File 10 Status — 1.2.25-rc1
 
 **Classification:** repository/source correction candidate in the sequential R101–R120 review cycle begun 2026-09-06.
 
@@ -20,7 +20,7 @@
 - R109 correction: current rights/consent delivery, consent-expiry fairness/history and replay-lineage gates applied as `1.2.20-rc1`; R110 began only after the R109 Green gate.
 - R110 review: completed read-only before correction; frozen findings cover late public-delivery opaque-ID consistency, public browse current rights/consent revalidation, consent-link scope, fail-closed late authorization reads/projections, and non-public derivative/download delivery boundaries.
 - R110 correction candidate: `1.2.22-rc1`; correction code is being validated against the full historical/current regression suite and exact-head release QA. R111 remains blocked until that gate is fully green.
-- Coded/reviewed candidate: `1.2.24-rc1` on `fix/file10-r101-r120-sequential-2026-09-06`.
+- Coded/reviewed candidate: `1.2.25-rc1` on `fix/file10-r101-r120-sequential-2026-09-06`.
 - Automated-QA Green: R101–R109 established; R110 not yet established.
 - Staging-Accepted: not established.
 - Live-Deployed: not established.
@@ -36,6 +36,8 @@ GitHub, staging and live are distinct realities. Repository source/package evide
 - R111 review: completed read-only from the R110 Green baseline; three findings frozen in `docs/FILE-10-R111-FROZEN-FINDINGS-2026-09-08.md`. Correction candidate: `1.2.22-rc1`; R112 remains blocked until exact-head QA is Green.
 
 - R111 exact-head QA: `4194d1daf1f6b7ef835f11c0448211c6714c464d`, File 10 Release QA run `34178262832`, PHP 8.3/8.4 Green with complete suite, R101–R120 gate, package/checksum/archive, source/package parity and artifact publication. Artifact ID `10037991198`; digest `sha256:c8c90f910d94c7fdb4b5ae591f4edecc1ded063be30fe6887d5e588df294b044`.
-- R112 review: completed read-only from the R111 Green baseline; four findings frozen in `docs/FILE-10-R112-FROZEN-FINDINGS-2026-09-08.md`. Correction candidate: `1.2.24-rc1`; R113 remains blocked until exact-head QA is Green.
+- R112 review: completed read-only from the R111 Green baseline; four findings frozen in `docs/FILE-10-R112-FROZEN-FINDINGS-2026-09-08.md`. Correction candidate: `1.2.25-rc1`; R113 remains blocked until exact-head QA is Green.
 
-- R113: read-only mutation/preflight integrity review completed and three findings frozen in `docs/FILE-10-R113-FROZEN-FINDINGS-2026-09-08.md`; correction candidate `1.2.24-rc1` requires exact-head Green before R114.
+- R113: read-only mutation/preflight integrity review completed and three findings frozen in `docs/FILE-10-R113-FROZEN-FINDINGS-2026-09-08.md`; correction candidate `1.2.25-rc1` requires exact-head Green before R114.
+
+- R114: read-only direct database mutation-read integrity review completed; five findings frozen in `docs/FILE-10-R114-FROZEN-FINDINGS-2026-09-08.md`; correction candidate `1.2.25-rc1` requires exact-head Green before R115.

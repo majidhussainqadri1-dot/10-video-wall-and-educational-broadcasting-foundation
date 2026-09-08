@@ -206,3 +206,14 @@ grep -F "r113_asset_public_resolver" "$P/includes/class-vwlb-r113-mutation-read-
 grep -F "r113_publish_series" "$P/includes/class-vwlb-podcasts.php" >/dev/null
 grep -F "Podcast episode state could not be verified safely" "$P/includes/class-vwlb-podcasts.php" >/dev/null
 grep -F "vwlb_live_mutation_read_failed" "$P/includes/class-vwlb-live.php" >/dev/null
+
+# R114 direct database mutation-read integrity correction
+grep -F "r114_publication_caption_count" "$P/includes/class-vwlb-videos.php" >/dev/null
+grep -F "r114_caption_parent_lock" "$P/includes/class-vwlb-videos.php" >/dev/null
+grep -F "r114_caption_version" "$P/includes/class-vwlb-videos.php" >/dev/null
+grep -F "r114_playback_session_lookup" "$P/includes/class-vwlb-videos.php" >/dev/null
+grep -F "r114_progress_session_lookup" "$P/includes/class-vwlb-videos.php" >/dev/null
+grep -F "r114_interaction_video_lock" "$P/includes/class-vwlb-videos.php" >/dev/null
+grep -F "r114_interaction_lookup" "$P/includes/class-vwlb-videos.php" >/dev/null
+grep -F "r114_interaction_count" "$P/includes/class-vwlb-videos.php" >/dev/null
+grep -F "r114_moderation_lock" "$P/includes/class-vwlb-moderation.php" >/dev/null
