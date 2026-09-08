@@ -1,6 +1,6 @@
 # File 10 Status — 1.2.25-rc1
 
-**Classification:** repository/source correction candidate in the sequential R101–R120 review cycle begun 2026-09-06.
+**Classification:** repository/source correction candidate in the sequential review lineage; R101–R120 is QA-closed and R121 provenance/closure correction is in progress.
 
 - Cycle baseline exact HEAD: `9a2c317d664b3c0d56797afbf1934f6c55479aaa` (`1.2.11-rc1`).
 - Review method: complete one round read-only → freeze that round's findings → correct all proven findings together → full regression/release QA → only then begin the next round.
@@ -24,9 +24,11 @@
 - R117 exact-head QA: `f2c4345973a4b01896b9250bee6f3d220f82da1c`, run `34228952712`, PHP 8.3/8.4 green.
 - R118 review: release-provenance consistency findings frozen in `reviews/R118-FROZEN-FINDINGS.md`; corrected and exact-head QA closed before R119.
 - R119 review: nine fail-closed read-integrity defect groups frozen in `reviews/R119-FROZEN-FINDINGS.md`; correction completed. Final exact-head QA: `c2d48ed9bbd5cbc29f9fe186340d01acf4e857ce`, run `34259864776`, completed successfully.
-- R120 review: completed read-only from the R119 Green baseline `c2d48ed9bbd5cbc29f9fe186340d01acf4e857ce`; four provenance/closure findings frozen in `reviews/R120-FROZEN-FINDINGS.md`. Correction updates STATUS, MANIFEST, SBOM and the named R101–R120 cycle ledger together; R120 remains unclosed until full regression/retest and exact-head Release QA are Green.
+- R120 review: four provenance/closure findings frozen in `reviews/R120-FROZEN-FINDINGS.md`, corrected together, and exact-head QA Green at `4094a9a861eae9a47222cc7a28959eaff87c6c76`, run `34271494386`, PHP 8.3/8.4 green; complete suite, R101–R120 gate, R118/R119 gates, canonical package, checksum/archive and source/package parity all passed.
+- R111–R120 ten-round batch result: defects were found in **R111, R112, R113, R114, R115, R116, R117, R118, R119 and R120**; clean rounds: **0/10**. The >70% clean stopping criterion was not met.
+- R121 review: post-R120 closure/provenance findings frozen in `reviews/R121-FROZEN-FINDINGS.md`; correction is provenance-only and must pass full regression plus exact-head QA before R122.
 - Coded/reviewed candidate: `1.2.25-rc1` on `fix/file10-r101-r120-sequential-2026-09-06`.
-- Automated-QA Green through R119 at the recorded exact heads. R120 exact-head QA is pending after the provenance correction set.
+- Automated-QA Green through R120 at the recorded exact heads. R121 correction exact-head QA is pending.
 - Staging-Accepted: not established.
 - Live-Deployed: not established.
 - Operational: not established.
