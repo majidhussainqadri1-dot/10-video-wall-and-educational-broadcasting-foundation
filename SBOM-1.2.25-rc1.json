@@ -1,7 +1,7 @@
 {
   "bomFormat": "CycloneDX",
   "specVersion": "1.5",
-  "serialNumber": "urn:uuid:file10-r120-1.2.25-rc1",
+  "serialNumber": "urn:uuid:file10-r121-1.2.25-rc1",
   "version": 1,
   "metadata": {
     "component": {
@@ -12,11 +12,11 @@
     "properties": [
       {
         "name": "review_boundary",
-        "value": "R120 repository-provenance closure correction candidate; R119 exact-head QA Green at c2d48ed9bbd5cbc29f9fe186340d01acf4e857ce, run 34259864776"
+        "value": "R121 post-R120 closure/provenance correction candidate; R120 exact-head QA Green at 4094a9a861eae9a47222cc7a28959eaff87c6c76, run 34271494386; historical R119 exact-head QA Green at c2d48ed9bbd5cbc29f9fe186340d01acf4e857ce, run 34259864776"
       },
       {
         "name": "baseline_exact_head",
-        "value": "c2d48ed9bbd5cbc29f9fe186340d01acf4e857ce"
+        "value": "4094a9a861eae9a47222cc7a28959eaff87c6c76"
       },
       {
         "name": "plan",
