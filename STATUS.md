@@ -19,9 +19,9 @@
 - R109 review: completed read-only after R108 Green; five findings frozen in `docs/FILE-10-R109-FROZEN-FINDINGS-2026-09-07.md`.
 - R109 correction: current rights/consent delivery, consent-expiry fairness/history and replay-lineage gates applied as `1.2.20-rc1`; R110 began only after the R109 Green gate.
 - R110 review: completed read-only before correction; frozen findings cover late public-delivery opaque-ID consistency, public browse current rights/consent revalidation, consent-link scope, fail-closed late authorization reads/projections, and non-public derivative/download delivery boundaries.
-- R110 correction candidate: `1.2.22-rc1`; correction code is being validated against the full historical/current regression suite and exact-head release QA. R111 remains blocked until that gate is fully green.
+- Historical R110 correction checkpoint (superseded by the Green gate below): candidate `1.2.22-rc1` was awaiting full regression and exact-head release QA before R111.
 - Coded/reviewed candidate: `1.2.25-rc1` on `fix/file10-r101-r120-sequential-2026-09-06`.
-- Automated-QA Green: R101–R109 established; R110 not yet established.
+- Automated-QA Green: R101–R117 established at their recorded exact heads; R118 correction requires its own exact-head Green before R119.
 - Staging-Accepted: not established.
 - Live-Deployed: not established.
 - Operational: not established.
@@ -33,11 +33,12 @@
 GitHub, staging and live are distinct realities. Repository source/package evidence does not identify the code currently deployed to the website. Exact deployed code, live DB/schema and migration state remain unverified until separately frozen from the environment.
 
 - R110 exact-head QA: `d7ed00cbaf76093fd1ccadfa4fbcf405ecde2fb3`, File 10 Release QA run `34174866764`, PHP 8.3/8.4 Green with complete suite, R101–R120 gate, package/checksum/archive and source/package parity.
-- R111 review: completed read-only from the R110 Green baseline; three findings frozen in `docs/FILE-10-R111-FROZEN-FINDINGS-2026-09-08.md`. Correction candidate: `1.2.22-rc1`; R112 remains blocked until exact-head QA is Green.
-
+- R111 review: completed read-only from the R110 Green baseline; three findings frozen in `docs/FILE-10-R111-FROZEN-FINDINGS-2026-09-08.md`.
 - R111 exact-head QA: `4194d1daf1f6b7ef835f11c0448211c6714c464d`, File 10 Release QA run `34178262832`, PHP 8.3/8.4 Green with complete suite, R101–R120 gate, package/checksum/archive, source/package parity and artifact publication. Artifact ID `10037991198`; digest `sha256:c8c90f910d94c7fdb4b5ae591f4edecc1ded063be30fe6887d5e588df294b044`.
-- R112 review: completed read-only from the R111 Green baseline; four findings frozen in `docs/FILE-10-R112-FROZEN-FINDINGS-2026-09-08.md`. Correction candidate: `1.2.25-rc1`; R113 remains blocked until exact-head QA is Green.
-
-- R113: read-only mutation/preflight integrity review completed and three findings frozen in `docs/FILE-10-R113-FROZEN-FINDINGS-2026-09-08.md`; correction candidate `1.2.25-rc1` requires exact-head Green before R114.
-
-- R114: read-only direct database mutation-read integrity review completed; five findings frozen in `docs/FILE-10-R114-FROZEN-FINDINGS-2026-09-08.md`; correction candidate `1.2.25-rc1` requires exact-head Green before R115.
+- R112 review: completed read-only from the R111 Green baseline; four findings frozen in `docs/FILE-10-R112-FROZEN-FINDINGS-2026-09-08.md`.
+- R113 review: completed read-only and three findings frozen in `docs/FILE-10-R113-FROZEN-FINDINGS-2026-09-08.md`; correction/QA completed before R114.
+- R114 review: completed read-only and five findings frozen in `docs/FILE-10-R114-FROZEN-FINDINGS-2026-09-08.md`; correction/QA completed before R115.
+- R115: read-only review found idempotency authoritative-read and transaction rollback-verification durability defects; correction completed and exact-head QA was Green before R116.
+- R116: read-only review found private-media protection-write verification and authoritative post-write reread defects; correction completed. Final exact-head QA: `3b6397135ac1d84292be98068f46ccd8b2170227`, run `34223100132`, PHP 8.3/8.4 Green with complete suite, R101–R120 gate, canonical package, checksum/archive, source/package parity and artifact publication.
+- R117: read-only review found destructive uninstall purge integrity defects; findings frozen in `reviews/R117-FROZEN-FINDINGS.md`, corrected, and exact-head QA Green at `f2c4345973a4b01896b9250bee6f3d220f82da1c`, run `34228952712`, PHP 8.3/8.4 with complete suite, R101–R120 gate, canonical package, checksum/archive, source/package parity and PHP 8.3 artifact publication.
+- R118: read-only provenance review completed from the R117 Green baseline; findings frozen in `reviews/R118-FROZEN-FINDINGS.md`. Current correction normalizes SBOM/STATUS/MANIFEST evidence only. R119 remains blocked until R118 exact-head QA is Green.
