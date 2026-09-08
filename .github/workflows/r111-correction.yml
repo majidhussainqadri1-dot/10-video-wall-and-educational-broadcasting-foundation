@@ -1,0 +1,37 @@
+name: File 10 R111 Correction
+
+on:
+  push:
+    branches:
+      - fix/file10-r101-r120-sequential-2026-09-06
+    paths:
+      - tools/.r111-correction-trigger
+
+permissions:
+  contents: write
+
+jobs:
+  correct:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/file10-r101-r120-sequential-2026-09-06
+          fetch-depth: 0
+      - name: Apply frozen R111 corrections
+        run: python3 tools/r111-apply.py
+      - name: Validate correction before commit
+        run: |
+          git diff --check
+          php -l video-wall-and-live-broadcasting/includes/class-vwlb-r111-public-read-integrity.php
+          php -l video-wall-and-live-broadcasting/video-wall-and-live-broadcasting.php
+          bash -n tests/file10-r101-r120-contracts.sh
+          bash tests/file10-r101-r120-contracts.sh
+          bash tests/run-all.sh
+      - name: Commit R111 correction batch
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add video-wall-and-live-broadcasting .github/workflows/file10-release.yml tools/build-package.sh tests README.md MANIFEST.md STATUS.md SBOM-1.2.22-rc1.json
+          git commit -m 'Correct R111 public read integrity boundaries'
+          git push origin HEAD:fix/file10-r101-r120-sequential-2026-09-06
