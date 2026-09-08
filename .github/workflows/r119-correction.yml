@@ -35,6 +35,6 @@ jobs:
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add video-wall-and-live-broadcasting/includes/class-vwlb-extended-rest.php video-wall-and-live-broadcasting/includes/class-vwlb-podcasts.php video-wall-and-live-broadcasting/includes/class-vwlb-extensions.php
-          git commit -m 'Correct R119 residual authoritative reads'
+          git add video-wall-and-live-broadcasting/includes/class-vwlb-extended-rest.php video-wall-and-live-broadcasting/includes/class-vwlb-podcasts.php video-wall-and-live-broadcasting/includes/class-vwlb-extensions.php tests/file10-r101-r120-contracts.sh
+          git commit -m 'Correct R119 residual authoritative reads and regression contract'
           git push origin HEAD:fix/file10-r101-r120-sequential-2026-09-06
