@@ -16,10 +16,9 @@ def replace_all(p,old,new):
     if old not in t: raise SystemExit(f'{p}: missing {old!r}')
     write(p,t.replace(old,new))
 
-# Current immutable release identity.
+# Current immutable release identity. build-package.sh derives VWLB_VERSION dynamically.
 replace_once('tests/run-all.sh',"CURRENT_VERSION='1.2.22-rc1'","CURRENT_VERSION='1.2.23-rc1'")
 replace_all('.github/workflows/file10-release.yml',OLD,NEW)
-replace_all('tools/build-package.sh',OLD,NEW)
 replace_once('video-wall-and-live-broadcasting/readme.txt','Stable tag: 1.2.22-rc1','Stable tag: 1.2.23-rc1')
 
 # Manifest current fields only; preserve historical R111 identity mentions.
