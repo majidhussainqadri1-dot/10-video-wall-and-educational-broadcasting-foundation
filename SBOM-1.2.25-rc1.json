@@ -1,7 +1,7 @@
 {
   "bomFormat": "CycloneDX",
   "specVersion": "1.5",
-  "serialNumber": "urn:uuid:file10-r121-1.2.25-rc1",
+  "serialNumber": "urn:uuid:file10-1.2.25-rc1",
   "version": 1,
   "metadata": {
     "component": {
@@ -12,11 +12,15 @@
     "properties": [
       {
         "name": "review_boundary",
-        "value": "R121 post-R120 closure/provenance correction candidate; R120 exact-head QA Green at 4094a9a861eae9a47222cc7a28959eaff87c6c76, run 34271494386; historical R119 exact-head QA Green at c2d48ed9bbd5cbc29f9fe186340d01acf4e857ce, run 34259864776"
+        "value": "sequential review lineage; immutable predecessor baseline is R121 exact-head QA Green at d466a9020d38a49fd9dcee8085da58775cd26601, run 34277370167; historical R120 exact-head QA Green at 4094a9a861eae9a47222cc7a28959eaff87c6c76, run 34271494386; historical R119 exact-head QA Green at c2d48ed9bbd5cbc29f9fe186340d01acf4e857ce, run 34259864776"
       },
       {
         "name": "baseline_exact_head",
-        "value": "4094a9a861eae9a47222cc7a28959eaff87c6c76"
+        "value": "d466a9020d38a49fd9dcee8085da58775cd26601"
+      },
+      {
+        "name": "exact_head_closure_model",
+        "value": "current closure is authoritative only from successful File 10 Release QA for the same commit SHA; no post-QA SBOM mutation is required to record a transient pending/green flip"
       },
       {
         "name": "plan",
