@@ -40,7 +40,7 @@ need "vwlb_inbox_retry_release_failed" "$P/includes/class-vwlb-r18-durability.ph
 # R19 — an expired idempotency row must not be forgotten unless durable deletion/re-read proves it is gone or safely replaced.
 need "vwlb_idempotency_expiry_cleanup_failed" "$P/includes/class-vwlb-security.php" r19-expiry-fail-closed
 need "\$expired_id=absint(\$row['id'])" "$P/includes/class-vwlb-security.php" r19-expired-row-identity
-need "\$row=\$wpdb->get_row" "$P/includes/class-vwlb-security.php" r19-post-delete-reread
+need "idempotency_expiry_recheck" "$P/includes/class-vwlb-security.php" r19-post-delete-reread
 need "absint(\$row['id'])===\$expired_id" "$P/includes/class-vwlb-security.php" r19-stale-row-detection
 # R20 — retry payloads are encrypted at rest, bounded by TTL, reconciled only after authenticated decryption, and included in privacy erasure.
 need "class-vwlb-r20-retry-privacy.php" "$P/video-wall-and-live-broadcasting.php" r20-autoload
