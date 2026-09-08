@@ -1,0 +1,34 @@
+name: File 10 R112 Correction
+on:
+  push:
+    branches:
+      - fix/file10-r101-r120-sequential-2026-09-06
+    paths:
+      - tools/.r112-correction-trigger
+permissions:
+  contents: write
+jobs:
+  correct:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/file10-r101-r120-sequential-2026-09-06
+          fetch-depth: 0
+      - name: Apply frozen R112 finalization
+        run: python3 tools/r112-finalize.py
+      - name: Validate R112 correction
+        run: |
+          git diff --check
+          php -l video-wall-and-live-broadcasting/includes/class-vwlb-r112-operational-read-integrity.php
+          php -l video-wall-and-live-broadcasting/video-wall-and-live-broadcasting.php
+          bash -n tests/file10-r101-r120-contracts.sh
+          bash tests/file10-r101-r120-contracts.sh
+          bash tests/run-all.sh
+      - name: Commit R112 correction batch
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add video-wall-and-live-broadcasting .github/workflows/file10-release.yml MANIFEST.md README.md STATUS.md tests/file10-r101-r120-contracts.sh tests/run-all.sh tools/build-package.sh SBOM-1.2.23-rc1.json docs/FILE-10-R112-FROZEN-FINDINGS-2026-09-08.md
+          git commit -m 'Correct R112 operational read integrity boundaries'
+          git push origin HEAD:fix/file10-r101-r120-sequential-2026-09-06
