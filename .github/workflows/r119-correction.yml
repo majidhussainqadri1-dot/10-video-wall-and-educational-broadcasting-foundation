@@ -30,7 +30,7 @@ jobs:
           bash tests/file10-r119-contracts.sh
           bash tests/run-all.sh
           bash tests/file10-r101-r120-contracts.sh
-          bash tests/file10-r118-contracts.sh
+          bash -x tests/file10-r118-contracts.sh
       - name: Commit R119 correction batch
         run: |
           git config user.name 'github-actions[bot]'
