@@ -14,31 +14,26 @@
 - Checksum target: same filename plus `.sha256`
 - SBOM: `SBOM-1.2.25-rc1.json`
 - Prior review boundary: R81–R100 closed at `1.2.11-rc1` on exact reviewed HEAD `9a2c317d664b3c0d56797afbf1934f6c55479aaa`.
-- Current review boundary: R101–R120 sequential cycle; R101–R117 are QA-closed at their recorded exact reviewed heads. R118 review is frozen and its provenance-only correction requires exact-head release QA before R119.
+- Current review boundary: R101–R120 sequential cycle. R101–R119 are QA-closed at their recorded exact heads. R120 read-only review is frozen in `reviews/R120-FROZEN-FINDINGS.md` and its provenance/closure correction requires full regression/retest and exact-head Release QA before the cycle can be declared closed.
 - R101 exact-head QA: `03f9e29e65eac7421f70ea7e01845f4e0e8d46a4`, run `34045547009`.
 - R102 exact-head QA: `895c2d66a35a7b9430379a8eff8bc65aaf2d340c`, run `34064117765`.
 - R103 exact-head QA: `e0a7ae7efba4c2287dc57c3978e4ef9953ef3aa3`, run `34064836972`.
 - R104 exact-head QA: `79651313324d4a85e5b0b5583c7319a7559d6c16`, run `34066084479`.
-- R105 final evidence revalidation: `4c8d9b1a7ccc05f996b6bdb8e49a8939b431d0c1`, run `34083167364`, PHP 8.3/8.4 green; complete suite, R101–R120 gate, deterministic package, checksum/archive, source/package parity and artifact publication green. Artifact ID `10004334313`, uploaded artifact digest `9282da4838aafcce66bdd50ec42bbf97a412e533a523298396c7dc13d567d1e8`.
-- R106 frozen findings: cleanup/write race on private resumable files; uncontained validation/checksum/scanner failures at the processing-worker boundary; permissive late resumable-completion route grammar.
-- R106 correction source commit: `bf88573db6eb205bc8d0e4b362022a894f5bb19f`; candidate identity advanced to `1.2.17-rc1` for final exact-head verification.
-- R107 frozen findings: late permissive REST IDs/stale playback enrichment; incomplete provider-compensation Throwable boundaries; incomplete secret-key detection; stale provider-health DB error contamination; implementation-vs-runtime readiness ambiguity.
-- R107 correction candidate identity: `1.2.18-rc1`.
-- R108 frozen findings: public provider-proof injection; missing canonical verified provider lifecycle reconciliation; unconfirmed emergency provider end; unfair/silent core live reconciliation; unsafe/unfair Future redundancy reconciliation; permissive effective late REST override grammar.
-- R108 correction candidate identity: `1.2.19-rc1`; exact-head release QA was required before R109.
-- R108 exact-head QA: `762361ae9f1b1c8392e0fbce224a15051432952c`, run `34100057505`, PHP 8.3/8.4 Green before R109.
-- R109 frozen findings: inconsistent current rights delivery; cron-only stale consent exposure; unsafe/unfair consent-expiry reconciliation; mutable terminal consent history without lifecycle evidence; replay policy/consent/lineage gap.
-- R109 correction candidate identity: `1.2.20-rc1`; exact-head release QA was required before R110.
-- R110 frozen findings: late public-delivery opaque-ID inconsistency; public browse rights/consent revalidation gap; video-specific consent-link scope ambiguity; security-sensitive late revalidation fail-open/incomplete authorization projections; non-public media/download derivative delivery bypass risks.
-- R110 exact-head QA Green baseline for R111: `d7ed00cbaf76093fd1ccadfa4fbcf405ecde2fb3`, run `34174866764`.
-- R111 frozen findings: fail-open public live browse DB read; nested chapter-read failure in video detail; nested chapter-read failure in the dedicated chapters endpoint.
-- R111 exact-head QA Green: `4194d1daf1f6b7ef835f11c0448211c6714c464d`, run `34178262832`, PHP 8.3/8.4 complete suite/package/parity Green; artifact `10037991198`, digest `sha256:c8c90f910d94c7fdb4b5ae591f4edecc1ded063be30fe6887d5e588df294b044`.
-- R112 frozen findings: authenticated Creator Studio fail-open reads/nested errors; observability false-zero/empty DB failure semantics; podcast series resolver DB-failure-to-404 collapse; privileged admin operational views rendering DB failure as zero/no records.
-- R113 review: completed read-only and three mutation/preflight integrity findings were frozen before correction; correction/QA completed before R114.
-- R114 review: completed read-only and five direct database mutation-read integrity findings were frozen before correction; correction/QA completed before R115.
-- R115 review/correction: idempotency authoritative-read and transaction rollback-verification durability defects were frozen, corrected and QA-closed before R116.
-- R116 exact-head QA: `3b6397135ac1d84292be98068f46ccd8b2170227`, run `34223100132`, PHP 8.3/8.4 Green with complete suite, R101–R120 gate, canonical package, checksum/archive, source/package parity and artifact publication.
-- R117 review/correction: destructive uninstall purge integrity findings frozen in `reviews/R117-FROZEN-FINDINGS.md`; exact-head QA Green at `f2c4345973a4b01896b9250bee6f3d220f82da1c`, run `34228952712`, PHP 8.3/8.4 complete suite, R101–R120 gate, canonical package, checksum/archive, source/package parity and PHP 8.3 artifact publication Green.
-- R118: release-provenance consistency findings frozen in `reviews/R118-FROZEN-FINDINGS.md` from baseline `f2c4345973a4b01896b9250bee6f3d220f82da1c`; R119 is blocked until R118 correction receives full exact-head Green.
+- R105 final evidence revalidation: `4c8d9b1a7ccc05f996b6bdb8e49a8939b431d0c1`, run `34083167364`.
+- R106 exact-head QA: `a1507752f5dad87e7b22e7a4aa4cf714de4aefd3`, run `34085674761`.
+- R107 final evidence-recording QA: `0de65d9956cf3a4c03e3e0c315c09bb70ca8c82f`, run `34087545859`.
+- R108 exact-head QA: `762361ae9f1b1c8392e0fbce224a15051432952c`, run `34100057505`.
+- R109 findings/correction were closed before R110.
+- R110 exact-head QA: `d7ed00cbaf76093fd1ccadfa4fbcf405ecde2fb3`, run `34174866764`.
+- R111 exact-head QA: `4194d1daf1f6b7ef835f11c0448211c6714c464d`, run `34178262832`.
+- R112 findings/correction were closed before R113.
+- R113 findings/correction were closed before R114.
+- R114 findings/correction were closed before R115.
+- R115 findings/correction were closed before R116.
+- R116 exact-head QA: `3b6397135ac1d84292be98068f46ccd8b2170227`, run `34223100132`.
+- R117 exact-head QA: `f2c4345973a4b01896b9250bee6f3d220f82da1c`, run `34228952712`.
+- R118 release-provenance consistency findings were frozen and corrected; exact-head QA closed before R119.
+- R119 fail-closed read-integrity findings were frozen and corrected; final exact-head QA Green at `c2d48ed9bbd5cbc29f9fe186340d01acf4e857ce`, run `34259864776`.
+- R120 frozen findings: stale STATUS boundary, stale MANIFEST boundary, stale SBOM provenance and incomplete named R101–R120 cycle ledger. These are being corrected as one provenance/closure correction phase.
 
 This manifest establishes repository-source/package QA identity only. Staging, deployed/live and operational evidence remain separate and are not predeclared. Exact deployed source is unverified; GitHub is not live evidence.
