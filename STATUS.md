@@ -1,9 +1,10 @@
 # File 10 Status — 1.2.25-rc1
 
-**Classification:** repository/source correction candidate in the sequential review lineage; R101–R120 is QA-closed and R121 provenance/closure correction is in progress.
+**Classification:** repository/source correction candidate in the sequential review lineage. Repository status records immutable review evidence; exact-head closure is resolved from the Release QA result attached to the same commit SHA, not by a post-QA status-only commit.
 
 - Cycle baseline exact HEAD: `9a2c317d664b3c0d56797afbf1934f6c55479aaa` (`1.2.11-rc1`).
 - Review method: complete one round read-only → freeze that round's findings → correct all proven findings together → full regression/release QA → only then begin the next round.
+- Exact-head closure rule: a round is Green only when File 10 Release QA is successful for the same exact commit SHA. Repository documentation does not mutate merely to flip `pending` to `Green`; any subsequent source mutation is a new head and requires its own QA.
 - Historical R40 ledger: R40 found additional package/release-hygiene defects; those historical defects were corrected and closed in the prior sequential lineage.
 - R101 exact-head QA: `03f9e29e65eac7421f70ea7e01845f4e0e8d46a4`, run `34045547009`, PHP 8.3/8.4 green.
 - R102 exact-head QA: `895c2d66a35a7b9430379a8eff8bc65aaf2d340c`, run `34064117765`, PHP 8.3/8.4 green.
@@ -23,12 +24,12 @@
 - R116 exact-head QA: `3b6397135ac1d84292be98068f46ccd8b2170227`, run `34223100132`, PHP 8.3/8.4 green.
 - R117 exact-head QA: `f2c4345973a4b01896b9250bee6f3d220f82da1c`, run `34228952712`, PHP 8.3/8.4 green.
 - R118 review: release-provenance consistency findings frozen in `reviews/R118-FROZEN-FINDINGS.md`; corrected and exact-head QA closed before R119.
-- R119 review: nine fail-closed read-integrity defect groups frozen in `reviews/R119-FROZEN-FINDINGS.md`; correction completed. Final exact-head QA: `c2d48ed9bbd5cbc29f9fe186340d01acf4e857ce`, run `34259864776`, completed successfully.
-- R120 review: four provenance/closure findings frozen in `reviews/R120-FROZEN-FINDINGS.md`, corrected together, and exact-head QA Green at `4094a9a861eae9a47222cc7a28959eaff87c6c76`, run `34271494386`, PHP 8.3/8.4 green; complete suite, R101–R120 gate, R118/R119 gates, canonical package, checksum/archive and source/package parity all passed.
-- R111–R120 ten-round batch result: defects were found in **R111, R112, R113, R114, R115, R116, R117, R118, R119 and R120**; clean rounds: **0/10**. The >70% clean stopping criterion was not met.
-- R121 review: post-R120 closure/provenance findings frozen in `reviews/R121-FROZEN-FINDINGS.md`; correction is provenance-only and must pass full regression plus exact-head QA before R122.
+- R119 review: nine fail-closed read-integrity defect groups frozen in `reviews/R119-FROZEN-FINDINGS.md`; final exact-head QA `c2d48ed9bbd5cbc29f9fe186340d01acf4e857ce`, run `34259864776`, successful.
+- R120 review: four provenance/closure findings frozen in `reviews/R120-FROZEN-FINDINGS.md`; exact-head QA `4094a9a861eae9a47222cc7a28959eaff87c6c76`, run `34271494386`, PHP 8.3/8.4 green with complete suite, R101–R120, R118/R119, package, checksum/archive and parity gates passed.
+- R111–R120 ten-round batch result: defects in **R111, R112, R113, R114, R115, R116, R117, R118, R119 and R120**; clean rounds: **0/10**; stopping criterion not met.
+- R121 review findings are frozen in `reviews/R121-FROZEN-FINDINGS.md`; corrected exact head `d466a9020d38a49fd9dcee8085da58775cd26601`, Release QA run `34277370167`, PHP 8.3/8.4 successful with complete regression, provenance/read-integrity gates, package/checksum/parity and artifact publication.
+- R122 read-only review findings are frozen in `reviews/R122-FROZEN-FINDINGS.md`; correction is provenance/QA-contract infrastructure only. Its closure must be determined by a successful File 10 Release QA run on the eventual exact correction head.
 - Coded/reviewed candidate: `1.2.25-rc1` on `fix/file10-r101-r120-sequential-2026-09-06`.
-- Automated-QA Green through R120 at the recorded exact heads. R121 correction exact-head QA is pending.
 - Staging-Accepted: not established.
 - Live-Deployed: not established.
 - Operational: not established.
@@ -37,4 +38,4 @@
 - Migration state: unverified.
 - Live verification: not performed.
 
-GitHub, staging and live are distinct realities. Repository source/package evidence does not identify the code currently deployed to the website. Exact deployed code, live DB/schema and migration state remain unverified until separately frozen from the environment.
+GitHub, staging and live are distinct realities. Repository source/package/CI evidence does not identify the code currently deployed to the website. Exact deployed code, live DB/schema and migration state remain unverified until separately frozen from the environment.
