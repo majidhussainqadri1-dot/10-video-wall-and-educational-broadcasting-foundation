@@ -15,21 +15,29 @@ check(){
   fi
 }
 
-check sbom-serial "$SBOM" '"serialNumber": "urn:uuid:file10-r118-1.2.25-rc1"'
+# R118 provenance guarantees are historical invariants. The current single
+# candidate SBOM must advance with later rounds rather than remain pinned to
+# the R118 serial/baseline forever. Verify the current R120 provenance state
+# while retaining explicit R118 closure evidence in STATUS/MANIFEST.
+check sbom-serial "$SBOM" '"serialNumber": "urn:uuid:file10-r120-1.2.25-rc1"'
 check sbom-review-key "$SBOM" '"name": "review_boundary"'
-check sbom-review-r118 "$SBOM" 'R118 release-provenance correction candidate'
-check sbom-r119-block "$SBOM" 'R119 blocked until exact-head Green'
+check sbom-review-r120 "$SBOM" 'R120 repository-provenance closure correction candidate'
+check sbom-r119-green "$SBOM" 'R119 exact-head QA Green'
 check sbom-baseline-key "$SBOM" '"name": "baseline_exact_head"'
-check sbom-baseline-sha "$SBOM" 'f2c4345973a4b01896b9250bee6f3d220f82da1c'
+check sbom-baseline-sha "$SBOM" 'c2d48ed9bbd5cbc29f9fe186340d01acf4e857ce'
 check sbom-live-first "$SBOM" 'exact deployed source unverified'
 
-check status-qa-label "$STATUS" 'Automated-QA Green:'
+check status-qa-label "$STATUS" 'Automated-QA Green through R119'
 check status-r117 "$STATUS" 'R117'
 check status-r118 "$STATUS" 'R118'
+check status-r119 "$STATUS" 'R119'
+check status-r120 "$STATUS" 'R120'
 
 check manifest-boundary "$MANIFEST" 'Current review boundary:'
 check manifest-r117 "$MANIFEST" 'R117'
 check manifest-r118 "$MANIFEST" 'R118'
+check manifest-r119 "$MANIFEST" 'R119'
+check manifest-r120 "$MANIFEST" 'R120'
 check manifest-live-first "$MANIFEST" 'Exact deployed source is unverified; GitHub is not live evidence.'
 
-echo 'R118 release provenance consistency contracts PASS'
+echo 'R118 release provenance continuity contracts PASS'
