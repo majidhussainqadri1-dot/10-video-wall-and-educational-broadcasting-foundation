@@ -3,16 +3,10 @@ import json
 
 OLD='1.2.21-rc1'
 NEW='1.2.22-rc1'
-
 root=Path('.')
 
 def read(p): return (root/p).read_text()
 def write(p,s): (root/p).write_text(s)
-def replace_once(p,old,new):
-    s=read(p); n=s.count(old)
-    if n != 1: raise SystemExit(f'{p}: expected exactly one occurrence of {old!r}, found {n}')
-    write(p,s.replace(old,new,1))
-
 def replace_all_if_present(p,old,new):
     s=read(p)
     if old in s: write(p,s.replace(old,new))
@@ -56,7 +50,6 @@ final class VWLB_R111_Public_Read_Integrity {
 '''
 write('video-wall-and-live-broadcasting/includes/class-vwlb-r111-public-read-integrity.php',guard)
 
-# Wire the frozen correction after prior guards without editing the reviewed methods in place.
 p='video-wall-and-live-broadcasting/video-wall-and-live-broadcasting.php'
 s=read(p)
 anchor="'class-vwlb-r109-rights-consent-replay-guard.php','class-vwlb-r3-playback.php'"
@@ -67,18 +60,15 @@ if anchor2 not in s: raise SystemExit('plugin register anchor missing')
 s=s.replace(anchor2,'VWLB_R109_Rights_Consent_Replay_Guard::register();VWLB_R111_Public_Read_Integrity::register();}',1)
 write(p,s)
 
-# Fresh immutable candidate identity for materially changed deployable source/package.
 identity_files=[
- 'video-wall-and-live-broadcasting/video-wall-and-live-broadcasting.php',
- 'video-wall-and-live-broadcasting/readme.txt',
- 'README.md','MANIFEST.md','STATUS.md',
- '.github/workflows/file10-release.yml','tools/build-package.sh',
+ 'video-wall-and-live-broadcasting/video-wall-and-live-broadcasting.php','video-wall-and-live-broadcasting/readme.txt',
+ 'README.md','MANIFEST.md','STATUS.md','.github/workflows/file10-release.yml','tools/build-package.sh',
  'tests/run-all.sh','tests/static-contracts.sh','tests/plan-completion-contracts.sh','tests/file10-r101-r120-contracts.sh'
 ]
 for p in identity_files: replace_all_if_present(p,OLD,NEW)
 
 old_sbom=root/'SBOM-1.2.21-rc1.json'; new_sbom=root/'SBOM-1.2.22-rc1.json'
-obj=json.loads(old_sbom.read_text());
+obj=json.loads(old_sbom.read_text())
 def bump(v):
     if isinstance(v,str): return v.replace(OLD,NEW)
     if isinstance(v,list): return [bump(x) for x in v]
@@ -86,7 +76,6 @@ def bump(v):
     return v
 new_sbom.write_text(json.dumps(bump(obj),indent=2,ensure_ascii=False)+'\n')
 
-# Append current-state evidence without rewriting historical round records.
 with (root/'STATUS.md').open('a') as f:
     f.write("\n- R110 exact-head QA: `d7ed00cbaf76093fd1ccadfa4fbcf405ecde2fb3`, File 10 Release QA run `34174866764`, PHP 8.3/8.4 Green with complete suite, R101–R120 gate, package/checksum/archive and source/package parity.\n- R111 review: completed read-only from the R110 Green baseline; three findings frozen in `docs/FILE-10-R111-FROZEN-FINDINGS-2026-09-08.md`. Correction candidate: `1.2.22-rc1`; R112 remains blocked until exact-head QA is Green.\n")
 with (root/'MANIFEST.md').open('a') as f:
@@ -94,16 +83,15 @@ with (root/'MANIFEST.md').open('a') as f:
 with (root/'README.md').open('a') as f:
     f.write("\n### R111 correction candidate\nR111 completed its read-only public REST read-integrity review from the exact R110 Green baseline. Three findings were frozen in `docs/FILE-10-R111-FROZEN-FINDINGS-2026-09-08.md`. The `1.2.22-rc1` correction fails closed on public live-list DB errors and promotes chapter enrichment/read failures to top-level REST errors. Exact-head QA must be Green before R112 begins.\n")
 
-# R111 regression assertions.
 test=root/'tests/file10-r101-r120-contracts.sh'
 s=test.read_text()
-marker="printf '%s\\n' 'R101-R120 contracts PASS'"
+marker="echo 'R101-R120 contracts PASS'"
 checks=r'''# R111 — public read/enrichment failures must never become successful empty/partial payloads.
-need "class-vwlb-r111-public-read-integrity.php" "$P/video-wall-and-live-broadcasting.php" r111-autoload
-need "VWLB_R111_Public_Read_Integrity::register" "$P/video-wall-and-live-broadcasting.php" r111-register
-need "VWLB_DB::read_results(\$query,'r111_public_live_browse')" "$P/includes/class-vwlb-r111-public-read-integrity.php" r111-live-read-wrapper
-need "if(is_wp_error(\$chapters))return \$chapters" "$P/includes/class-vwlb-r111-public-read-integrity.php" r111-chapter-error-promotion
-need "vwlb_database_read_failed" "$P/includes/class-vwlb-r111-public-read-integrity.php" r111-parent-read-fail-closed
+grep -F "class-vwlb-r111-public-read-integrity.php" "$P/video-wall-and-live-broadcasting.php" >/dev/null
+grep -F "VWLB_R111_Public_Read_Integrity::register" "$P/video-wall-and-live-broadcasting.php" >/dev/null
+grep -F "VWLB_DB::read_results(\$query,'r111_public_live_browse')" "$P/includes/class-vwlb-r111-public-read-integrity.php" >/dev/null
+grep -F "if(is_wp_error(\$chapters))return \$chapters" "$P/includes/class-vwlb-r111-public-read-integrity.php" >/dev/null
+grep -F "vwlb_database_read_failed" "$P/includes/class-vwlb-r111-public-read-integrity.php" >/dev/null
 '''
 if marker not in s: raise SystemExit('R101-R120 PASS marker missing')
 s=s.replace(marker,checks+marker,1); test.write_text(s)
