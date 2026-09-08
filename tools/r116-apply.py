@@ -31,4 +31,13 @@ once(
     "$row=VWLB_DB::read_row($wpdb->prepare(\"SELECT status,response_json FROM $table WHERE idempotency_key=%s AND scope=%s\",$key,$scope),'idempotency_finish_verify');if(is_wp_error($row))return $row;if($row&&'complete'===$row['status']&&hash_equals((string)$row['response_json'],$encoded))return true;"
 )
 
+# Regression reconciliation: R19's durable post-delete re-read contract remains required,
+# but R115/R116 hardening moved authoritative reads behind the fail-closed helper.
+p = 'tests/file10-sequential-late-contracts.sh'
+once(
+    p,
+    'need "\\$row=\\$wpdb->get_row" "$P/includes/class-vwlb-security.php" r19-post-delete-reread',
+    'need "idempotency_expiry_recheck" "$P/includes/class-vwlb-security.php" r19-post-delete-reread'
+)
+
 print('R116 correction applicator completed')
