@@ -4,7 +4,7 @@ Canonical source repository for **Sabri Social Homeopathy Platform File 10**.
 
 ## Current reviewed candidate
 
-- Runtime: `1.2.20-rc1`
+- Runtime: `1.2.21-rc1`
 - Plugin folder: `video-wall-and-live-broadcasting`
 - Base schema: `1.1.0`
 - Extension schema: `1.1.0`
@@ -32,17 +32,14 @@ R105 completed its full privacy/consent/export/erasure/retention review before c
 
 R106 then completed a full read-only upload/scan/transcode safety review before any correction. Three proven findings were frozen: expired private-upload cleanup could race an in-flight chunk writer; checksum/scanner/external technical-validation failures could escape the processing-worker boundary and strand a claimed job; and a late resumable-completion route override retained permissive public-ID grammar. The correction at source commit `bf88573db6eb205bc8d0e4b362022a894f5bb19f` coordinates cleanup with the writer lock, contains validation failures in the normal retry/dead-letter path, and restores the canonical prefixed opaque public-ID route grammar. Candidate identity `1.2.17-rc1` completed R106 exact-head release QA before R107 began.
 
-R107 then completed a full read-only provider/webhook/secrets/readiness review before correction. Five proven findings were frozen: permissive late REST identifier overrides plus stale playback enrichment, incomplete provider-compensation Throwable containment, incomplete raw-secret key detection, stale `$wpdb->last_error` contamination of provider-health availability, and Future capability reporting that did not clearly separate implementation presence from runtime readiness. The correction closes those boundaries and advances the candidate to `1.2.18-rc1`; final exact-head R107 release QA is required before R108 may begin.
+R107 then completed a full read-only provider/webhook/secrets/readiness review before correction. Five proven findings were frozen: permissive late REST identifier overrides plus stale playback enrichment, incomplete provider-compensation Throwable containment, incomplete raw-secret key detection, stale `$wpdb->last_error` contamination of provider-health availability, and Future capability reporting that did not clearly separate implementation presence from runtime readiness. The correction closed those boundaries and R107 completed exact-head Green before R108 began.
 
-Historical candidates remain preserved by their immutable version identities. `1.2.18-rc1` is the current R107 repository/source correction candidate and must not be treated as Automated-QA Green until its exact-head PHP 8.3/8.4 release QA, deterministic packaging, checksum/archive verification, package/source parity and artifact publication all pass.
+R108 completed its read-only live-lifecycle/reconciliation review before correction. Six findings were frozen in `docs/FILE-10-R108-FROZEN-FINDINGS-2026-09-07.md`; its exact-head release QA completed Green before R109 began.
+
+R109 completed its full read-only rights/takedown/recording-consent/replay review from the exact R108 Green baseline. Five findings were frozen in `docs/FILE-10-R109-FROZEN-FINDINGS-2026-09-07.md`; its correction completed exact-head Green before R110 began.
+
+R110 completed a full read-only public-delivery/security-boundary review before correction. Its findings were frozen before any patching. The corrected repository/source candidate is `1.2.21-rc1`; full historical/current regression and exact-head release QA remain the gate before R111 may begin.
 
 ## Completion boundary
 
 Repository source, deterministic packaging and green CI establish only source/package/Automated-QA evidence. Staging acceptance, real providers/storage, backup restore, rollback, Founder acceptance, live deployment and operational verification remain separate gates and are not claimed here.
-
-
-### R108 correction candidate
-R108 completed its read-only live-lifecycle/reconciliation review before correction. Six findings were frozen in `docs/FILE-10-R108-FROZEN-FINDINGS-2026-09-07.md`. The correction candidate is `1.2.19-rc1`; exact-head PHP 8.3/8.4 release QA, deterministic packaging, checksum/archive, source/package parity and artifact publication must be green before R109 begins.
-
-### R109 correction candidate
-R109 completed its full read-only rights/takedown/recording-consent/replay review from the exact R108 Green baseline `762361ae9f1b1c8392e0fbce224a15051432952c`. Five findings were frozen in `docs/FILE-10-R109-FROZEN-FINDINGS-2026-09-07.md`. The correction candidate is `1.2.20-rc1`; exact-head PHP 8.3/8.4 release QA, deterministic packaging, checksum/archive, source/package parity and artifact publication must be green before R110 begins.
