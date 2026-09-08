@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -euxo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SBOM="$ROOT/SBOM-1.2.25-rc1.json"
 STATUS="$ROOT/STATUS.md"
