@@ -70,7 +70,7 @@ final class VWLB_Podcasts {
 	}
 
 	public static function publish_episode($id,$expected_version){
-		$wpdb->last_error='';$ep=self::episode($id,true);if(''!==(string)$wpdb->last_error)return VWLB_Helpers::error('vwlb_database_read_failed',__('Podcast episode state could not be verified safely.',VWLB_TEXT_DOMAIN),503);if(!$ep)return VWLB_Helpers::error('vwlb_not_found',__('Podcast episode not found.',VWLB_TEXT_DOMAIN),404);
+		$ep=self::episode($id,true);if(is_wp_error($ep))return $ep;if(!$ep)return VWLB_Helpers::error('vwlb_not_found',__('Podcast episode not found.',VWLB_TEXT_DOMAIN),404);
 		if(!VWLB_Security::can(VWLB_Contracts::CAP_PUBLISH,$ep,'publish_podcast'))return VWLB_Helpers::error('vwlb_forbidden',__('You cannot publish this podcast.',VWLB_TEXT_DOMAIN),403);
 		if((int)$ep['version']!==(int)$expected_version)return VWLB_Helpers::error('vwlb_version_conflict',__('The podcast changed. Refresh before publishing.',VWLB_TEXT_DOMAIN),409);
 		$asset=VWLB_Repository::find('media_assets',$ep['asset_id']);if(!$asset||'ready'!==$asset['status']||'passed'!==$asset['scan_status'])return VWLB_Helpers::error('vwlb_media_not_ready',__('The audio asset must be scanned and ready.',VWLB_TEXT_DOMAIN),422);
@@ -85,14 +85,14 @@ final class VWLB_Podcasts {
 
 	public static function episode($id,$private=false){
 		global $wpdb;$where=is_numeric($id)?$wpdb->prepare('id=%d',absint($id)):$wpdb->prepare('public_id=%s',VWLB_Helpers::text($id,64));
-		$row=$wpdb->get_row("SELECT * FROM ".VWLB_Helpers::table('podcast_episodes')." WHERE $where AND deleted_at IS NULL LIMIT 1",ARRAY_A);
-		if(!$row)return null;
+		$row=VWLB_DB::read_row("SELECT * FROM ".VWLB_Helpers::table('podcast_episodes')." WHERE $where AND deleted_at IS NULL LIMIT 1",'r119_podcast_episode');
+		if(is_wp_error($row))return $row;if(!$row)return null;
 		if(!$private&&('published'!==$row['status']||!VWLB_Security::can_view($row,'podcast_playback')))return null;
 		return $row;
 	}
 
 	public static function public_episode_dto($id){
-		global $wpdb;if(!VWLB_Helpers::is_public_id((string)$id))return null;$wpdb->last_error='';$ep=self::episode($id,false);if(''!==(string)$wpdb->last_error)return VWLB_Helpers::error('vwlb_database_read_failed',__('Podcast episode state could not be verified safely.',VWLB_TEXT_DOMAIN),503);if(!$ep)return null;
+		global $wpdb;if(!VWLB_Helpers::is_public_id((string)$id))return null;$ep=self::episode($id,false);if(is_wp_error($ep))return $ep;if(!$ep)return null;
 		$asset=VWLB_Repository::find('media_assets',$ep['asset_id']);if(VWLB_Repository::read_failed())return VWLB_Helpers::error('vwlb_database_read_failed',__('Podcast media state could not be verified safely.',VWLB_TEXT_DOMAIN),503);$der=VWLB_Helpers::json($asset['derivatives_json']??'{}');
 		$series_public='';if(!empty($ep['series_id'])){$series_public=VWLB_DB::read_var($wpdb->prepare('SELECT public_id FROM '.VWLB_Helpers::table('podcast_series').' WHERE id=%d LIMIT 1',(int)$ep['series_id']),'podcast_series_projection');if(is_wp_error($series_public))return $series_public;$series_public=(string)$series_public;}
 		$chapters=VWLB_Extensions::chapters('podcast',$ep['id']);if(is_wp_error($chapters))return $chapters;

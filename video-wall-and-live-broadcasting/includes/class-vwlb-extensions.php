@@ -306,9 +306,9 @@ final class VWLB_Extensions {
 
 	private static function upload_session( $public_id ) {
 		global $wpdb;
-		return $wpdb->get_row(
+		return VWLB_DB::read_row(
 			$wpdb->prepare( 'SELECT * FROM ' . VWLB_Helpers::table('upload_sessions') . ' WHERE public_id=%s LIMIT 1', VWLB_Helpers::text( $public_id, 64 ) ),
-			ARRAY_A
+			'r119_upload_session'
 		);
 	}
 
@@ -329,6 +329,7 @@ final class VWLB_Extensions {
 		$rate = VWLB_Security::rate_limit( 'upload_chunk', 240, HOUR_IN_SECONDS );
 		if ( is_wp_error( $rate ) ) return $rate;
 		$session = self::upload_session( $public_id );
+		if ( is_wp_error( $session ) ) return $session;
 		$auth = self::authorize_upload_session( $session, $token );
 		if ( is_wp_error( $auth ) ) return $auth;
 		$offset = max( 0, (int)$offset );
@@ -383,6 +384,7 @@ final class VWLB_Extensions {
 
 	public static function complete_resumable( $public_id, $token ) {
 		$session = self::upload_session( $public_id );
+		if ( is_wp_error( $session ) ) return $session;
 		$auth = self::authorize_upload_session( $session, $token );
 		if ( is_wp_error( $auth ) ) return $auth;
 		if ( (int)$session['received_bytes'] !== (int)$session['expected_bytes'] ) {
@@ -485,7 +487,7 @@ final class VWLB_Extensions {
 		));
 		if(!$ok)return VWLB_Helpers::error('vwlb_database_error',__('Chapter could not be saved.',VWLB_TEXT_DOMAIN),500);
 		VWLB_Helpers::audit('chapter',(int)$wpdb->insert_id,'create','','published');
-		return array('public_id'=>$wpdb->get_var($wpdb->prepare('SELECT public_id FROM '.VWLB_Helpers::table('chapters').' WHERE id=%d',$wpdb->insert_id)),'start_seconds'=>$start,'end_seconds'=>$end,'title'=>$title);
+		$chapter_public=VWLB_DB::read_var($wpdb->prepare('SELECT public_id FROM '.VWLB_Helpers::table('chapters').' WHERE id=%d',$wpdb->insert_id),'r119_chapter_projection');if(is_wp_error($chapter_public))return $chapter_public;return array('public_id'=>(string)$chapter_public,'start_seconds'=>$start,'end_seconds'=>$end,'title'=>$title);
 	}
 
 	public static function chapters( $object_type, $object_id ) {
@@ -503,14 +505,14 @@ final class VWLB_Extensions {
 		return VWLB_DB::transaction(function()use($event,$data){
 			global $wpdb;
 			$events=VWLB_Helpers::table('live_events');
-			$fresh=$wpdb->get_row($wpdb->prepare("SELECT * FROM $events WHERE id=%d FOR UPDATE",$event['id']),ARRAY_A);
-			if(!$fresh||!VWLB_Security::can_view($fresh,'waiting_room'))return VWLB_Helpers::error('vwlb_not_found',__('Live event not found.',VWLB_TEXT_DOMAIN),404);
+			$fresh=VWLB_DB::read_row($wpdb->prepare("SELECT * FROM $events WHERE id=%d FOR UPDATE",$event['id']),'r119_waiting_room_event_lock');
+			if(is_wp_error($fresh))return $fresh;if(!$fresh||!VWLB_Security::can_view($fresh,'waiting_room'))return VWLB_Helpers::error('vwlb_not_found',__('Live event not found.',VWLB_TEXT_DOMAIN),404);
 			if(!in_array($fresh['status'],array('scheduled','rehearsal','ready','live'),true))return VWLB_Helpers::error('vwlb_waiting_room_closed',__('The waiting room is closed.',VWLB_TEXT_DOMAIN),409);
 			$table=VWLB_Helpers::table('live_attendees');$uid=get_current_user_id();
-			$existing=$wpdb->get_row($wpdb->prepare("SELECT * FROM $table WHERE live_event_id=%d AND user_id=%d FOR UPDATE",$fresh['id'],$uid),ARRAY_A);
+			$existing=VWLB_DB::read_row($wpdb->prepare("SELECT * FROM $table WHERE live_event_id=%d AND user_id=%d FOR UPDATE",$fresh['id'],$uid),'r119_waiting_room_attendee_lock');if(is_wp_error($existing))return $existing;
 			$capacity=self::event_capacity($fresh);
 			if(!$existing&&$capacity>0){
-				$count=(int)$wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM $table WHERE live_event_id=%d AND state IN ('waiting','approved','joined')",$fresh['id']));
+				$count=VWLB_DB::read_var($wpdb->prepare("SELECT COUNT(*) FROM $table WHERE live_event_id=%d AND state IN ('waiting','approved','joined')",$fresh['id']),'r119_waiting_room_capacity');if(is_wp_error($count))return $count;$count=(int)$count;
 				if($count>=$capacity)return VWLB_Helpers::error('vwlb_live_capacity_reached',__('This live event has reached capacity.',VWLB_TEXT_DOMAIN),409);
 			}
 			$state='live'===$fresh['status']?'joined':'waiting';$reminder=max(0,min(1440,(int)($data['reminder_minutes']??15)));$now=VWLB_Helpers::now();
@@ -524,13 +526,13 @@ final class VWLB_Extensions {
 				$id=(int)$wpdb->insert_id;
 			}
 			VWLB_Helpers::audit('live_attendee',$id,'waiting_room_join','',$state,'',array('live_event_id'=>$fresh['id']));
-			$attendee_public=$existing?($existing['public_id']??''):(string)$wpdb->get_var($wpdb->prepare('SELECT public_id FROM '.$table.' WHERE id=%d',$id));return array('attendee_public_id'=>$attendee_public,'state'=>$state,'reminder_minutes'=>$reminder,'recording_consent'=>$existing?!empty($existing['recording_consent']):false);
+			$attendee_public=$existing?($existing['public_id']??''):VWLB_DB::read_var($wpdb->prepare('SELECT public_id FROM '.$table.' WHERE id=%d',$id),'r119_waiting_room_projection');if(is_wp_error($attendee_public))return $attendee_public;$attendee_public=(string)$attendee_public;return array('attendee_public_id'=>$attendee_public,'state'=>$state,'reminder_minutes'=>$reminder,'recording_consent'=>$existing?!empty($existing['recording_consent']):false);
 		});
 	}
 
 	public static function set_recording_consent( $live_id, $consent, $version='' ) {
 		if(!is_user_logged_in())return VWLB_Helpers::error('vwlb_login_required',__('Sign in first.',VWLB_TEXT_DOMAIN),401);$event=VWLB_Repository::find('live_events',$live_id);if(!$event||!VWLB_Security::can_view($event,'recording_consent'))return VWLB_Helpers::error('vwlb_not_found',__('Live event not found.',VWLB_TEXT_DOMAIN),404);$policy=VWLB_Helpers::json($event['recording_policy_json']??'{}');$required=VWLB_Helpers::text($policy['consent_version']??'v1',64);$submitted=VWLB_Helpers::text($version?:$required,64);$consent=(bool)$consent;if($consent&&!hash_equals($required,$submitted))return VWLB_Helpers::error('vwlb_recording_consent_version_stale',__('The recording-consent text changed. Review the current policy before consenting.',VWLB_TEXT_DOMAIN),409,array('required_consent_version'=>$required));
-		return VWLB_DB::transaction(function()use($event,$consent,$required){global $wpdb;$table=VWLB_Helpers::table('live_attendees');$row=$wpdb->get_row($wpdb->prepare("SELECT * FROM $table WHERE live_event_id=%d AND user_id=%d FOR UPDATE",$event['id'],get_current_user_id()),ARRAY_A);if(!$row)return VWLB_Helpers::error('vwlb_attendee_missing',__('Join the waiting room before setting recording consent.',VWLB_TEXT_DOMAIN),409);$now=VWLB_Helpers::now();$changed=$wpdb->update($table,array('recording_consent'=>$consent?1:0,'consent_version'=>$required,'consented_at'=>$now,'version'=>(int)$row['version']+1,'updated_at'=>$now),array('id'=>$row['id'],'version'=>$row['version']));if(1!==$changed)return VWLB_Helpers::error('vwlb_recording_consent_conflict',__('Recording consent changed concurrently. Refresh and try again.',VWLB_TEXT_DOMAIN),409);VWLB_Helpers::audit('live_attendee',$row['id'],'recording_consent_change',$row['recording_consent']?'yes':'no',$consent?'yes':'no','',array('live_event_id'=>$event['id'],'purpose'=>'recording_consent','consent_version'=>$required));VWLB_Helpers::outbox('LiveRecordingConsentChanged','live',$event['id'],array('attendee_public_id'=>$row['public_id'],'consented'=>$consent,'consent_version'=>$required));return array('recording_consent'=>$consent,'consent_version'=>$required,'consented_at'=>VWLB_Helpers::iso_utc($now));});
+		return VWLB_DB::transaction(function()use($event,$consent,$required){global $wpdb;$table=VWLB_Helpers::table('live_attendees');$row=VWLB_DB::read_row($wpdb->prepare("SELECT * FROM $table WHERE live_event_id=%d AND user_id=%d FOR UPDATE",$event['id'],get_current_user_id()),'r119_recording_consent_lock');if(is_wp_error($row))return $row;if(!$row)return VWLB_Helpers::error('vwlb_attendee_missing',__('Join the waiting room before setting recording consent.',VWLB_TEXT_DOMAIN),409);$now=VWLB_Helpers::now();$changed=$wpdb->update($table,array('recording_consent'=>$consent?1:0,'consent_version'=>$required,'consented_at'=>$now,'version'=>(int)$row['version']+1,'updated_at'=>$now),array('id'=>$row['id'],'version'=>$row['version']));if(1!==$changed)return VWLB_Helpers::error('vwlb_recording_consent_conflict',__('Recording consent changed concurrently. Refresh and try again.',VWLB_TEXT_DOMAIN),409);VWLB_Helpers::audit('live_attendee',$row['id'],'recording_consent_change',$row['recording_consent']?'yes':'no',$consent?'yes':'no','',array('live_event_id'=>$event['id'],'purpose'=>'recording_consent','consent_version'=>$required));VWLB_Helpers::outbox('LiveRecordingConsentChanged','live',$event['id'],array('attendee_public_id'=>$row['public_id'],'consented'=>$consent,'consent_version'=>$required));return array('recording_consent'=>$consent,'consent_version'=>$required,'consented_at'=>VWLB_Helpers::iso_utc($now));});
 	}
 
 	public static function ask_question( $live_id, $question ) {
@@ -540,7 +542,7 @@ final class VWLB_Extensions {
 		$q=VWLB_Helpers::textarea($question,4000);if(!$q)return VWLB_Helpers::error('vwlb_question_required',__('Question is required.',VWLB_TEXT_DOMAIN),422);
 		global $wpdb;$now=VWLB_Helpers::now();$saved=$wpdb->insert(VWLB_Helpers::table('live_questions'),array('public_id'=>VWLB_Helpers::public_id('q'),'live_event_id'=>$event['id'],'user_id'=>get_current_user_id(),'question'=>$q,'status'=>'queued','answer'=>'','moderator_id'=>0,'version'=>1,'created_at'=>$now,'updated_at'=>$now));
 		if(!$saved||!(int)$wpdb->insert_id)return VWLB_Helpers::error('vwlb_database_error',__('Question could not be saved.',VWLB_TEXT_DOMAIN),500);
-		$id=(int)$wpdb->insert_id;$public=(string)$wpdb->get_var($wpdb->prepare('SELECT public_id FROM '.VWLB_Helpers::table('live_questions').' WHERE id=%d',$id));VWLB_Helpers::audit('live_question',$id,'submit','','queued','',array('live_event_id'=>$event['id']));
+		$id=(int)$wpdb->insert_id;$public=VWLB_DB::read_var($wpdb->prepare('SELECT public_id FROM '.VWLB_Helpers::table('live_questions').' WHERE id=%d',$id),'r119_question_projection');if(is_wp_error($public))return $public;$public=(string)$public;VWLB_Helpers::audit('live_question',$id,'submit','','queued','',array('live_event_id'=>$event['id']));
 		return array('public_id'=>$public,'status'=>'queued');
 	}
 
@@ -549,7 +551,7 @@ final class VWLB_Extensions {
 		if(!$status)return VWLB_Helpers::error('vwlb_question_state_invalid',__('Question state is invalid.',VWLB_TEXT_DOMAIN),422);
 		global $wpdb;$table=VWLB_Helpers::table('live_questions');
 		return VWLB_DB::transaction(function()use($wpdb,$table,$question_id,$status,$answer){
-			$row=$wpdb->get_row($wpdb->prepare("SELECT * FROM $table WHERE public_id=%s FOR UPDATE",VWLB_Helpers::text($question_id,64)),ARRAY_A);if(!$row)return VWLB_Helpers::error('vwlb_not_found',__('Question not found.',VWLB_TEXT_DOMAIN),404);
+			$row=VWLB_DB::read_row($wpdb->prepare("SELECT * FROM $table WHERE public_id=%s FOR UPDATE",VWLB_Helpers::text($question_id,64)),'r119_question_lock');if(is_wp_error($row))return $row;if(!$row)return VWLB_Helpers::error('vwlb_not_found',__('Question not found.',VWLB_TEXT_DOMAIN),404);
 			$event=VWLB_Repository::find('live_events',$row['live_event_id']);
 			if(!$event||!VWLB_Security::can(VWLB_Contracts::CAP_MODERATE,$event,'moderate_live_question'))return VWLB_Helpers::error('vwlb_forbidden',__('You cannot moderate this live event question.',VWLB_TEXT_DOMAIN),403);
 			$changed=$wpdb->update($table,array('status'=>$status,'answer'=>VWLB_Helpers::textarea($answer,10000),'moderator_id'=>get_current_user_id(),'version'=>(int)$row['version']+1,'updated_at'=>VWLB_Helpers::now()),array('id'=>$row['id'],'version'=>$row['version']));
@@ -561,7 +563,7 @@ final class VWLB_Extensions {
 
 	public static function add_live_resource( $live_id, $data ) {
 		$event=VWLB_Repository::find('live_events',$live_id);if(!$event||!VWLB_Security::can(VWLB_Contracts::CAP_BROADCAST,$event,'add_live_resource'))return VWLB_Helpers::error('vwlb_not_found',__('Live event not found.',VWLB_TEXT_DOMAIN),404);$title=VWLB_Helpers::text($data['title']??'',255);if(!$title)return VWLB_Helpers::error('vwlb_title_required',__('Title is required.',VWLB_TEXT_DOMAIN),422);$url=VWLB_Helpers::remote_url($data['url']??'');$attachment=absint($data['attachment_id']??0);if(!$url&&!$attachment)return VWLB_Helpers::error('vwlb_resource_required',__('A resource link or attachment is required.',VWLB_TEXT_DOMAIN),422);if($attachment&&(!current_user_can('read_post',$attachment)||!apply_filters('vwlb_live_resource_attachment_allowed',false,$attachment,$event,$data)))return VWLB_Helpers::error('vwlb_resource_attachment_forbidden',__('Live resource attachments must be explicitly authorized and safety-validated by the File 10 private-media boundary.',VWLB_TEXT_DOMAIN),403);
-		global $wpdb;$now=VWLB_Helpers::now();$rights_status=VWLB_Helpers::enum($data['rights_status']??'declared',array('declared','verified','restricted'),'declared');$resource_status='restricted'===$rights_status?'restricted':'published';$saved=$wpdb->insert(VWLB_Helpers::table('live_resources'),array('public_id'=>VWLB_Helpers::public_id('res'),'live_event_id'=>$event['id'],'title'=>$title,'resource_type'=>$attachment?'attachment':'link','url'=>$url,'attachment_id'=>$attachment,'rights_status'=>$rights_status,'status'=>$resource_status,'version'=>1,'created_by'=>get_current_user_id(),'created_at'=>$now,'updated_at'=>$now));if(!$saved||!(int)$wpdb->insert_id)return VWLB_Helpers::error('vwlb_database_error',__('Live resource could not be saved.',VWLB_TEXT_DOMAIN),500);$id=(int)$wpdb->insert_id;VWLB_Helpers::audit('live_resource',$id,'create','',$resource_status,'',array('live_event_id'=>$event['id']));$public=(string)$wpdb->get_var($wpdb->prepare('SELECT public_id FROM '.VWLB_Helpers::table('live_resources').' WHERE id=%d',$id));return array('public_id'=>$public,'title'=>$title,'url'=>$url,'resource_type'=>$attachment?'attachment':'link');
+		global $wpdb;$now=VWLB_Helpers::now();$rights_status=VWLB_Helpers::enum($data['rights_status']??'declared',array('declared','verified','restricted'),'declared');$resource_status='restricted'===$rights_status?'restricted':'published';$saved=$wpdb->insert(VWLB_Helpers::table('live_resources'),array('public_id'=>VWLB_Helpers::public_id('res'),'live_event_id'=>$event['id'],'title'=>$title,'resource_type'=>$attachment?'attachment':'link','url'=>$url,'attachment_id'=>$attachment,'rights_status'=>$rights_status,'status'=>$resource_status,'version'=>1,'created_by'=>get_current_user_id(),'created_at'=>$now,'updated_at'=>$now));if(!$saved||!(int)$wpdb->insert_id)return VWLB_Helpers::error('vwlb_database_error',__('Live resource could not be saved.',VWLB_TEXT_DOMAIN),500);$id=(int)$wpdb->insert_id;VWLB_Helpers::audit('live_resource',$id,'create','',$resource_status,'',array('live_event_id'=>$event['id']));$public=VWLB_DB::read_var($wpdb->prepare('SELECT public_id FROM '.VWLB_Helpers::table('live_resources').' WHERE id=%d',$id),'r119_resource_projection');if(is_wp_error($public))return $public;$public=(string)$public;return array('public_id'=>$public,'title'=>$title,'url'=>$url,'resource_type'=>$attachment?'attachment':'link');
 	}
 
 	public static function live_extras( $event ) {
@@ -582,7 +584,7 @@ final class VWLB_Extensions {
 		$video=VWLB_Repository::find('videos',$data['video_id']??0);if(!$video||'published'!==$video['status']||!VWLB_Security::can(VWLB_Contracts::CAP_PUBLISH,$video,'create_premiere'))return VWLB_Helpers::error('vwlb_premiere_video_invalid',__('A published, authorized video is required for a premiere.',VWLB_TEXT_DOMAIN),422);
 		$live_data=array('title'=>VWLB_Helpers::text($data['title']??$video['title'],255),'description'=>VWLB_Helpers::textarea($data['description']??$video['description']),'scheduled_start'=>$data['scheduled_start']??null,'scheduled_end'=>$data['scheduled_end']??null,'timezone'=>$data['timezone']??'UTC','visibility'=>$data['visibility']??$video['visibility'],'provider'=>$data['provider']??'custom','language'=>$data['language']??$video['language'],'chat_policy'=>array('enabled'=>true,'moderated'=>true,'slow_mode_seconds'=>max(0,min(300,absint($data['slow_mode_seconds']??0)))),'recording_policy'=>array('record'=>false,'publish_replay'=>false,'consent_required'=>false),'access_policy'=>array('audience'=>$data['visibility']??$video['visibility'],'premiere_video_public_id'=>$video['public_id']));
 		$live=VWLB_Live::schedule($live_data,$idempotency_key);if(is_wp_error($live))return $live;$extras=self::schedule_live_extras($live['id'],array('capacity'=>$data['capacity']??0,'waiting_room'=>true,'reminders'=>$data['reminders']??array(1440,60,15)));if(is_wp_error($extras))return $extras;
-		global $wpdb;$table=VWLB_Helpers::table('premieres');$existing=$wpdb->get_row($wpdb->prepare("SELECT * FROM $table WHERE live_event_id=%d LIMIT 1",$live['id']),ARRAY_A);if($existing){if((int)$existing['video_id']!==(int)$video['id']||(int)$existing['owner_id']!==get_current_user_id())return VWLB_Helpers::error('vwlb_premiere_replay_conflict',__('This live event is already mapped to another premiere.',VWLB_TEXT_DOMAIN),409);return array('id'=>$existing['public_id'],'video_public_id'=>$video['public_id'],'live_public_id'=>$live['public_id'],'scheduled_at'=>VWLB_Helpers::iso_utc($existing['scheduled_at']),'status'=>$existing['status']);}
+		global $wpdb;$table=VWLB_Helpers::table('premieres');$existing=VWLB_DB::read_row($wpdb->prepare("SELECT * FROM $table WHERE live_event_id=%d LIMIT 1",$live['id']),'r119_premiere_mapping');if(is_wp_error($existing))return $existing;if($existing){if((int)$existing['video_id']!==(int)$video['id']||(int)$existing['owner_id']!==get_current_user_id())return VWLB_Helpers::error('vwlb_premiere_replay_conflict',__('This live event is already mapped to another premiere.',VWLB_TEXT_DOMAIN),409);return array('id'=>$existing['public_id'],'video_public_id'=>$video['public_id'],'live_public_id'=>$live['public_id'],'scheduled_at'=>VWLB_Helpers::iso_utc($existing['scheduled_at']),'status'=>$existing['status']);}
 		$now=VWLB_Helpers::now();$public=VWLB_Helpers::public_id('pre');$saved=$wpdb->insert($table,array('public_id'=>$public,'video_id'=>$video['id'],'live_event_id'=>$live['id'],'owner_id'=>get_current_user_id(),'status'=>'scheduled','scheduled_at'=>VWLB_Helpers::datetime_in_timezone($data['scheduled_start']??null,$data['timezone']??'UTC'),'version'=>1,'created_at'=>$now,'updated_at'=>$now));if(!$saved||!(int)$wpdb->insert_id)return VWLB_Helpers::error('vwlb_database_error',__('Premiere mapping could not be created.',VWLB_TEXT_DOMAIN),500);
 		VWLB_Helpers::audit('premiere',(int)$wpdb->insert_id,'create','','scheduled','Recorded premiere linked to moderated live discussion.');VWLB_Helpers::outbox('VideoPremiereScheduled','video',$video['id'],array('premiere_public_id'=>$public,'live_public_id'=>$live['public_id']));return array('id'=>$public,'video_public_id'=>$video['public_id'],'live_public_id'=>$live['public_id'],'scheduled_at'=>$data['scheduled_start']??null,'status'=>'scheduled');
 	}
@@ -595,17 +597,17 @@ final class VWLB_Extensions {
 
 	public static function creator_studio() {
 		if(!VWLB_Security::can(VWLB_Contracts::CAP_SUBMIT,null,'creator_studio'))return VWLB_Helpers::error('vwlb_forbidden',__('Creator Studio is restricted.',VWLB_TEXT_DOMAIN),403);
-		global $wpdb;$uid=get_current_user_id();$videos=$wpdb->get_results($wpdb->prepare('SELECT public_id,title,status,visibility,view_count,like_count,dislike_count,updated_at FROM '.VWLB_Helpers::table('videos').' WHERE owner_id=%d AND deleted_at IS NULL ORDER BY id DESC LIMIT 100',$uid),ARRAY_A);
-		$live=$wpdb->get_results($wpdb->prepare('SELECT public_id,title,status,scheduled_start,visibility,updated_at FROM '.VWLB_Helpers::table('live_events').' WHERE owner_id=%d AND deleted_at IS NULL ORDER BY id DESC LIMIT 100',$uid),ARRAY_A);
-		$jobs=$wpdb->get_results($wpdb->prepare('SELECT j.public_id,j.job_type,j.status,j.attempts,j.error_code,j.updated_at FROM '.VWLB_Helpers::table('processing_jobs').' j INNER JOIN '.VWLB_Helpers::table('media_assets').' a ON a.id=j.asset_id WHERE a.owner_id=%d ORDER BY j.id DESC LIMIT 100',$uid),ARRAY_A);
-		$rights=$wpdb->get_results($wpdb->prepare('SELECT public_id,target_type,target_id,status,rights_basis,decision_reason,updated_at FROM '.VWLB_Helpers::table('takedowns').' WHERE claimant_id=%d ORDER BY id DESC LIMIT 100',$uid),ARRAY_A);foreach($rights as &$case){$entity='video'===($case['target_type']??'')?'videos':'live_events';$target=VWLB_Repository::find($entity,(int)$case['target_id'],true);$case['target_public_id']=$target['public_id']??'';unset($case['target_id']);}unset($case);
+		global $wpdb;$uid=get_current_user_id();$videos=VWLB_DB::read_results($wpdb->prepare('SELECT public_id,title,status,visibility,view_count,like_count,dislike_count,updated_at FROM '.VWLB_Helpers::table('videos').' WHERE owner_id=%d AND deleted_at IS NULL ORDER BY id DESC LIMIT 100',$uid),'r119_creator_videos');if(is_wp_error($videos))return $videos;
+		$live=VWLB_DB::read_results($wpdb->prepare('SELECT public_id,title,status,scheduled_start,visibility,updated_at FROM '.VWLB_Helpers::table('live_events').' WHERE owner_id=%d AND deleted_at IS NULL ORDER BY id DESC LIMIT 100',$uid),'r119_creator_live');if(is_wp_error($live))return $live;
+		$jobs=VWLB_DB::read_results($wpdb->prepare('SELECT j.public_id,j.job_type,j.status,j.attempts,j.error_code,j.updated_at FROM '.VWLB_Helpers::table('processing_jobs').' j INNER JOIN '.VWLB_Helpers::table('media_assets').' a ON a.id=j.asset_id WHERE a.owner_id=%d ORDER BY j.id DESC LIMIT 100',$uid),'r119_creator_jobs');if(is_wp_error($jobs))return $jobs;
+		$rights=VWLB_DB::read_results($wpdb->prepare('SELECT public_id,target_type,target_id,status,rights_basis,decision_reason,updated_at FROM '.VWLB_Helpers::table('takedowns').' WHERE claimant_id=%d ORDER BY id DESC LIMIT 100',$uid),'r119_creator_rights');if(is_wp_error($rights))return $rights;foreach($rights as &$case){$entity='video'===($case['target_type']??'')?'videos':'live_events';$target=VWLB_Repository::find($entity,(int)$case['target_id'],true);$case['target_public_id']=$target['public_id']??'';unset($case['target_id']);}unset($case);
 		return array('videos'=>$videos,'live'=>$live,'jobs'=>$jobs,'copyright'=>$rights,'insights'=>self::creator_insights(30),'comments'=>apply_filters('vwlb_creator_comment_projection',array(),$uid),'canonical_owner'=>'File 10','comments_owner'=>'File 21/shared interaction contract');
 	}
 
 	public static function create_download_token( $object_type, $object_id, $ttl=900, $max_downloads=1 ) {
 		if(!is_user_logged_in())return VWLB_Helpers::error('vwlb_login_required',__('Sign in first.',VWLB_TEXT_DOMAIN),401);
 		$object_type=VWLB_Helpers::enum($object_type,array('video','podcast'),'');if(!$object_type)return VWLB_Helpers::error('vwlb_download_type_invalid',__('Download object type is invalid.',VWLB_TEXT_DOMAIN),422);
-		$object='video'===$object_type?VWLB_Repository::find('videos',$object_id):VWLB_Podcasts::episode($object_id,true);
+		$object='video'===$object_type?VWLB_Repository::find('videos',$object_id):VWLB_Podcasts::episode($object_id,true);if(is_wp_error($object))return $object;
 		if(!$object)return VWLB_Helpers::error('vwlb_not_found',__('Media not found.',VWLB_TEXT_DOMAIN),404);
 		if('podcast'===$object_type&&'published'!==($object['status']??'')){$owns=(int)($object['owner_id']??0)===get_current_user_id();if(!$owns||!VWLB_Security::can(VWLB_Contracts::CAP_PUBLISH,$object,'download_unpublished_podcast'))return VWLB_Helpers::error('vwlb_not_found',__('Media not found.',VWLB_TEXT_DOMAIN),404);}elseif(!VWLB_Security::can_view($object,'download'))return VWLB_Helpers::error('vwlb_not_found',__('Media not found.',VWLB_TEXT_DOMAIN),404);
 		if(!self::download_allowed($object_type,$object))return VWLB_Helpers::error('vwlb_download_not_allowed',__('Download is not allowed by the current rights policy.',VWLB_TEXT_DOMAIN),403);
@@ -626,10 +628,10 @@ final class VWLB_Extensions {
 
 	public static function resolve_download( $public_id, $token ) {
 		if(!is_user_logged_in())return VWLB_Helpers::error('vwlb_login_required',__('Sign in first.',VWLB_TEXT_DOMAIN),401);
-		global $wpdb;$table=VWLB_Helpers::table('download_tokens');$row=$wpdb->get_row($wpdb->prepare("SELECT * FROM $table WHERE public_id=%s",VWLB_Helpers::text($public_id,64)),ARRAY_A);
+		global $wpdb;$table=VWLB_Helpers::table('download_tokens');$row=VWLB_DB::read_row($wpdb->prepare("SELECT * FROM $table WHERE public_id=%s",VWLB_Helpers::text($public_id,64)),'r119_download_token');if(is_wp_error($row))return $row;
 		if(!$row||(int)$row['user_id']!==get_current_user_id()||'active'!==$row['status']||strtotime($row['expires_at'].' UTC')<=time()||!password_verify((string)$token,$row['token_hash']))return VWLB_Helpers::error('vwlb_download_token_invalid',__('Download token is invalid or expired.',VWLB_TEXT_DOMAIN),410);
 		if((int)$row['download_count']>=(int)$row['max_downloads'])return VWLB_Helpers::error('vwlb_download_limit_reached',__('Download limit has been reached.',VWLB_TEXT_DOMAIN),410);
-		$object='video'===$row['object_type']?VWLB_Repository::video_bundle($row['object_id']):VWLB_Podcasts::episode($row['object_id'],true);
+		$object='video'===$row['object_type']?VWLB_Repository::video_bundle($row['object_id']):VWLB_Podcasts::episode($row['object_id'],true);if(is_wp_error($object))return $object;
 		if(!$object||('podcast'===$row['object_type']&&'published'!==($object['status']??''))||!VWLB_Security::can_view($object,'download')||!self::download_allowed($row['object_type'],$object))return VWLB_Helpers::error('vwlb_download_revoked',__('Download access has been revoked.',VWLB_TEXT_DOMAIN),403);
 		$asset='video'===$row['object_type']?($object['asset']??array()):VWLB_Repository::find('media_assets',$object['asset_id']??0);$derivatives=VWLB_Helpers::json($asset['derivatives_json']??'{}');$storage=VWLB_Helpers::json($asset['storage_json']??'{}');$protected='public'!==($object['visibility']??'private')||'private_file'===($storage['driver']??'');if($protected){try{$url=apply_filters('vwlb_private_download_grant','',$asset,$object,$row);}catch(Throwable $e){return VWLB_Helpers::error('vwlb_private_download_grant_failed',__('Secure download delivery failed safely.',VWLB_TEXT_DOMAIN),503);}$url=is_string($url)?$url:'';}else{$url=$derivatives['download']??$derivatives['mp4_high']??$derivatives['mp4']??$derivatives['audio_only']??'';}
 		$url=esc_url_raw($url);if(!$url)return VWLB_Helpers::error('vwlb_download_unavailable',__('Download derivative is not ready.',VWLB_TEXT_DOMAIN),503);
@@ -736,21 +738,21 @@ final class VWLB_Extensions {
 
 	public static function recording_consent_gate( $result, $input, $job ) {
 		$live_id=absint($input['live_event_id']??0);if(!$live_id)return $result;$event=VWLB_Repository::find('live_events',$live_id);if(!$event)return VWLB_Helpers::error('vwlb_live_missing',__('Live event not found for recording finalization.',VWLB_TEXT_DOMAIN),404);$policy=VWLB_Helpers::json($event['recording_policy_json']??'{}');if(empty($policy['record']))return VWLB_Helpers::error('vwlb_recording_not_authorized',__('Recording was not authorized for this live event.',VWLB_TEXT_DOMAIN),409);
-		if(!empty($policy['consent_required'])){global $wpdb;$required=VWLB_Helpers::text($policy['consent_version']??'v1',64);$missing=(int)$wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM ".VWLB_Helpers::table('live_attendees')." WHERE live_event_id=%d AND state IN ('approved','joined') AND (recording_consent=0 OR consent_version<>%s)",$event['id'],$required));if($missing>0){VWLB_Helpers::audit('live',$event['id'],'recording_blocked_consent',$event['status'],$event['status'],'Recording finalization blocked because attendee consent is incomplete or stale.',array('missing_consent_count'=>$missing,'consent_version'=>$required,'purpose'=>'recording_consent'));return VWLB_Helpers::error('vwlb_recording_consent_incomplete',__('Recording cannot be finalized while required attendee consent is incomplete or stale.',VWLB_TEXT_DOMAIN),409);}}
+		if(!empty($policy['consent_required'])){global $wpdb;$required=VWLB_Helpers::text($policy['consent_version']??'v1',64);$missing=VWLB_DB::read_var($wpdb->prepare("SELECT COUNT(*) FROM ".VWLB_Helpers::table('live_attendees')." WHERE live_event_id=%d AND state IN ('approved','joined') AND (recording_consent=0 OR consent_version<>%s)",$event['id'],$required),'r119_recording_consent_count');if(is_wp_error($missing))return $missing;$missing=(int)$missing;if($missing>0){VWLB_Helpers::audit('live',$event['id'],'recording_blocked_consent',$event['status'],$event['status'],'Recording finalization blocked because attendee consent is incomplete or stale.',array('missing_consent_count'=>$missing,'consent_version'=>$required,'purpose'=>'recording_consent'));return VWLB_Helpers::error('vwlb_recording_consent_incomplete',__('Recording cannot be finalized while required attendee consent is incomplete or stale.',VWLB_TEXT_DOMAIN),409);}}
 		return $result;
 	}
 
 	public static function schedule_live_extras( $live_id, $data ) {
 		$event=VWLB_Repository::find('live_events',$live_id);if(!$event)return VWLB_Helpers::error('vwlb_live_missing',__('Live event not found.',VWLB_TEXT_DOMAIN),404);$capacity=max(0,min(100000,(int)($data['capacity']??0)));$reminders=array_values(array_unique(array_filter(array_map('absint',(array)($data['reminders']??array(1440,60,15))))));
-		return VWLB_DB::transaction(function()use($event,$data,$capacity,$reminders){global $wpdb;$events=VWLB_Helpers::table('live_events');$fresh=$wpdb->get_row($wpdb->prepare("SELECT * FROM $events WHERE id=%d FOR UPDATE",$event['id']),ARRAY_A);if(!$fresh)return VWLB_Helpers::error('vwlb_live_missing',__('Live event not found.',VWLB_TEXT_DOMAIN),404);$access=VWLB_Helpers::json($fresh['access_policy_json']);$access['capacity']=$capacity;$access['waiting_room']=array_key_exists('waiting_room',$data)?(bool)$data['waiting_room']:true;$changed=$wpdb->update($events,array('access_policy_json'=>VWLB_Helpers::json_encode($access),'version'=>(int)$fresh['version']+1,'updated_at'=>VWLB_Helpers::now()),array('id'=>$fresh['id'],'version'=>$fresh['version']));if(1!==$changed)return VWLB_Helpers::error('vwlb_live_extras_conflict',__('Live waiting-room settings changed concurrently.',VWLB_TEXT_DOMAIN),409);
-			$jobs_table=VWLB_Helpers::table('processing_jobs');$old=$wpdb->get_results("SELECT id,input_json FROM $jobs_table WHERE job_type='send_live_reminder' AND status IN ('pending','retry') AND asset_id=0 LIMIT 500",ARRAY_A);foreach($old as $job){$input=VWLB_Helpers::json($job['input_json']);if((int)($input['live_event_id']??0)===(int)$fresh['id']){if(false===$wpdb->delete($jobs_table,array('id'=>$job['id']),array('%d')))return VWLB_Helpers::error('vwlb_database_error',__('Existing live reminders could not be reconciled.',VWLB_TEXT_DOMAIN),500);}}
+		return VWLB_DB::transaction(function()use($event,$data,$capacity,$reminders){global $wpdb;$events=VWLB_Helpers::table('live_events');$fresh=VWLB_DB::read_row($wpdb->prepare("SELECT * FROM $events WHERE id=%d FOR UPDATE",$event['id']),'r119_live_extras_lock');if(is_wp_error($fresh))return $fresh;if(!$fresh)return VWLB_Helpers::error('vwlb_live_missing',__('Live event not found.',VWLB_TEXT_DOMAIN),404);$access=VWLB_Helpers::json($fresh['access_policy_json']);$access['capacity']=$capacity;$access['waiting_room']=array_key_exists('waiting_room',$data)?(bool)$data['waiting_room']:true;$changed=$wpdb->update($events,array('access_policy_json'=>VWLB_Helpers::json_encode($access),'version'=>(int)$fresh['version']+1,'updated_at'=>VWLB_Helpers::now()),array('id'=>$fresh['id'],'version'=>$fresh['version']));if(1!==$changed)return VWLB_Helpers::error('vwlb_live_extras_conflict',__('Live waiting-room settings changed concurrently.',VWLB_TEXT_DOMAIN),409);
+			$jobs_table=VWLB_Helpers::table('processing_jobs');$old=VWLB_DB::read_results("SELECT id,input_json FROM $jobs_table WHERE job_type='send_live_reminder' AND status IN ('pending','retry') AND asset_id=0 LIMIT 500",'r119_live_reminder_reconcile');if(is_wp_error($old))return $old;foreach($old as $job){$input=VWLB_Helpers::json($job['input_json']);if((int)($input['live_event_id']??0)===(int)$fresh['id']){if(false===$wpdb->delete($jobs_table,array('id'=>$job['id']),array('%d')))return VWLB_Helpers::error('vwlb_database_error',__('Existing live reminders could not be reconciled.',VWLB_TEXT_DOMAIN),500);}}
 			foreach($reminders as $minutes){if($minutes>10080)continue;$available=strtotime($fresh['scheduled_start'].' UTC')-$minutes*MINUTE_IN_SECONDS;if($available<=time())continue;$saved=$wpdb->insert($jobs_table,array('public_id'=>VWLB_Helpers::public_id('job'),'asset_id'=>0,'job_type'=>'send_live_reminder','provider'=>'local','status'=>'pending','priority'=>50,'attempts'=>0,'max_attempts'=>5,'available_at'=>gmdate('Y-m-d H:i:s',$available),'input_json'=>VWLB_Helpers::json_encode(array('live_event_id'=>$fresh['id'],'minutes'=>$minutes)),'output_json'=>'{}','created_at'=>VWLB_Helpers::now(),'updated_at'=>VWLB_Helpers::now()));if(!$saved)return VWLB_Helpers::error('vwlb_database_error',__('Live reminder could not be scheduled.',VWLB_TEXT_DOMAIN),500);}
 			VWLB_Helpers::outbox('LiveWaitingRoomOpened','live',$fresh['id'],array('capacity'=>$capacity,'waiting_room'=>$access['waiting_room']));return true;});
 	}
 
 	public static function cleanup() {
 		global $wpdb;$now=VWLB_Helpers::now();
-		$sessions=$wpdb->get_results($wpdb->prepare("SELECT * FROM ".VWLB_Helpers::table('upload_sessions')." WHERE status IN ('active','failed') AND expires_at<%s LIMIT 100",$now),ARRAY_A);
+		$sessions=VWLB_DB::read_results($wpdb->prepare("SELECT * FROM ".VWLB_Helpers::table('upload_sessions')." WHERE status IN ('active','failed') AND expires_at<%s LIMIT 100",$now),'r119_cleanup_sessions');if(is_wp_error($sessions))return;
 		foreach($sessions as $s){
 			$path=self::upload_path($s['private_filename']);if(is_wp_error($path)){VWLB_Helpers::audit('upload_session',$s['id'],'expire_failed',$s['status'],$s['status'],'Private upload cleanup path could not be resolved.');continue;}if(is_file($path)&&!@unlink($path)){VWLB_Helpers::audit('upload_session',$s['id'],'expire_failed',$s['status'],$s['status'],'Expired private upload file could not be deleted.');continue;}
 			$changed=$wpdb->update(VWLB_Helpers::table('upload_sessions'),array('status'=>'expired','updated_at'=>$now),array('id'=>$s['id'],'status'=>$s['status']));if(false===$changed){VWLB_Helpers::audit('upload_session',$s['id'],'expire_failed',$s['status'],$s['status'],'Expired upload state could not be persisted.');continue;}if(0===$changed)continue;
@@ -774,8 +776,8 @@ final class VWLB_Extensions {
 
 	public static function status() {
 		global $wpdb;
-		$dead=(int)$wpdb->get_var("SELECT COUNT(*) FROM ".VWLB_Helpers::table('processing_jobs')." WHERE status='dead'");
-		$active_uploads=(int)$wpdb->get_var("SELECT COUNT(*) FROM ".VWLB_Helpers::table('upload_sessions')." WHERE status='active'");
+		$dead=VWLB_DB::read_var("SELECT COUNT(*) FROM ".VWLB_Helpers::table('processing_jobs')." WHERE status='dead'",'r119_status_dead_jobs');if(is_wp_error($dead))return $dead;$dead=(int)$dead;
+		$active_uploads=VWLB_DB::read_var("SELECT COUNT(*) FROM ".VWLB_Helpers::table('upload_sessions')." WHERE status='active'",'r119_status_active_uploads');if(is_wp_error($active_uploads))return $active_uploads;$active_uploads=(int)$active_uploads;
 		return array(
 			'schema'=>get_option(self::OPTION,''),'canonical_api'=>VWLB_Contracts::CANONICAL_API_NAMESPACE,
 			'dead_jobs'=>$dead,'active_resumable_uploads'=>$active_uploads,
