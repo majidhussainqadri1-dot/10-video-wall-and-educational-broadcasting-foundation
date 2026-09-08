@@ -22,3 +22,16 @@ if count != 2:
 t=t.replace(old_call,new_call)
 ext.write_text(t)
 print('R119 upload-session caller propagation applied')
+
+# Historical R113 contract reconciliation: R119 moves the authoritative podcast
+# episode read into VWLB_DB::read_row(), so callers now propagate WP_Error directly
+# instead of inspecting $wpdb->last_error and recreating the same message. Preserve
+# the semantic fail-closed requirement by asserting the new primitive/caller path.
+contract=Path(__file__).resolve().parents[1]/'tests/file10-r101-r120-contracts.sh'
+c=contract.read_text()
+old_contract='grep -F "Podcast episode state could not be verified safely" "$P/includes/class-vwlb-podcasts.php" >/dev/null'
+new_contract='grep -F "r119_podcast_episode" "$P/includes/class-vwlb-podcasts.php" >/dev/null\ngrep -F "if(is_wp_error($ep))return $ep" "$P/includes/class-vwlb-podcasts.php" >/dev/null'
+if old_contract not in c:
+    raise SystemExit('R119 historical podcast contract target not found')
+contract.write_text(c.replace(old_contract,new_contract,1))
+print('R119 historical podcast contract reconciled')
