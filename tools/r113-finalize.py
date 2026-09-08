@@ -64,10 +64,10 @@ for p in ['video-wall-and-live-broadcasting/video-wall-and-live-broadcasting.php
     if OLD not in t: raise SystemExit(f'{p}: old version missing')
     write(p,t.replace(OLD,NEW))
 
-# Regression contracts for the frozen findings.
+# Regression contracts for the frozen findings. This contract file historically uses direct grep assertions.
 p='tests/file10-r101-r120-contracts.sh'; t=read(p)
-block='''\n# R113 mutation read-integrity correction\nneed "class-vwlb-r113-mutation-read-integrity.php" "$P/video-wall-and-live-broadcasting.php" r113-autoload\nneed "VWLB_R113_Mutation_Read_Integrity::register" "$P/video-wall-and-live-broadcasting.php" r113-register\nneed "r113_asset_public_resolver" "$P/includes/class-vwlb-r113-mutation-read-integrity.php" r113-public-resolver\nneed "r113_publish_series" "$P/includes/class-vwlb-podcasts.php" r113-podcast-series-read\nneed "Podcast episode state could not be verified safely" "$P/includes/class-vwlb-podcasts.php" r113-podcast-episode-read\nneed "vwlb_live_mutation_read_failed" "$P/includes/class-vwlb-live.php" r113-live-mutation-read\n'''
-if 'r113-live-mutation-read' not in t: write(p,t+block)
+block='''\n# R113 mutation read-integrity correction\ngrep -F "class-vwlb-r113-mutation-read-integrity.php" "$P/video-wall-and-live-broadcasting.php" >/dev/null\ngrep -F "VWLB_R113_Mutation_Read_Integrity::register" "$P/video-wall-and-live-broadcasting.php" >/dev/null\ngrep -F "r113_asset_public_resolver" "$P/includes/class-vwlb-r113-mutation-read-integrity.php" >/dev/null\ngrep -F "r113_publish_series" "$P/includes/class-vwlb-podcasts.php" >/dev/null\ngrep -F "Podcast episode state could not be verified safely" "$P/includes/class-vwlb-podcasts.php" >/dev/null\ngrep -F "vwlb_live_mutation_read_failed" "$P/includes/class-vwlb-live.php" >/dev/null\n'''
+if 'r113_asset_public_resolver' not in t: write(p,t+block)
 
 # New SBOM from prior candidate, preserving history.
 src=Path('SBOM-1.2.23-rc1.json'); dst=Path('SBOM-1.2.24-rc1.json')
