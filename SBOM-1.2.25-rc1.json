@@ -1,7 +1,7 @@
 {
   "bomFormat": "CycloneDX",
   "specVersion": "1.5",
-  "serialNumber": "urn:uuid:file10-r112-1.2.25-rc1",
+  "serialNumber": "urn:uuid:file10-r118-1.2.25-rc1",
   "version": 1,
   "metadata": {
     "component": {
@@ -12,19 +12,19 @@
     "properties": [
       {
         "name": "review_boundary",
-        "value": "R109 rights/consent/replay correction candidate; R110 blocked until exact-head Green"
+        "value": "R118 release-provenance correction candidate; R119 blocked until exact-head Green"
       },
       {
         "name": "baseline_exact_head",
-        "value": "762361ae9f1b1c8392e0fbce224a15051432952c"
+        "value": "f2c4345973a4b01896b9250bee6f3d220f82da1c"
       },
       {
         "name": "plan",
         "value": "SSH-F10-PLAN-2026-v1.1 Future24 amended + SSH-PMP-2026-v3.0"
       },
       {
-        "name": "review_boundary",
-        "value": "R112 authenticated operational read-integrity correction candidate; R113 blocked until exact-head Green"
+        "name": "deployment_state",
+        "value": "exact deployed source unverified; repository evidence is not live evidence"
       }
     ]
   },
