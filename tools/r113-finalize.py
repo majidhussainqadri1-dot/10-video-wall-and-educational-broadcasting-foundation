@@ -58,7 +58,8 @@ p='video-wall-and-live-broadcasting/video-wall-and-live-broadcasting.php'
 once(p,"'class-vwlb-r112-operational-read-integrity.php','class-vwlb-r3-playback.php'","'class-vwlb-r112-operational-read-integrity.php','class-vwlb-r113-mutation-read-integrity.php','class-vwlb-r3-playback.php'")
 once(p,"VWLB_R112_Operational_Read_Integrity::register();}","VWLB_R112_Operational_Read_Integrity::register();VWLB_R113_Mutation_Read_Integrity::register();}")
 
-for p in ['video-wall-and-live-broadcasting/video-wall-and-live-broadcasting.php','video-wall-and-live-broadcasting/readme.txt','README.md','MANIFEST.md','STATUS.md','tests/run-all.sh','tools/build-package.sh']:
+# Version-bearing files only. build-package.sh derives its version dynamically from VWLB_VERSION.
+for p in ['video-wall-and-live-broadcasting/video-wall-and-live-broadcasting.php','video-wall-and-live-broadcasting/readme.txt','README.md','MANIFEST.md','STATUS.md','tests/run-all.sh']:
     t=read(p)
     if OLD not in t: raise SystemExit(f'{p}: old version missing')
     write(p,t.replace(OLD,NEW))
