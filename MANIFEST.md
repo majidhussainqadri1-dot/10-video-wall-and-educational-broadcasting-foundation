@@ -14,28 +14,10 @@
 - Checksum target: same filename plus `.sha256`
 - SBOM: `SBOM-1.2.25-rc1.json`
 - Prior review boundary: R81–R100 closed at `1.2.11-rc1` on exact reviewed HEAD `9a2c317d664b3c0d56797afbf1934f6c55479aaa`.
-- Current review boundary: R101–R120 sequential cycle is QA-closed. R120 exact-head Release QA was Green at `4094a9a861eae9a47222cc7a28959eaff87c6c76`, run `34271494386`, on PHP 8.3/8.4 after complete regression, R101–R120, R118/R119, package, checksum/archive and source/package parity gates.
-- R101 exact-head QA: `03f9e29e65eac7421f70ea7e01845f4e0e8d46a4`, run `34045547009`.
-- R102 exact-head QA: `895c2d66a35a7b9430379a8eff8bc65aaf2d340c`, run `34064117765`.
-- R103 exact-head QA: `e0a7ae7efba4c2287dc57c3978e4ef9953ef3aa3`, run `34064836972`.
-- R104 exact-head QA: `79651313324d4a85e5b0b5583c7319a7559d6c16`, run `34066084479`.
-- R105 final evidence revalidation: `4c8d9b1a7ccc05f996b6bdb8e49a8939b431d0c1`, run `34083167364`.
-- R106 exact-head QA: `a1507752f5dad87e7b22e7a4aa4cf714de4aefd3`, run `34085674761`.
-- R107 final evidence-recording QA: `0de65d9956cf3a4c03e3e0c315c09bb70ca8c82f`, run `34087545859`.
-- R108 exact-head QA: `762361ae9f1b1c8392e0fbce224a15051432952c`, run `34100057505`.
-- R109 findings/correction were closed before R110.
-- R110 exact-head QA: `d7ed00cbaf76093fd1ccadfa4fbcf405ecde2fb3`, run `34174866764`.
-- R111 exact-head QA: `4194d1daf1f6b7ef835f11c0448211c6714c464d`, run `34178262832`.
-- R112 findings/correction were closed before R113.
-- R113 findings/correction were closed before R114.
-- R114 findings/correction were closed before R115.
-- R115 findings/correction were closed before R116.
-- R116 exact-head QA: `3b6397135ac1d84292be98068f46ccd8b2170227`, run `34223100132`.
-- R117 exact-head QA: `f2c4345973a4b01896b9250bee6f3d220f82da1c`, run `34228952712`.
-- R118 release-provenance consistency findings were frozen and corrected; exact-head QA closed before R119.
-- R119 fail-closed read-integrity findings were frozen and corrected; final exact-head QA Green at `c2d48ed9bbd5cbc29f9fe186340d01acf4e857ce`, run `34259864776`.
-- R120 provenance/closure findings were frozen and corrected; exact-head QA Green at `4094a9a861eae9a47222cc7a28959eaff87c6c76`, run `34271494386`.
+- R101–R120 sequential cycle is QA-closed. R120 exact-head Release QA was Green at `4094a9a861eae9a47222cc7a28959eaff87c6c76`, run `34271494386`, on PHP 8.3/8.4 after complete regression, R101–R120, R118/R119, package, checksum/archive and source/package parity gates.
 - R111–R120 ten-round batch: defects found in R111, R112, R113, R114, R115, R116, R117, R118, R119 and R120; clean rounds 0/10; >70% clean stopping criterion not met.
-- R121 post-R120 closure/provenance review findings are frozen in `reviews/R121-FROZEN-FINDINGS.md`; R122 is blocked until R121 full regression and exact-head QA are Green.
+- R121 post-R120 closure/provenance findings are frozen in `reviews/R121-FROZEN-FINDINGS.md`; corrected exact head `d466a9020d38a49fd9dcee8085da58775cd26601` passed File 10 Release QA run `34277370167` on PHP 8.3 and PHP 8.4, including complete regression, R118/R119 gates, package/checksum/parity and artifact publication.
+- R122 read-only review findings are frozen in `reviews/R122-FROZEN-FINDINGS.md`.
+- Exact-head closure model: repository files record immutable historical reviewed evidence. A current round is Green only when File 10 Release QA succeeds for the same exact commit SHA. No post-QA repository mutation is required merely to flip a textual `pending` state to `Green`; any later mutation is a new head and requires its own QA.
 
 This manifest establishes repository-source/package QA identity only. Staging, deployed/live and operational evidence remain separate and are not predeclared. Exact deployed source is unverified; GitHub is not live evidence.
