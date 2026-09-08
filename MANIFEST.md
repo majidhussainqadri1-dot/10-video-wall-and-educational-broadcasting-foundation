@@ -14,7 +14,7 @@
 - Checksum target: same filename plus `.sha256`
 - SBOM: `SBOM-1.2.25-rc1.json`
 - Prior review boundary: R81–R100 closed at `1.2.11-rc1` on exact reviewed HEAD `9a2c317d664b3c0d56797afbf1934f6c55479aaa`.
-- Current review boundary: R101–R120 sequential cycle. R101–R119 are QA-closed at their recorded exact heads. R120 read-only review is frozen in `reviews/R120-FROZEN-FINDINGS.md` and its provenance/closure correction requires full regression/retest and exact-head Release QA before the cycle can be declared closed.
+- Current review boundary: R101–R120 sequential cycle is QA-closed. R120 exact-head Release QA was Green at `4094a9a861eae9a47222cc7a28959eaff87c6c76`, run `34271494386`, on PHP 8.3/8.4 after complete regression, R101–R120, R118/R119, package, checksum/archive and source/package parity gates.
 - R101 exact-head QA: `03f9e29e65eac7421f70ea7e01845f4e0e8d46a4`, run `34045547009`.
 - R102 exact-head QA: `895c2d66a35a7b9430379a8eff8bc65aaf2d340c`, run `34064117765`.
 - R103 exact-head QA: `e0a7ae7efba4c2287dc57c3978e4ef9953ef3aa3`, run `34064836972`.
@@ -34,6 +34,8 @@
 - R117 exact-head QA: `f2c4345973a4b01896b9250bee6f3d220f82da1c`, run `34228952712`.
 - R118 release-provenance consistency findings were frozen and corrected; exact-head QA closed before R119.
 - R119 fail-closed read-integrity findings were frozen and corrected; final exact-head QA Green at `c2d48ed9bbd5cbc29f9fe186340d01acf4e857ce`, run `34259864776`.
-- R120 frozen findings: stale STATUS boundary, stale MANIFEST boundary, stale SBOM provenance and incomplete named R101–R120 cycle ledger. These are being corrected as one provenance/closure correction phase.
+- R120 provenance/closure findings were frozen and corrected; exact-head QA Green at `4094a9a861eae9a47222cc7a28959eaff87c6c76`, run `34271494386`.
+- R111–R120 ten-round batch: defects found in R111, R112, R113, R114, R115, R116, R117, R118, R119 and R120; clean rounds 0/10; >70% clean stopping criterion not met.
+- R121 post-R120 closure/provenance review findings are frozen in `reviews/R121-FROZEN-FINDINGS.md`; R122 is blocked until R121 full regression and exact-head QA are Green.
 
 This manifest establishes repository-source/package QA identity only. Staging, deployed/live and operational evidence remain separate and are not predeclared. Exact deployed source is unverified; GitHub is not live evidence.
