@@ -3,7 +3,7 @@ Contributors: sabrihomeopathy
 Requires at least: 7.0
 Tested up to: 7.0.1
 Requires PHP: 8.3
-Stable tag: 1.2.22-rc1
+Stable tag: 1.2.23-rc1
 License: GPLv2 or later
 
 File 10 canonical owner for recorded video and live broadcasting in the Sabri Social Homeopathy Platform.

@@ -190,4 +190,12 @@ grep -F "VWLB_R111_Public_Read_Integrity::register" "$P/video-wall-and-live-broa
 grep -F "VWLB_DB::read_results(\$query,'r111_public_live_browse')" "$P/includes/class-vwlb-r111-public-read-integrity.php" >/dev/null
 grep -F "if(is_wp_error(\$chapters))return \$chapters" "$P/includes/class-vwlb-r111-public-read-integrity.php" >/dev/null
 grep -F "vwlb_database_read_failed" "$P/includes/class-vwlb-r111-public-read-integrity.php" >/dev/null
+
+# R112 — authenticated creator/operational reads must fail closed.
+grep -F "class-vwlb-r112-operational-read-integrity.php" "$P/video-wall-and-live-broadcasting.php" >/dev/null
+grep -F "VWLB_R112_Operational_Read_Integrity::register" "$P/video-wall-and-live-broadcasting.php" >/dev/null
+grep -F "r112_creator_videos" "$P/includes/class-vwlb-r112-operational-read-integrity.php" >/dev/null
+grep -F "r112_observability_dead_jobs" "$P/includes/class-vwlb-r112-operational-read-integrity.php" >/dev/null
+grep -F "r112_podcast_series_resolver" "$P/includes/class-vwlb-r112-operational-read-integrity.php" >/dev/null
+grep -F "r112_admin_preflight_" "$P/includes/class-vwlb-r112-operational-read-integrity.php" >/dev/null
 echo 'R101-R120 contracts PASS'

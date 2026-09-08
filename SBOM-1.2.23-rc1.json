@@ -1,0 +1,43 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.5",
+  "serialNumber": "urn:uuid:file10-r112-1.2.23-rc1",
+  "version": 1,
+  "metadata": {
+    "component": {
+      "type": "application",
+      "name": "Video Wall and Live Broadcasting",
+      "version": "1.2.23-rc1"
+    },
+    "properties": [
+      {
+        "name": "review_boundary",
+        "value": "R109 rights/consent/replay correction candidate; R110 blocked until exact-head Green"
+      },
+      {
+        "name": "baseline_exact_head",
+        "value": "762361ae9f1b1c8392e0fbce224a15051432952c"
+      },
+      {
+        "name": "plan",
+        "value": "SSH-F10-PLAN-2026-v1.1 Future24 amended + SSH-PMP-2026-v3.0"
+      },
+      {
+        "name": "review_boundary",
+        "value": "R112 authenticated operational read-integrity correction candidate; R113 blocked until exact-head Green"
+      }
+    ]
+  },
+  "components": [
+    {
+      "type": "library",
+      "name": "WordPress",
+      "version": "7.0+"
+    },
+    {
+      "type": "library",
+      "name": "PHP",
+      "version": "8.3+"
+    }
+  ]
+}
