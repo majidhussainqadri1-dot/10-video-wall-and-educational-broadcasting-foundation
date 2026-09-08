@@ -46,6 +46,24 @@ Premiere replay mapping and secure download-token resolution use direct row read
 
 **Proven defect.** Required correction: use fail-closed scalar reads and expose operational uncertainty rather than fabricated zero state.
 
+### R119-F7 — Additional authoritative mutation locks remain outside the fail-closed DB boundary
+
+`VWLB_Extensions::moderate_question()` and `schedule_live_extras()` use direct `FOR UPDATE` reads; `upload_session()` also directly reads a session row used by resumable-upload mutation flows. DB read failure can be interpreted as a missing question/live/session or otherwise feed normal mutation branching.
+
+**Proven defect.** Required correction: route these row reads through `VWLB_DB::read_row()` and propagate `WP_Error` before state decisions.
+
+### R119-F8 — Reminder reconciliation, Creator Studio projections, and cleanup enumerations can silently degrade to empty data
+
+`schedule_live_extras()` directly enumerates pending reminder jobs, `creator_studio()` directly enumerates videos/live/jobs/rights, and `cleanup()` directly enumerates expired upload sessions. Database read failure can be treated as an empty result set. In reminder reconciliation this can preserve stale jobs while scheduling replacements; in cleanup it can silently skip expired private-upload cleanup; in Creator Studio it can present false-empty operational state.
+
+**Proven defect.** Required correction: use `VWLB_DB::read_results()` and fail closed (or emit explicit operational uncertainty for status/projection surfaces) rather than treating failed reads as verified-empty datasets.
+
+### R119-F9 — Podcast episode row primitive remains a direct DB read with inconsistent caller-side failure handling
+
+`VWLB_Podcasts::episode()` performs a direct `$wpdb->get_row()` and returns `null` for both absence and DB failure. Some callers explicitly inspect `$wpdb->last_error`, but the primitive itself does not provide a fail-closed result and other callers can consume `null` as ordinary absence/revocation.
+
+**Proven defect.** Required correction: move the episode row read to `VWLB_DB::read_row()` and make callers propagate `WP_Error` before applying normal absence or authorization semantics.
+
 ## Existing safe primitive
 
 `VWLB_DB` already provides `read_row()`, `read_results()`, and `read_var()`. Each clears/checks `$wpdb->last_error`, emits the operational-failure signal, and returns `vwlb_database_read_failed` on failure. R119 correction must reuse these primitives rather than introducing an independent read-error mechanism.
