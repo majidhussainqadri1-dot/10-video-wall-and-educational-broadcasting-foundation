@@ -4,7 +4,7 @@ Canonical source repository for **Sabri Social Homeopathy Platform File 10**.
 
 ## Current reviewed candidate
 
-- Runtime: `1.2.21-rc1`
+- Runtime: `1.2.22-rc1`
 - Plugin folder: `video-wall-and-live-broadcasting`
 - Base schema: `1.1.0`
 - Extension schema: `1.1.0`
@@ -38,8 +38,11 @@ R108 completed its read-only live-lifecycle/reconciliation review before correct
 
 R109 completed its full read-only rights/takedown/recording-consent/replay review from the exact R108 Green baseline. Five findings were frozen in `docs/FILE-10-R109-FROZEN-FINDINGS-2026-09-07.md`; its correction completed exact-head Green before R110 began.
 
-R110 completed a full read-only public-delivery/security-boundary review before correction. Its findings were frozen before any patching. The corrected repository/source candidate is `1.2.21-rc1`; full historical/current regression and exact-head release QA remain the gate before R111 may begin.
+R110 completed a full read-only public-delivery/security-boundary review before correction. Its findings were frozen before any patching. The corrected repository/source candidate is `1.2.22-rc1`; full historical/current regression and exact-head release QA remain the gate before R111 may begin.
 
 ## Completion boundary
 
 Repository source, deterministic packaging and green CI establish only source/package/Automated-QA evidence. Staging acceptance, real providers/storage, backup restore, rollback, Founder acceptance, live deployment and operational verification remain separate gates and are not claimed here.
+
+### R111 correction candidate
+R111 completed its read-only public REST read-integrity review from the exact R110 Green baseline. Three findings were frozen in `docs/FILE-10-R111-FROZEN-FINDINGS-2026-09-08.md`. The `1.2.22-rc1` correction fails closed on public live-list DB errors and promotes chapter enrichment/read failures to top-level REST errors. Exact-head QA must be Green before R112 begins.

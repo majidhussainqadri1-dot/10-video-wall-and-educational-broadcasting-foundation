@@ -184,4 +184,10 @@ grep -F "'public'!==(\$video['visibility']??'private')" "$P/includes/class-vwlb-
 grep -F "X-Robots-Tag','noindex, nofollow, noarchive" "$P/includes/class-vwlb-review-hardening.php" >/dev/null
 grep -F "vwlb_private_download_grant_failed" "$P/includes/class-vwlb-extensions.php" >/dev/null
 
+# R111 — public read/enrichment failures must never become successful empty/partial payloads.
+grep -F "class-vwlb-r111-public-read-integrity.php" "$P/video-wall-and-live-broadcasting.php" >/dev/null
+grep -F "VWLB_R111_Public_Read_Integrity::register" "$P/video-wall-and-live-broadcasting.php" >/dev/null
+grep -F "VWLB_DB::read_results(\$query,'r111_public_live_browse')" "$P/includes/class-vwlb-r111-public-read-integrity.php" >/dev/null
+grep -F "if(is_wp_error(\$chapters))return \$chapters" "$P/includes/class-vwlb-r111-public-read-integrity.php" >/dev/null
+grep -F "vwlb_database_read_failed" "$P/includes/class-vwlb-r111-public-read-integrity.php" >/dev/null
 echo 'R101-R120 contracts PASS'

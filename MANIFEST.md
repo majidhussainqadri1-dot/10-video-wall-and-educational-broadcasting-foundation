@@ -1,7 +1,7 @@
-# File 10 Release Candidate Manifest — 1.2.21-rc1
+# File 10 Release Candidate Manifest — 1.2.22-rc1
 
 - Plugin folder: `video-wall-and-live-broadcasting`
-- Plugin version: `1.2.21-rc1`
+- Plugin version: `1.2.22-rc1`
 - Base schema: `1.1.0`
 - Extension schema: `1.1.0`
 - Future schema: `1.2.0`
@@ -10,11 +10,11 @@
 - Canonical API: `video-wall-live-broadcasting/v1`
 - Compatibility API: `vwlb/v1`
 - Text domain: `video-wall-live-broadcasting`
-- Package target: `packages/video-wall-and-live-broadcasting-1.2.21-rc1.zip`
+- Package target: `packages/video-wall-and-live-broadcasting-1.2.22-rc1.zip`
 - Checksum target: same filename plus `.sha256`
-- SBOM: `SBOM-1.2.21-rc1.json`
+- SBOM: `SBOM-1.2.22-rc1.json`
 - Prior review boundary: R81–R100 closed at `1.2.11-rc1` on exact reviewed HEAD `9a2c317d664b3c0d56797afbf1934f6c55479aaa`.
-- Current review boundary: R101–R120 sequential cycle; R101–R109 are QA-closed at their recorded exact reviewed heads. R110 review/freeze is complete; its correction candidate is `1.2.21-rc1` and final exact-head release QA is required before R111.
+- Current review boundary: R101–R120 sequential cycle; R101–R109 are QA-closed at their recorded exact reviewed heads. R110 review/freeze is complete; its correction candidate is `1.2.22-rc1` and final exact-head release QA is required before R111.
 - R101 exact-head QA: `03f9e29e65eac7421f70ea7e01845f4e0e8d46a4`, run `34045547009`.
 - R102 exact-head QA: `895c2d66a35a7b9430379a8eff8bc65aaf2d340c`, run `34064117765`.
 - R103 exact-head QA: `e0a7ae7efba4c2287dc57c3978e4ef9953ef3aa3`, run `34064836972`.
@@ -36,4 +36,7 @@ This manifest establishes repository-source/package QA identity only. Staging, d
 - R109 correction candidate identity: `1.2.20-rc1`; exact-head release QA was required before R110.
 
 - R110 frozen findings: late public-delivery opaque-ID inconsistency; public browse rights/consent revalidation gap; video-specific consent-link scope ambiguity; security-sensitive late revalidation fail-open/incomplete authorization projections; and non-public media/download derivative delivery bypass risks.
-- R110 correction candidate identity: `1.2.21-rc1`; exact-head PHP 8.3/8.4 release QA, deterministic packaging, checksum/archive verification, source/package parity and artifact publication must all be green before R111 begins.
+- R110 correction candidate identity: `1.2.22-rc1`; exact-head PHP 8.3/8.4 release QA, deterministic packaging, checksum/archive verification, source/package parity and artifact publication must all be green before R111 begins.
+
+- R110 exact-head QA Green baseline for R111: `d7ed00cbaf76093fd1ccadfa4fbcf405ecde2fb3`, run `34174866764`.
+- R111 frozen findings: fail-open public live browse DB read; nested chapter-read failure in video detail; nested chapter-read failure in the dedicated chapters endpoint. Correction candidate: `1.2.22-rc1`; exact-head release QA is required before R112.

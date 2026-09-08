@@ -1,4 +1,4 @@
-# File 10 Status — 1.2.21-rc1
+# File 10 Status — 1.2.22-rc1
 
 **Classification:** repository/source correction candidate in the sequential R101–R120 review cycle begun 2026-09-06.
 
@@ -19,8 +19,8 @@
 - R109 review: completed read-only after R108 Green; five findings frozen in `docs/FILE-10-R109-FROZEN-FINDINGS-2026-09-07.md`.
 - R109 correction: current rights/consent delivery, consent-expiry fairness/history and replay-lineage gates applied as `1.2.20-rc1`; R110 began only after the R109 Green gate.
 - R110 review: completed read-only before correction; frozen findings cover late public-delivery opaque-ID consistency, public browse current rights/consent revalidation, consent-link scope, fail-closed late authorization reads/projections, and non-public derivative/download delivery boundaries.
-- R110 correction candidate: `1.2.21-rc1`; correction code is being validated against the full historical/current regression suite and exact-head release QA. R111 remains blocked until that gate is fully green.
-- Coded/reviewed candidate: `1.2.21-rc1` on `fix/file10-r101-r120-sequential-2026-09-06`.
+- R110 correction candidate: `1.2.22-rc1`; correction code is being validated against the full historical/current regression suite and exact-head release QA. R111 remains blocked until that gate is fully green.
+- Coded/reviewed candidate: `1.2.22-rc1` on `fix/file10-r101-r120-sequential-2026-09-06`.
 - Automated-QA Green: R101–R109 established; R110 not yet established.
 - Staging-Accepted: not established.
 - Live-Deployed: not established.
@@ -31,3 +31,6 @@
 - Live verification: not performed.
 
 GitHub, staging and live are distinct realities. Repository source/package evidence does not identify the code currently deployed to the website. Exact deployed code, live DB/schema and migration state remain unverified until separately frozen from the environment.
+
+- R110 exact-head QA: `d7ed00cbaf76093fd1ccadfa4fbcf405ecde2fb3`, File 10 Release QA run `34174866764`, PHP 8.3/8.4 Green with complete suite, R101–R120 gate, package/checksum/archive and source/package parity.
+- R111 review: completed read-only from the R110 Green baseline; three findings frozen in `docs/FILE-10-R111-FROZEN-FINDINGS-2026-09-08.md`. Correction candidate: `1.2.22-rc1`; R112 remains blocked until exact-head QA is Green.
