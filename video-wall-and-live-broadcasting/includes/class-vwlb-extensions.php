@@ -214,7 +214,16 @@ final class VWLB_Extensions {
 		foreach ( $protect as $file => $content ) {
 			$path = trailingslashit( $base ) . $file;
 			if ( ! file_exists( $path ) ) {
-				@file_put_contents( $path, $content, LOCK_EX );
+				$written = file_put_contents( $path, $content, LOCK_EX );
+				if ( false === $written ) {
+					do_action( 'vwlb_operational_failure', 'private_storage', 'vwlb_private_storage_protection_failed', array( 'file' => $file ) );
+					return VWLB_Helpers::error( 'vwlb_private_storage_protection_failed', __( 'Private media storage protection could not be written safely.', VWLB_TEXT_DOMAIN ), 503, array( 'file' => $file ) );
+				}
+			}
+			$actual = file_get_contents( $path );
+			if ( false === $actual || ! hash_equals( hash( 'sha256', $content ), hash( 'sha256', $actual ) ) ) {
+				do_action( 'vwlb_operational_failure', 'private_storage', 'vwlb_private_storage_protection_unverified', array( 'file' => $file ) );
+				return VWLB_Helpers::error( 'vwlb_private_storage_protection_unverified', __( 'Private media storage protection could not be verified safely.', VWLB_TEXT_DOMAIN ), 503, array( 'file' => $file ) );
 			}
 		}
 		return $base;
