@@ -2,6 +2,7 @@
 /** Schema, transactions and migrations. */
 defined( 'ABSPATH' ) || exit;
 final class VWLB_DB {
+	private static function rollback_verified($cause='transaction_failure'){global $wpdb;$rolled=$wpdb->query('ROLLBACK');if(false!==$rolled)return true;$cause=sanitize_key((string)$cause);do_action('vwlb_operational_failure','database','vwlb_transaction_rollback_failed',array('cause'=>$cause));return VWLB_Helpers::error('vwlb_transaction_rollback_failed',__('File 10 could not verify that the failed database transaction was rolled back safely.',VWLB_TEXT_DOMAIN),503,array('cause'=>$cause));}
 	public static function transaction( $callback ) {
 		global $wpdb;
 		$started = $wpdb->query( 'START TRANSACTION' );
@@ -11,17 +12,19 @@ final class VWLB_DB {
 		try {
 			$result = call_user_func( $callback );
 			if ( is_wp_error( $result ) ) {
-				$wpdb->query( 'ROLLBACK' );
-				return $result;
+				$rolled=self::rollback_verified($result->get_error_code());
+				return is_wp_error($rolled)?$rolled:$result;
 			}
 			$committed = $wpdb->query( 'COMMIT' );
 			if ( false === $committed ) {
-				$wpdb->query( 'ROLLBACK' );
+				$rolled=self::rollback_verified('commit_failed');
+				if(is_wp_error($rolled))return $rolled;
 				return VWLB_Helpers::error( 'vwlb_transaction_commit_failed', __( 'The operation could not be committed safely.', VWLB_TEXT_DOMAIN ), 500 );
 			}
 			return $result;
 		} catch ( Throwable $e ) {
-			$wpdb->query( 'ROLLBACK' );
+			$rolled=self::rollback_verified('exception_'.sanitize_key(get_class($e)));
+			if(is_wp_error($rolled))return $rolled;
 			return VWLB_Helpers::error( 'vwlb_transaction_failed', __( 'The operation could not be completed.', VWLB_TEXT_DOMAIN ), 500, array( 'exception' => get_class( $e ) ) );
 		}
 	}
