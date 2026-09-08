@@ -34,7 +34,7 @@ text = text.replace('need "video-wall-and-live-broadcasting-'+version+'.zip" "$R
 text = text.replace('need "Version: '+version+'" "$ROOT/tests/static-contracts.sh" r20-static-version', 'need \'grep -F "Version: $VERSION"\' "$ROOT/tests/static-contracts.sh" r20-static-version')
 text = text.replace('need "Version: '+version+'" "$ROOT/tests/plan-completion-contracts.sh" r20-plan-version', 'need \'need "Version: $VERSION"\' "$ROOT/tests/plan-completion-contracts.sh" r20-plan-version')
 text = text.replace("need '\"version\": \""+version+"\"' \"$ROOT/SBOM-1.2.8-rc1.json\" r59-sbom", "need '\"version\": \"1.2.8-rc1\"' \"$ROOT/SBOM-1.2.8-rc1.json\" r59-sbom")
-text = text.replace('round `R59` completed', 'Current review boundary: R101–R120 sequential cycle')
+text = text.replace('round `R59` completed', 'R101–R120 sequential cycle is QA-closed.')
 text = text.replace('R60 remains pending', 'only then begin the next round.')
 pathlib.Path(dst).write_text(text)
 PY
