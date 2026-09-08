@@ -199,3 +199,10 @@ grep -F "r112_observability_dead_jobs" "$P/includes/class-vwlb-r112-operational-
 grep -F "r112_podcast_series_resolver" "$P/includes/class-vwlb-r112-operational-read-integrity.php" >/dev/null
 grep -F "r112_admin_preflight_" "$P/includes/class-vwlb-r112-operational-read-integrity.php" >/dev/null
 echo 'R101-R120 contracts PASS'
+# R113 mutation read-integrity correction
+grep -F "class-vwlb-r113-mutation-read-integrity.php" "$P/video-wall-and-live-broadcasting.php" >/dev/null
+grep -F "VWLB_R113_Mutation_Read_Integrity::register" "$P/video-wall-and-live-broadcasting.php" >/dev/null
+grep -F "r113_asset_public_resolver" "$P/includes/class-vwlb-r113-mutation-read-integrity.php" >/dev/null
+grep -F "r113_publish_series" "$P/includes/class-vwlb-podcasts.php" >/dev/null
+grep -F "Podcast episode state could not be verified safely" "$P/includes/class-vwlb-podcasts.php" >/dev/null
+grep -F "vwlb_live_mutation_read_failed" "$P/includes/class-vwlb-live.php" >/dev/null

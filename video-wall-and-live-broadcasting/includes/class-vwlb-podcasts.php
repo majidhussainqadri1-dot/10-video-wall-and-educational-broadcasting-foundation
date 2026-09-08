@@ -47,7 +47,7 @@ final class VWLB_Podcasts {
 
 	public static function create_episode($data){
 		if(!VWLB_Security::can(VWLB_Contracts::CAP_SUBMIT,null,'create_podcast_episode'))return VWLB_Helpers::error('vwlb_forbidden',__('You cannot create podcast episodes.',VWLB_TEXT_DOMAIN),403);
-		$title=VWLB_Helpers::text($data['title']??'',255);$asset=VWLB_Repository::find('media_assets',$data['asset_id']??0);
+		$title=VWLB_Helpers::text($data['title']??'',255);VWLB_Repository::reset_read_failure();$asset=VWLB_Repository::find('media_assets',$data['asset_id']??0);if(VWLB_Repository::read_failed())return VWLB_Helpers::error('vwlb_database_read_failed',__('Podcast asset state could not be verified safely.',VWLB_TEXT_DOMAIN),503);
 		if(!$title||!$asset)return VWLB_Helpers::error('vwlb_episode_fields_required',__('Title and audio asset are required.',VWLB_TEXT_DOMAIN),422);
 		if((int)$asset['owner_id']!==get_current_user_id()&&!VWLB_Security::can(VWLB_Contracts::CAP_MANAGE,$asset,'create_podcast_episode'))return VWLB_Helpers::error('vwlb_not_found',__('Audio asset not found.',VWLB_TEXT_DOMAIN),404);
 		if(!in_array($asset['media_class'],array('audio','podcast'),true))return VWLB_Helpers::error('vwlb_episode_asset_invalid',__('Podcast episodes require an audio asset.',VWLB_TEXT_DOMAIN),422);
@@ -70,7 +70,7 @@ final class VWLB_Podcasts {
 	}
 
 	public static function publish_episode($id,$expected_version){
-		$ep=self::episode($id,true);if(!$ep)return VWLB_Helpers::error('vwlb_not_found',__('Podcast episode not found.',VWLB_TEXT_DOMAIN),404);
+		$wpdb->last_error='';$ep=self::episode($id,true);if(''!==(string)$wpdb->last_error)return VWLB_Helpers::error('vwlb_database_read_failed',__('Podcast episode state could not be verified safely.',VWLB_TEXT_DOMAIN),503);if(!$ep)return VWLB_Helpers::error('vwlb_not_found',__('Podcast episode not found.',VWLB_TEXT_DOMAIN),404);
 		if(!VWLB_Security::can(VWLB_Contracts::CAP_PUBLISH,$ep,'publish_podcast'))return VWLB_Helpers::error('vwlb_forbidden',__('You cannot publish this podcast.',VWLB_TEXT_DOMAIN),403);
 		if((int)$ep['version']!==(int)$expected_version)return VWLB_Helpers::error('vwlb_version_conflict',__('The podcast changed. Refresh before publishing.',VWLB_TEXT_DOMAIN),409);
 		$asset=VWLB_Repository::find('media_assets',$ep['asset_id']);if(!$asset||'ready'!==$asset['status']||'passed'!==$asset['scan_status'])return VWLB_Helpers::error('vwlb_media_not_ready',__('The audio asset must be scanned and ready.',VWLB_TEXT_DOMAIN),422);
@@ -101,7 +101,7 @@ final class VWLB_Podcasts {
 
 
 	public static function publish_series($id,$expected_version){
-		global $wpdb;$series=$wpdb->get_row($wpdb->prepare('SELECT * FROM '.VWLB_Helpers::table('podcast_series').' WHERE (id=%d OR public_id=%s) AND deleted_at IS NULL LIMIT 1',absint($id),VWLB_Helpers::text($id,64)),ARRAY_A);
+		global $wpdb;$series=VWLB_DB::read_row($wpdb->prepare('SELECT * FROM '.VWLB_Helpers::table('podcast_series').' WHERE (id=%d OR public_id=%s) AND deleted_at IS NULL LIMIT 1',absint($id),VWLB_Helpers::text($id,64)),'r113_publish_series');if(is_wp_error($series))return $series;
 		if(!$series)return VWLB_Helpers::error('vwlb_not_found',__('Podcast series not found.',VWLB_TEXT_DOMAIN),404);
 		if(!VWLB_Security::can(VWLB_Contracts::CAP_PUBLISH,$series,'publish_podcast_series'))return VWLB_Helpers::error('vwlb_forbidden',__('You cannot publish this podcast series.',VWLB_TEXT_DOMAIN),403);
 		if((int)$series['version']!==(int)$expected_version)return VWLB_Helpers::error('vwlb_version_conflict',__('The podcast series changed. Refresh and retry.',VWLB_TEXT_DOMAIN),409);
