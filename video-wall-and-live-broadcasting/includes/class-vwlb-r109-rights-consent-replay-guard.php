@@ -17,6 +17,7 @@ final class VWLB_R109_Rights_Consent_Replay_Guard {
 	private static function file10_request($request){if(!$request instanceof WP_REST_Request)return false;$route=(string)$request->get_route();foreach(VWLB_Contracts::namespaces() as $n)if(str_starts_with($route,'/'.$n.'/'))return true;return false;}
 	public static function rest_before($response,$handler,$request){if(null===$response&&self::file10_request($request))self::$policy_read_failed=false;return $response;}
 	public static function rest_after($response,$handler,$request){if(!self::$policy_read_failed||!self::file10_request($request))return $response;return VWLB_Helpers::error('vwlb_rights_consent_unverifiable',__('Current media rights or consent state could not be verified safely.',VWLB_TEXT_DOMAIN),503);}
+	public static function policy_read_failed(){return self::$policy_read_failed;}
 	private static function read_failed($context){self::$policy_read_failed=true;do_action('vwlb_operational_failure','rights_consent','vwlb_rights_consent_read_failed',array('context'=>sanitize_key($context)));return false;}
 
 	private static function rights_allow($object,$purpose){
@@ -29,8 +30,8 @@ final class VWLB_R109_Rights_Consent_Replay_Guard {
 		return true;
 	}
 	private static function consent_allow($video){
-		if(!array_key_exists('published_at',$video)||empty($video['id']))return true;
 		if(array_key_exists('consent_status',$video)&&!in_array((string)$video['consent_status'],array('not_patient_case','documented','anonymized','approved'),true))return false;
+		$is_video=array_key_exists('rights_json',$video)&&array_key_exists('access_policy_json',$video)&&array_key_exists('published_at',$video);if(!$is_video||empty($video['id']))return true;
 		global $wpdb;$table=VWLB_Helpers::table('consent_links');$wpdb->last_error='';$blocker=$wpdb->get_var($wpdb->prepare("SELECT id FROM $table WHERE video_id=%d AND (status IN ('expired','withdrawn') OR (status='active' AND expires_at IS NOT NULL AND expires_at<=%s)) ORDER BY id DESC LIMIT 1",(int)$video['id'],VWLB_Helpers::now()));if(''!==(string)$wpdb->last_error)return self::read_failed('video_consent_delivery');return !$blocker;
 	}
 	public static function current_delivery_allowed($object,$purpose='playback'){if(!is_array($object))return false;if(!self::rights_allow($object,$purpose))return false;return self::consent_allow($object);}

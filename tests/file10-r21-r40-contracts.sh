@@ -9,7 +9,7 @@ need "true !== VWLB_Plugin::instance()->run()" "$P/video-wall-and-live-broadcast
 need "return false;" "$P/includes/class-vwlb-plugin.php" r21-failure-result
 need "return true;" "$P/includes/class-vwlb-plugin.php" r21-success-result
 # R22
-need "unset(\$r['id'],\$r['channel_id'],\$r['owner_id'],\$r['thumbnail_id'])" "$P/includes/class-vwlb-repository.php" r22-strip-internal-ids
+need "unset(\$r['id'],\$r['channel_id'],\$r['owner_id'],\$r['thumbnail_id']" "$P/includes/class-vwlb-repository.php" r22-strip-internal-ids
 need "\$r['thumbnail_url']" "$P/includes/class-vwlb-repository.php" r22-public-thumbnail-url
 # R25
 need "R25: state transition and processing-queue persistence are one transaction" "$P/includes/class-vwlb-media.php" r25-atomic-intent

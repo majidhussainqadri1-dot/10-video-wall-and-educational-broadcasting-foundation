@@ -162,4 +162,26 @@ grep -F "vwlb_replay_not_authorized" "$P/includes/class-vwlb-r109-rights-consent
 grep -F "vwlb_replay_lineage_invalid" "$P/includes/class-vwlb-r109-rights-consent-replay-guard.php" >/dev/null
 grep -F "vwlb_r109_consent_expiry_cursor" "$P/uninstall.php" >/dev/null
 
+
+# R110 — current public-delivery truth, canonical opaque IDs and fail-closed secure grants.
+grep -F "/videos/(?P<id>[a-z][a-z0-9]*_[a-z0-9]+)/playback" "$P/includes/class-vwlb-r3-playback.php" >/dev/null
+for f in class-vwlb-r3-playback.php class-vwlb-r71-private-download-guard.php class-vwlb-r72-podcast-boundary-guard.php class-vwlb-r78-public-delivery-guard.php class-vwlb-r79-watermark-session-guard.php class-vwlb-r91-unlisted-access-guard.php; do
+  ! grep -F "[A-Za-z0-9_-]+" "$P/includes/$f" >/dev/null
+ done
+grep -F "VWLB_Security::can_view(\$r,'browse_video')" "$P/includes/class-vwlb-repository.php" >/dev/null
+grep -F "vwlb_video_browse_policy_unverifiable" "$P/includes/class-vwlb-repository.php" >/dev/null
+grep -F "policy_read_failed()" "$P/includes/class-vwlb-r109-rights-consent-replay-guard.php" >/dev/null
+grep -F "array_key_exists('rights_json',\$video)" "$P/includes/class-vwlb-r109-rights-consent-replay-guard.php" >/dev/null
+grep -F "vwlb_download_state_unreadable" "$P/includes/class-vwlb-r71-private-download-guard.php" >/dev/null
+grep -F "revalidated_episode" "$P/includes/class-vwlb-r72-podcast-boundary-guard.php" >/dev/null
+grep -F "id,public_id,owner_id,asset_id" "$P/includes/class-vwlb-r78-public-delivery-guard.php" >/dev/null
+grep -F "vwlb_caption_delivery_unverifiable" "$P/includes/class-vwlb-r78-public-delivery-guard.php" >/dev/null
+grep -F "repository_route_object" "$P/includes/class-vwlb-r91-unlisted-access-guard.php" >/dev/null
+grep -F "vwlb_unlisted_state_unverifiable" "$P/includes/class-vwlb-r91-unlisted-access-guard.php" >/dev/null
+grep -F "vwlb_secure_media_contract_grant_exception" "$P/includes/class-vwlb-review-hardening.php" >/dev/null
+grep -F "vwlb_secure_media_contract_grant_exception" "$P/includes/class-vwlb-extensions.php" >/dev/null
+grep -F "'public'!==(\$video['visibility']??'private')" "$P/includes/class-vwlb-review-hardening.php" >/dev/null
+grep -F "X-Robots-Tag','noindex, nofollow, noarchive" "$P/includes/class-vwlb-review-hardening.php" >/dev/null
+grep -F "vwlb_private_download_grant_failed" "$P/includes/class-vwlb-extensions.php" >/dev/null
+
 echo 'R101-R120 contracts PASS'

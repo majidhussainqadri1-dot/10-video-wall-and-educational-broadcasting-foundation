@@ -3,7 +3,7 @@
 defined( 'ABSPATH' ) || exit;
 final class VWLB_R79_Watermark_Session_Guard {
 	public static function register(){add_filter('rest_request_before_callbacks',array(__CLASS__,'guard'),24,3);}
-	private static function matches($request){if(!$request instanceof WP_REST_Request||'POST'!==strtoupper((string)$request->get_method()))return false;$route=(string)$request->get_route();foreach(VWLB_Contracts::namespaces() as $n){if(preg_match('#^/'.preg_quote($n,'#').'/watermarks/(video|live)/([A-Za-z0-9_-]+)/grant$#',$route))return true;}return false;}
+	private static function matches($request){if(!$request instanceof WP_REST_Request||'POST'!==strtoupper((string)$request->get_method()))return false;$route=(string)$request->get_route();foreach(VWLB_Contracts::namespaces() as $n){if(preg_match('#^/'.preg_quote($n,'#').'/watermarks/(video|live)/([a-z][a-z0-9]*_[a-z0-9]+)/grant$#',$route))return true;}return false;}
 	private static function object($type,$id){return 'video'===$type?VWLB_Repository::find('videos',$id):('live'===$type?VWLB_Repository::find('live_events',$id):null);}
 	private static function policy($type,$object){global $wpdb;$table=VWLB_Helpers::table('watermark_policies');$wpdb->last_error='';$row=$wpdb->get_row($wpdb->prepare("SELECT mode,status,version FROM {$table} WHERE object_type=%s AND object_id=%d LIMIT 1",$type,(int)$object['id']),ARRAY_A);if(''!==(string)$wpdb->last_error)return VWLB_Helpers::error('vwlb_watermark_policy_unreadable',__('Watermark policy could not be verified safely.',VWLB_TEXT_DOMAIN),503);return $row;}
 	private static function video_session($request,$object){
