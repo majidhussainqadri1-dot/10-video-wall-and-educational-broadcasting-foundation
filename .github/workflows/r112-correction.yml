@@ -4,14 +4,14 @@ on:
     branches:
       - fix/file10-r101-r120-sequential-2026-09-06
     paths:
-      - tools/.r112-correction-trigger
+      - tools/.r114-correction-trigger
 permissions:
   contents: write
 jobs:
   correct:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           ref: fix/file10-r101-r120-sequential-2026-09-06
           fetch-depth: 0
