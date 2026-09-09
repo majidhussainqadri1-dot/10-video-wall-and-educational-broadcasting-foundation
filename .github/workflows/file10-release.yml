@@ -47,6 +47,8 @@ jobs:
         run: bash ./tests/file10-r126-contracts.sh
       - name: Run R127 PHP patch pinning gate
         run: bash ./tests/file10-r127-contracts.sh
+      - name: Run R128 artifact provenance gate
+        run: bash ./tests/file10-r128-contracts.sh
       - name: Build canonical package
         run: bash ./tools/build-package.sh packages/video-wall-and-live-broadcasting-1.2.25-rc1.zip
       - name: Verify checksum and archive
@@ -60,10 +62,10 @@ jobs:
           unzip -q packages/video-wall-and-live-broadcasting-1.2.25-rc1.zip -d /tmp/vwlb-extract
           diff -ru video-wall-and-live-broadcasting /tmp/vwlb-extract/video-wall-and-live-broadcasting
       - name: Publish release-candidate artifact
-        if: matrix.php == '8.3.33' && env.VWLB_PUBLISH_REVIEW_ARTIFACT == '1'
+        if: github.event_name == 'push' && matrix.php == '8.3.33' && env.VWLB_PUBLISH_REVIEW_ARTIFACT == '1'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: file10-video-wall-live-1.2.25-rc1
+          name: file10-video-wall-live-1.2.25-rc1-${{ github.sha }}
           path: |
             packages/video-wall-and-live-broadcasting-1.2.25-rc1.zip
             packages/video-wall-and-live-broadcasting-1.2.25-rc1.zip.sha256
