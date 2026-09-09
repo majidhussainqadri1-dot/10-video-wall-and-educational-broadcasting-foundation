@@ -31,6 +31,8 @@ jobs:
         run: bash ./tests/file10-r118-contracts.sh
       - name: Run R119 fail-closed read-integrity gate
         run: bash ./tests/file10-r119-contracts.sh
+      - name: Run R125 archived-correction workflow gate
+        run: bash ./tests/file10-r125-contracts.sh
       - name: Build canonical package
         run: bash ./tools/build-package.sh packages/video-wall-and-live-broadcasting-1.2.25-rc1.zip
       - name: Verify checksum and archive
