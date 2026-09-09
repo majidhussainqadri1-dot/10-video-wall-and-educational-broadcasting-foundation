@@ -13,7 +13,7 @@ jobs:
       fail-fast: false
       matrix:
         php: ['8.3','8.4']
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - name: Configure PHP
@@ -21,8 +21,15 @@ jobs:
         with:
           php-version: ${{ matrix.php }}
           coverage: none
-      - name: Install archive tools
-        run: sudo apt-get update && sudo apt-get install -y zip unzip
+      - name: Verify fixed runner toolchain
+        run: |
+          command -v zip
+          command -v unzip
+          command -v sha256sum
+          zip -v | head -n 2
+          unzip -v | head -n 2
+          sha256sum --version | head -n 1
+          php -v
       - name: Run complete automated suite
         run: bash ./tests/run-all.sh
       - name: Run R101-R120 sequential regression gate
@@ -33,6 +40,8 @@ jobs:
         run: bash ./tests/file10-r119-contracts.sh
       - name: Run R125 archived-correction workflow gate
         run: bash ./tests/file10-r125-contracts.sh
+      - name: Run R126 QA environment drift gate
+        run: bash ./tests/file10-r126-contracts.sh
       - name: Build canonical package
         run: bash ./tools/build-package.sh packages/video-wall-and-live-broadcasting-1.2.25-rc1.zip
       - name: Verify checksum and archive
