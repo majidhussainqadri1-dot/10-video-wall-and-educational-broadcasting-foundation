@@ -1,40 +1,16 @@
-name: File 10 R119 Correction
+name: File 10 R119 Correction (Archived)
 
 on:
-  push:
-    branches:
-      - fix/file10-r101-r120-sequential-2026-09-06
-    paths:
-      - tools/.r119-correction-trigger
+  workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  correct:
+  archival-note:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
-        with:
-          ref: fix/file10-r101-r120-sequential-2026-09-06
-          fetch-depth: 0
-      - name: Apply frozen R119 corrections
-        run: python3 tools/r119-apply-hotfix.py
-      - name: Validate R119 correction
+      - name: Explain closed correction boundary
         run: |
-          git diff --check
-          php -l video-wall-and-live-broadcasting/includes/class-vwlb-extended-rest.php
-          php -l video-wall-and-live-broadcasting/includes/class-vwlb-podcasts.php
-          php -l video-wall-and-live-broadcasting/includes/class-vwlb-extensions.php
-          bash -n tests/file10-r119-contracts.sh
-          bash tests/file10-r119-contracts.sh
-          bash tests/run-all.sh
-          bash -x tests/file10-r101-r120-contracts.sh
-          bash -x tests/file10-r118-contracts.sh
-      - name: Commit R119 correction batch
-        run: |
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add video-wall-and-live-broadcasting/includes/class-vwlb-extended-rest.php video-wall-and-live-broadcasting/includes/class-vwlb-podcasts.php video-wall-and-live-broadcasting/includes/class-vwlb-extensions.php tests/file10-r101-r120-contracts.sh
-          git commit -m 'Correct R119 residual authoritative reads and regression contract'
-          git push origin HEAD:fix/file10-r101-r120-sequential-2026-09-06
+          echo 'R119 is closed and this historical correction workflow is intentionally non-mutating.'
+          echo 'Use the current numbered review round and File 10 Release QA for repository changes and exact-head validation.'
