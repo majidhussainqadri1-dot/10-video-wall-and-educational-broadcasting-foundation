@@ -12,7 +12,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php: ['8.3','8.4']
+        php: ['8.3.33','8.4.25']
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -21,7 +21,7 @@ jobs:
         with:
           php-version: ${{ matrix.php }}
           coverage: none
-      - name: Verify fixed runner toolchain
+      - name: Verify bounded runner toolchain and exact PHP
         run: |
           command -v zip
           command -v unzip
@@ -30,6 +30,9 @@ jobs:
           unzip -v | head -n 2
           sha256sum --version | head -n 1
           php -v
+          expected="${{ matrix.php }}"
+          actual="$(php -r 'echo PHP_VERSION;')"
+          test "$actual" = "$expected"
       - name: Run complete automated suite
         run: bash ./tests/run-all.sh
       - name: Run R101-R120 sequential regression gate
@@ -42,6 +45,8 @@ jobs:
         run: bash ./tests/file10-r125-contracts.sh
       - name: Run R126 QA environment drift gate
         run: bash ./tests/file10-r126-contracts.sh
+      - name: Run R127 PHP patch pinning gate
+        run: bash ./tests/file10-r127-contracts.sh
       - name: Build canonical package
         run: bash ./tools/build-package.sh packages/video-wall-and-live-broadcasting-1.2.25-rc1.zip
       - name: Verify checksum and archive
@@ -55,7 +60,7 @@ jobs:
           unzip -q packages/video-wall-and-live-broadcasting-1.2.25-rc1.zip -d /tmp/vwlb-extract
           diff -ru video-wall-and-live-broadcasting /tmp/vwlb-extract/video-wall-and-live-broadcasting
       - name: Publish release-candidate artifact
-        if: matrix.php == '8.3' && env.VWLB_PUBLISH_REVIEW_ARTIFACT == '1'
+        if: matrix.php == '8.3.33' && env.VWLB_PUBLISH_REVIEW_ARTIFACT == '1'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: file10-video-wall-live-1.2.25-rc1
