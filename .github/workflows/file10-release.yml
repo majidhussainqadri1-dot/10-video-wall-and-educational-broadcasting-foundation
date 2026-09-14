@@ -49,6 +49,8 @@ jobs:
         run: bash ./tests/file10-r127-contracts.sh
       - name: Run R128 artifact provenance gate
         run: bash ./tests/file10-r128-contracts.sh
+      - name: Run R132 caption cache privacy gate
+        run: bash ./tests/file10-r132-contracts.sh
       - name: Build canonical package
         run: bash ./tools/build-package.sh packages/video-wall-and-live-broadcasting-1.2.25-rc1.zip
       - name: Verify checksum and archive
