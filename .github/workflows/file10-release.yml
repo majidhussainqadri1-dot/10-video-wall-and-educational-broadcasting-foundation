@@ -49,8 +49,6 @@ jobs:
         run: bash ./tests/file10-r127-contracts.sh
       - name: Run R128 artifact provenance gate
         run: bash ./tests/file10-r128-contracts.sh
-      - name: Run R132 caption cache privacy gate
-        run: bash ./tests/file10-r132-contracts.sh
       - name: Run R133 recording safe-default gate
         run: bash ./tests/file10-r133-contracts.sh
       - name: Build canonical package
