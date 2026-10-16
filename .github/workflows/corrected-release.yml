@@ -12,6 +12,7 @@ permissions:
 
 jobs:
   corrected-release:
+    if: ${{ !startsWith(github.head_ref, 'codex/') && !startsWith(github.ref_name, 'codex/') }}
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
