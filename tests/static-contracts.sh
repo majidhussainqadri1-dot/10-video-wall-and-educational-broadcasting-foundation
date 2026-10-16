@@ -1,34 +1,21 @@
 #!/usr/bin/env bash
 set -euo pipefail
-root="$(cd "$(dirname "$0")/.." && pwd)"
-cd "$root"
-
-find video-wall -type f -name '*.php' -print0 | sort -z | xargs -0 -n1 php -l >/dev/null
-node --check video-wall/assets/js/video-wall.js
-php tests/test-helpers.php
-
-grep -Fq 'Version: 0.2.0' video-wall/video-wall.php
-grep -Fq "define( 'SVW_VERSION', '0.2.0' );" video-wall/video-wall.php
-grep -Fq "'create_posts'           => 'manage_video_wall'" video-wall/includes/class-svw-activator.php
-grep -Fq 'svw_history' video-wall/includes/class-svw-activator.php
-grep -Fq 'svw_audit' video-wall/includes/class-svw-activator.php
-grep -Fq 'DONOTCACHEPAGE' video-wall/includes/class-svw-frontend.php
-grep -Fq 'no-store' video-wall/includes/class-svw-frontend.php
-grep -Fq 'payload.success' video-wall/assets/js/video-wall.js
-grep -Fq "return 'Video Contributor';" video-wall/includes/class-svw-helpers.php
-grep -Fq 'posts_per_page' video-wall/includes/class-svw-frontend.php
-
-if grep -R "posts_per_page[^\n]*60" video-wall/includes; then
-  echo 'Unbounded 60-video listing remains.' >&2
-  exit 1
-fi
-if grep -R "youtube\\.com|youtu\\.be" video-wall/includes/class-svw-frontend.php; then
-  echo 'Frontend still performs weak substring URL validation.' >&2
-  exit 1
-fi
-if grep -R "Verified Founder':'Verified Doctor" video-wall; then
-  echo 'False blanket verification label remains.' >&2
-  exit 1
-fi
-
-echo 'Static correction contracts passed.'
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+PLUGIN="$ROOT/video-wall-and-live-broadcasting"
+fail(){ echo "FAIL: $*" >&2; exit 1; }
+[[ -f "$PLUGIN/video-wall-and-live-broadcasting.php" ]] || fail "main plugin missing"
+grep -F "Version: 1.2.5-rc1" "$PLUGIN/video-wall-and-live-broadcasting.php" >/dev/null || fail version
+grep -F "define( 'VWLB_VERSION', '1.2.5-rc1' );" "$PLUGIN/video-wall-and-live-broadcasting.php" >/dev/null || fail constant
+grep -F "define( 'VWLB_FUTURE_SCHEMA_VERSION', '1.2.0' );" "$PLUGIN/video-wall-and-live-broadcasting.php" >/dev/null || fail future-schema
+grep -F "Text Domain: video-wall-live-broadcasting" "$PLUGIN/video-wall-and-live-broadcasting.php" >/dev/null || fail text-domain
+for id in $(seq -w 1 19); do grep -F "F10-FR-0${id}" "$ROOT/docs/REQUIREMENTS-TRACEABILITY.md" >/dev/null || fail "missing FR $id"; done
+for id in $(seq -w 1 10); do grep -F "F10-NFR-0${id}" "$ROOT/docs/REQUIREMENTS-TRACEABILITY.md" >/dev/null || fail "missing NFR $id"; done
+for id in $(seq -w 1 24); do grep -R -F "F10-FUT-0${id}" "$PLUGIN/includes" >/dev/null || fail "missing FUT $id"; done
+for token in "class VWLB_Media" "class VWLB_Videos" "class VWLB_Live" "class VWLB_Moderation" "interface VWLB_Provider_Interface" "class VWLB_Diagnostics" "class VWLB_Privacy" "class VWLB_Extensions" "class VWLB_Podcasts" "class VWLB_Future_Intelligence" "class VWLB_Future_Safety" "class VWLB_Future_Adapters" "class VWLB_Future_REST" "class VWLB_Future_Frontend"; do grep -R "$token" "$PLUGIN/includes" >/dev/null || fail "missing $token"; done
+grep -F "permission_callback'=>\$map" "$PLUGIN/includes/class-vwlb-rest.php" >/dev/null || fail permission-map
+grep -F "permission_callback'=>\$map" "$PLUGIN/includes/class-vwlb-extended-rest.php" >/dev/null || fail extended-permission-map
+grep -F "permission_callback'=>\$map" "$PLUGIN/includes/class-vwlb-future-rest.php" >/dev/null || fail future-permission-map
+grep -F "Cache-Control: private, no-store" "$PLUGIN/includes/class-vwlb-helpers.php" >/dev/null || fail private-cache
+grep -F "File 11" "$PLUGIN/includes/class-vwlb-integrations.php" >/dev/null || fail reels-contract
+bash "$ROOT/tests/plan-completion-contracts.sh"
+echo "static contracts PASS"
