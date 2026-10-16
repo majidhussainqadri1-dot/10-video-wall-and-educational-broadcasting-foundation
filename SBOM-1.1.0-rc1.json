@@ -1,0 +1,16 @@
+{
+  "bomFormat": "Sabri-Public-SBOM",
+  "specVersion": "1.0",
+  "component": {
+    "name": "video-wall-and-live-broadcasting",
+    "version": "1.1.0-rc1",
+    "type": "wordpress-plugin"
+  },
+  "runtime": {
+    "wordpress": ">=7.0",
+    "php": ">=8.3"
+  },
+  "bundledThirdPartyRuntimeLibraries": [],
+  "externalServiceAdapters": ["local", "youtube", "vimeo", "custom"],
+  "notes": "No credentials, provider secrets or private runbooks are part of this public SBOM. Provider implementations are adapter boundaries and require separate environment configuration/evidence."
+}

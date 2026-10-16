@@ -1,53 +1,17 @@
-# File 10 Status
+# File 10 Status — 1.2.7-rc1
 
-## Current classification
+**Classification:** repository/source correction candidate after completion of the fresh sequential R21–R40 review cycle opened 2026-08-18.
 
-**All code-audit defects corrected in Version 0.2.0 — automated local QA passed — real WordPress staging acceptance still required.**
+- Cycle baseline exact HEAD: `83558aea2e581e6f7b76084e21695989254704b7`.
+- Review method: complete one round first → freeze that round's findings → correct all proven findings from that round together → full regression/release QA → only then begin the next round.
+- R39 advanced the interim runtime candidate from `1.2.5-rc1` to `1.2.6-rc1` because materially different packages must not share the same deployable version identity.
+- R40 found additional package/release-hygiene defects; its correction therefore advances the candidate to `1.2.7-rc1` rather than overwriting the earlier `1.2.6-rc1` identity.
+- Specified: complete by governing plans.
+- Coded: candidate; the R21–R40 source-review cycle is complete and evidence is tracked in Draft PR #5.
+- Packaged: only an artifact generated from the final exact R40 head is valid as the cycle package.
+- Automated-QA Green: must be established by the final exact-head workflow run; this source file does not preclaim a future CI result.
+- Staging-Accepted: not established.
+- Live-Deployed: not established.
+- Operational: not established.
 
-## Completed corrective work
-
-- Original Version 0.1.0 ZIP retained byte-for-byte.
-- Original source tree made reviewable in the baseline branch.
-- Corrected Version 0.2.0 source tree prepared.
-- Custom post-type admin bypass closed.
-- Safe page creation and activation snapshots implemented.
-- Schema upgrade runner added.
-- Moderation, report, actor, state, time, and note audit table added.
-- Reject/hide notes made mandatory.
-- Private Saved Videos and Video History pages set to no-store/no-cache/noindex/noarchive.
-- Privacy export expanded to reactions, saves, history, reports, and audit records.
-- Privacy erasure recounts totals and anonymizes retained safety/audit records.
-- Media publication made transactional with cleanup on failure.
-- Official host and strict duration validation implemented.
-- Factual author labels implemented.
-- AJAX success/error handling corrected.
-- Viewing history and local-video resume progress implemented.
-- Video/user deletion cleanup implemented.
-- Public/admin pagination and batched interaction-state loading implemented.
-- View-count bot/admin/preview suppression and atomic increment improved.
-- Source-correct structured data and accessibility controls implemented.
-- Corrected ZIP built deterministically and checksummed.
-
-## Automated validation
-
-- PHP lint: PASS, 10/10 files.
-- JavaScript syntax: PASS.
-- Helper tests: PASS.
-- Static correction contracts: PASS.
-- ZIP integrity: PASS.
-
-## Remaining acceptance gates
-
-- Fresh installation on approved Hostinger staging.
-- Upgrade test from Version 0.1.0 with existing tables, pages, posts, and page maps.
-- Files 00/02/03/04/07/09 integration.
-- Founder direct-publish and verified-doctor pending workflow.
-- Non-doctor and wp-admin bypass-denial tests.
-- YouTube, Vimeo, local MP4/WebM/OGG, thumbnail, and rollback tests.
-- Real LiteSpeed/Hostinger private-cache exclusion verification.
-- Real WordPress privacy export/erasure execution.
-- Mobile, keyboard, focus, screen-reader, and cross-browser acceptance.
-- Backup restoration and plugin rollback.
-- Live deployment and post-deployment smoke tests.
-
-No merge, production-complete claim, or live deployment is permitted before these gates pass.
+GitHub, staging and live are distinct realities. Repository source/package evidence does not identify the code currently deployed to the website. Exact deployed code, live DB/schema and migration state remain unverified until separately frozen from the environment.
