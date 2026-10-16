@@ -1,0 +1,21 @@
+{
+  "bomFormat": "Sabri-Public-SBOM",
+  "specVersion": "1.0",
+  "component": {
+    "name": "video-wall-and-live-broadcasting",
+    "version": "1.2.7-rc1",
+    "type": "wordpress-plugin"
+  },
+  "runtime": {
+    "wordpress": ">=7.0",
+    "php": ">=8.3"
+  },
+  "schemas": {
+    "base": "1.1.0",
+    "extension": "1.1.0",
+    "future": "1.2.0"
+  },
+  "bundledThirdPartyRuntimeLibraries": [],
+  "externalServiceAdapters": ["local", "youtube", "vimeo", "custom"],
+  "notes": "Final R21-R40 source-review candidate. R40 closes purge/manifest release-hygiene defects; runtime/staging/live acceptance remains separate evidence."
+}
