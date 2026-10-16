@@ -1,16 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
-root="$(cd "$(dirname "$0")/.." && pwd)"
-out="${1:-$root/packages/10-video-wall-and-educational-broadcasting-foundation-0.2.0.zip}"
-tmp="$(mktemp -d)"
-trap 'rm -rf "$tmp"' EXIT
-cp -a "$root/video-wall" "$tmp/video-wall"
-find "$tmp/video-wall" -exec touch -t 202607292328.00 {} +
-mkdir -p "$(dirname "$out")"
-rm -f "$out"
-(
-  cd "$tmp"
-  find video-wall -type f -print | LC_ALL=C sort | zip -X -q "$out" -@
-)
-unzip -t "$out" >/dev/null
-printf '%s\n' "$out"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+SOURCE="$ROOT/video-wall-and-live-broadcasting"
+OUT="${1:-$ROOT/packages/video-wall-and-live-broadcasting-1.2.10-rc1.zip}"
+[[ "$OUT" == /* ]] || OUT="$ROOT/$OUT"
+TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT
+mkdir -p "$TMP/video-wall-and-live-broadcasting" "$(dirname "$OUT")"
+cp -R "$SOURCE"/. "$TMP/video-wall-and-live-broadcasting/"
+find "$TMP" -exec touch -t 202608300000.00 {} +
+rm -f "$OUT" "$OUT.sha256"
+( cd "$TMP"; LC_ALL=C find video-wall-and-live-broadcasting -type f -print | LC_ALL=C sort | zip -X -q "$OUT" -@ )
+( cd "$(dirname "$OUT")"; sha256sum "$(basename "$OUT")" > "$(basename "$OUT").sha256" )
+echo "$OUT"

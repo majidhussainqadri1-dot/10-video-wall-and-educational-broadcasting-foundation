@@ -1,0 +1,13 @@
+<?php
+/** R72: keep podcast REST DTOs opaque and require secure delivery for private podcast assets. */
+defined( 'ABSPATH' ) || exit;
+final class VWLB_R72_Podcast_Boundary_Guard {
+	public static function register(){add_filter('rest_request_after_callbacks',array(__CLASS__,'after'),95,3);}
+	private static function podcast_route($request){if(!$request instanceof WP_REST_Request)return false;$route=(string)$request->get_route();foreach(VWLB_Contracts::namespaces() as $n)if(str_starts_with($route,'/'.$n.'/podcasts/'))return true;return false;}
+	private static function strip_numeric_ids($value){if(!is_array($value))return $value;$out=array();foreach($value as $k=>$v){$key=(string)$k;$internal=('id'===$key||str_ends_with($key,'_id'))&&!str_ends_with($key,'_public_id')&&(is_int($v)||(is_string($v)&&ctype_digit($v)));if($internal)continue;$out[$k]=is_array($v)?self::strip_numeric_ids($v):$v;}return $out;}
+	private static function item_route_id($request){$route=(string)$request->get_route();foreach(VWLB_Contracts::namespaces() as $n){$q=preg_quote($n,'#');if(preg_match('#^/'.$q.'/podcasts/episodes/([A-Za-z0-9_-]+)$#',$route,$m)&&'GET'===strtoupper((string)$request->get_method()))return $m[1];}return '';}
+	public static function after($response,$handler,$request){
+		if(!self::podcast_route($request)||is_wp_error($response))return $response;$wrapped=rest_ensure_response($response);if($wrapped->get_status()>=400)return $response;$episode_id=self::item_route_id($request);if($episode_id){$ep=VWLB_Podcasts::episode($episode_id,false);if($ep){$asset=VWLB_Repository::find('media_assets',$ep['asset_id']??0);$storage=VWLB_Helpers::json($asset['storage_json']??'{}');$secure_required='private_file'===($storage['driver']??'')||!in_array($ep['visibility']??'private',array('public','unlisted'),true);if($secure_required){try{$grant=apply_filters('vwlb_secure_podcast_playback_grant','',$ep,$asset,VWLB_Security::claims());}catch(Throwable $e){do_action('vwlb_operational_failure','podcast','vwlb_podcast_secure_delivery_exception',array('episode_public_id'=>$ep['public_id']??'','exception'=>sanitize_key(get_class($e))));return VWLB_Helpers::error('vwlb_podcast_secure_delivery_failed',__('Secure podcast delivery failed safely.',VWLB_TEXT_DOMAIN),503);}$grant=esc_url_raw((string)$grant,array('https'));if(!$grant)return VWLB_Helpers::error('vwlb_podcast_secure_delivery_required',__('This podcast requires configured secure media delivery.',VWLB_TEXT_DOMAIN),503);$data=(array)$wrapped->get_data();$data['audio_url']=$grant;$wrapped->set_data($data);$wrapped->header('Cache-Control','private, no-store');}}}
+		$wrapped->set_data(self::strip_numeric_ids($wrapped->get_data()));return $wrapped;
+	}
+}
