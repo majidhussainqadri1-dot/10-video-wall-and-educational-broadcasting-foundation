@@ -116,4 +116,5 @@ if command -v grep >/dev/null; then ! grep -R -E "(AKIA[0-9A-Z]{16}|ghp_[A-Za-z0
 bash "$ROOT/tests/file10-file11-contract-bridge.sh"
 php "$ROOT/tests/file10-r150-crossfile-read-integrity.php"
 php "$ROOT/tests/file10-r190-read-failure-contracts.php"
+php "$ROOT/tests/file10-r230-media-worker-read-integrity.php"
 echo "all File 10 automated checks PASS"
