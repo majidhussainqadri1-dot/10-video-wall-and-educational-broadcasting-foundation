@@ -26,7 +26,7 @@ final class VWLB_Media {
 		return array('id'=>$id,'public_id'=>$public,'status'=>'initiated','upload'=>apply_filters('vwlb_upload_grant',array('method'=>'resumable-private','endpoint'=>rest_url(VWLB_Contracts::CANONICAL_API_NAMESPACE.'/media/resumable'),'expires_in'=>HOUR_IN_SECONDS),$id,$data));
 	}
 	public static function complete( $asset_id, $data, $expected_version=1 ) {
-		$asset=VWLB_Repository::find('media_assets',$asset_id);if(!$asset)return VWLB_Helpers::error('vwlb_asset_missing',__('Asset not found.',VWLB_TEXT_DOMAIN),404);
+		$asset=VWLB_Repository::find('media_assets',$asset_id);if(VWLB_Repository::read_failed())return VWLB_Helpers::error('vwlb_asset_read_unavailable',__('Asset state could not be verified.',VWLB_TEXT_DOMAIN),503);if(!$asset)return VWLB_Helpers::error('vwlb_asset_missing',__('Asset not found.',VWLB_TEXT_DOMAIN),404);
 		if(!VWLB_Security::can(VWLB_Contracts::CAP_SUBMIT,$asset,'complete_upload'))return VWLB_Helpers::error('vwlb_forbidden',__('You cannot update this asset.',VWLB_TEXT_DOMAIN),403);
 		if('initiated'!==$asset['status'])return VWLB_Helpers::error('vwlb_bad_asset_state',__('The upload is not awaiting completion.',VWLB_TEXT_DOMAIN),409);
 		$url=VWLB_Helpers::remote_url($data['source_url']??'');$attachment=absint($data['attachment_id']??0);
@@ -46,7 +46,7 @@ final class VWLB_Media {
 		VWLB_Helpers::audit('asset',$asset['id'],'complete','initiated','uploaded','Upload completed; validation, scan and transcoding queued');return $result;
 	}
 	public static function enqueue($asset_id,$type,$input=array(),$priority=100){
-		global $wpdb;$asset=VWLB_Repository::find('media_assets',$asset_id);$provider=$asset?sanitize_key($asset['provider']):'local';$saved=$wpdb->insert(VWLB_Helpers::table('processing_jobs'),array('public_id'=>VWLB_Helpers::public_id('job'),'asset_id'=>absint($asset_id),'job_type'=>sanitize_key($type),'provider'=>$provider,'status'=>'pending','priority'=>(int)$priority,'attempts'=>0,'max_attempts'=>5,'available_at'=>VWLB_Helpers::now(),'input_json'=>VWLB_Helpers::json_encode($input),'output_json'=>'{}','created_at'=>VWLB_Helpers::now(),'updated_at'=>VWLB_Helpers::now()));return $saved?(int)$wpdb->insert_id:0;
+		global $wpdb;$asset=VWLB_Repository::find('media_assets',$asset_id);if(VWLB_Repository::read_failed()){do_action('vwlb_operational_failure','media','vwlb_enqueue_asset_read_failed',array());return 0;}if(!$asset)return 0;$provider=sanitize_key($asset['provider']);$saved=$wpdb->insert(VWLB_Helpers::table('processing_jobs'),array('public_id'=>VWLB_Helpers::public_id('job'),'asset_id'=>absint($asset_id),'job_type'=>sanitize_key($type),'provider'=>$provider,'status'=>'pending','priority'=>(int)$priority,'attempts'=>0,'max_attempts'=>5,'available_at'=>VWLB_Helpers::now(),'input_json'=>VWLB_Helpers::json_encode($input),'output_json'=>'{}','created_at'=>VWLB_Helpers::now(),'updated_at'=>VWLB_Helpers::now()));return $saved?(int)$wpdb->insert_id:0;
 	}
 	public static function verify_magic( $asset ) {
 		if(!is_array($asset))return false;
