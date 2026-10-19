@@ -115,4 +115,5 @@ unzip -t /tmp/vwlb-build-a.zip >/dev/null
 if command -v grep >/dev/null; then ! grep -R -E "(AKIA[0-9A-Z]{16}|ghp_[A-Za-z0-9]{30,}|BEGIN (RSA|OPENSSH) PRIVATE KEY)" "$ROOT/video-wall-and-live-broadcasting" >/dev/null; fi
 bash "$ROOT/tests/file10-file11-contract-bridge.sh"
 php "$ROOT/tests/file10-r150-crossfile-read-integrity.php"
+php "$ROOT/tests/file10-r190-read-failure-contracts.php"
 echo "all File 10 automated checks PASS"
