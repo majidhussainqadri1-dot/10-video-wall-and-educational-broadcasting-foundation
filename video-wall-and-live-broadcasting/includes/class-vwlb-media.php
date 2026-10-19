@@ -13,7 +13,7 @@ final class VWLB_Media {
 		if($mime&&!in_array($mime,$allowed,true))return VWLB_Helpers::error('vwlb_mime_not_allowed',__('This file type is not allowed.',VWLB_TEXT_DOMAIN),415);
 		$checksum=strtolower(VWLB_Helpers::text($data['checksum']??'',128));if($checksum&&!preg_match('/^[a-f0-9]{64}$/',$checksum))return VWLB_Helpers::error('vwlb_checksum_invalid',__('Checksum must be SHA-256.',VWLB_TEXT_DOMAIN),422);
 		global $wpdb;$now=VWLB_Helpers::now();$public=VWLB_Helpers::public_id('asset');
-		$wpdb->insert(VWLB_Helpers::table('media_assets'),array(
+		$inserted=$wpdb->insert(VWLB_Helpers::table('media_assets'),array(
 			'public_id'=>$public,'owner_id'=>get_current_user_id(),'source_object_type'=>sanitize_key($data['source_object_type']??'video'),
 			'source_object_id'=>0,'media_class'=>$media_class,'provider'=>$provider,'checksum'=>$checksum,
 			'mime'=>$mime,'bytes'=>$bytes,'status'=>'initiated','scan_status'=>'pending',
@@ -21,7 +21,7 @@ final class VWLB_Media {
 			'storage_json'=>VWLB_Helpers::json_encode(array('upload_session'=>VWLB_Helpers::public_id('upload'),'expires_at'=>gmdate('c',time()+HOUR_IN_SECONDS))),
 			'derivatives_json'=>'{}','created_at'=>$now,'updated_at'=>$now
 		));
-		$id=(int)$wpdb->insert_id;if(!$id)return VWLB_Helpers::error('vwlb_database_error',__('Media asset could not be initialized.',VWLB_TEXT_DOMAIN),500);
+		$id=(int)$wpdb->insert_id;if(1!==$inserted||$id<=0)return VWLB_Helpers::error('vwlb_database_error',__('Media asset could not be initialized.',VWLB_TEXT_DOMAIN),500);
 		VWLB_Helpers::audit('asset',$id,'initiate','','initiated','Upload session initiated');
 		return array('id'=>$id,'public_id'=>$public,'status'=>'initiated','upload'=>apply_filters('vwlb_upload_grant',array('method'=>'resumable-private','endpoint'=>rest_url(VWLB_Contracts::CANONICAL_API_NAMESPACE.'/media/resumable'),'expires_in'=>HOUR_IN_SECONDS),$id,$data));
 	}
