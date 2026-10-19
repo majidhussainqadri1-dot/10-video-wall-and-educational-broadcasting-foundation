@@ -84,7 +84,7 @@ final class VWLB_Integrations {
 		return VWLB_Extensions::reels_media_contract($value,$media_id,is_array($context)?$context:array());
 	}
 	public function file17_live_context($value,$live_id,$viewer=array()){
-		$event=VWLB_Repository::find('live_events',$live_id);if(!$event||!VWLB_Security::can_view($event,'file17_live_context'))return VWLB_Helpers::error('vwlb_not_found',__('Live context not found.',VWLB_TEXT_DOMAIN),404);
+		$event=VWLB_Repository::find('live_events',$live_id);if(VWLB_Repository::read_failed())return VWLB_Helpers::error('vwlb_live_context_unavailable',__('Live context could not be verified.',VWLB_TEXT_DOMAIN),503);if(!$event||!VWLB_Security::can_view($event,'file17_live_context'))return VWLB_Helpers::error('vwlb_not_found',__('Live context not found.',VWLB_TEXT_DOMAIN),404);
 		$chat=VWLB_Helpers::json($event['chat_policy_json']??'{}');
 		return array('contract'=>'File10LiveContext.v1','owner'=>'File 10','live_public_id'=>$event['public_id'],'status'=>$event['status'],'visibility'=>$event['visibility'],'chat_policy'=>array('enabled'=>!empty($chat['enabled']),'moderated'=>!empty($chat['moderated']),'slow_mode_seconds'=>max(0,(int)($event['slow_mode_seconds']??$chat['slow_mode_seconds']??0))),'conversation_owner'=>'File 17','duplicate_chat_forbidden'=>true);
 	}
