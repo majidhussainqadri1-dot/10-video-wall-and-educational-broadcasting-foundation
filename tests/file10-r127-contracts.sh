@@ -8,7 +8,7 @@ fail() {
   exit 1
 }
 
-grep -Fq "php: ['8.3.33','8.4.25']" "$workflow" || fail 'exact PHP patch matrix missing'
+grep -Fq "php: ['8.3.35','8.4.26']" "$workflow" || fail 'exact PHP patch matrix missing'
 if grep -Fq "php: ['8.3','8.4']" "$workflow"; then
   fail 'major/minor-only PHP matrix remains'
 fi
