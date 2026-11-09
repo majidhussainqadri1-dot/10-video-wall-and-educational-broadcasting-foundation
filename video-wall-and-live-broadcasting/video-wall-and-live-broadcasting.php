@@ -31,7 +31,7 @@ $autoload = array(
 	'class-vwlb-observability.php', 'class-vwlb-rest.php', 'class-vwlb-extended-rest.php',
 	'class-vwlb-future-intelligence.php', 'class-vwlb-future-safety.php', 'class-vwlb-review-hardening.php', 'class-vwlb-r3-playback.php', 'class-vwlb-r4-migration-guard.php', 'class-vwlb-future-adapters.php', 'class-vwlb-future-rest.php', 'class-vwlb-future-frontend.php',
 	'class-vwlb-frontend.php', 'class-vwlb-admin.php', 'class-vwlb-privacy.php',
-	'class-vwlb-seo.php', 'class-vwlb-integrations.php', 'class-vwlb-compatibility.php',
+	'class-vwlb-seo.php', 'class-vwlb-integrations.php', 'class-vwlb-file26-connector.php', 'class-vwlb-compatibility.php',
 	'class-vwlb-diagnostics.php', 'class-vwlb-plugin.php',
 );
 foreach ( $autoload as $file ) {
