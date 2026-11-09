@@ -181,14 +181,12 @@ final class VWLB_File26_Connector {
 	}
 
 	public static function fetch_object( $entity_type, $public_id = '' ) {
-		$entity = array_search( $entity_type, array_column( self::TABLES, 'entity_type' ), true );
-		if ( false === $entity ) {
-			foreach ( self::TABLES as $table => $contract ) {
-				if ( $entity_type === $contract['entity_type'] ) { $entity = $table; break; }
-			}
+		$entity = null;
+		foreach ( self::TABLES as $table => $contract ) {
+			if ( (string) $entity_type === $contract['entity_type'] ) { $entity = $table; break; }
 		}
-		if ( ! is_string( $entity ) || '' === $public_id || ctype_digit( (string) $public_id ) ) { return null; }
-		$row = VWLB_Repository::find( $entity, (string) $public_id );
+		if ( null === $entity || ! is_string( $public_id ) || '' === $public_id || ctype_digit( $public_id ) ) { return null; }
+		$row = VWLB_Repository::find( $entity, $public_id );
 		return $row ? self::project( $entity, $row ) : null;
 	}
 
