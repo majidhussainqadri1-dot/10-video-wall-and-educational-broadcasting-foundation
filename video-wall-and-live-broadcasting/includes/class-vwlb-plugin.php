@@ -28,7 +28,7 @@ final class VWLB_Plugin {
 
 		$frontend=new VWLB_Frontend();$future_frontend=new VWLB_Future_Frontend();$admin=new VWLB_Admin();$privacy=new VWLB_Privacy();$integrations=new VWLB_Integrations();
 		$rest=new VWLB_REST();$extended=new VWLB_Extended_REST();$future_rest=new VWLB_Future_REST();$seo=new VWLB_SEO();
-		$frontend->register();$future_frontend->register();$integrations->register();
+		$frontend->register();$future_frontend->register();$integrations->register();VWLB_File26_Connector::register();
 		add_action('wp_enqueue_scripts',array($frontend,'assets'));add_action('admin_enqueue_scripts',array($admin,'enqueue'));
 		add_action('admin_menu',array($admin,'register'));add_action('rest_api_init',array($rest,'register'));add_action('rest_api_init',array($extended,'register'));add_action('rest_api_init',array($future_rest,'register'));
 		add_filter('rest_pre_serve_request',array($this,'serve_raw_caption'),10,4);add_action('wp_head',array($seo,'output'));
