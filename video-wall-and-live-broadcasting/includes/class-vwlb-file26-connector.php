@@ -168,7 +168,20 @@ final class VWLB_File26_Connector {
 		if ( $more ) { array_pop( $rows ); }
 		$items = array();
 		foreach ( $rows as $row ) {
-			$doc = self::project( $entity, $row );
+			try {
+				$doc = self::project( $entity, $row );
+			} catch ( Throwable $e ) {
+				return new WP_Error( 'file10_search_snapshot_policy_unavailable', 'Current owner visibility could not be verified for this batch.' );
+			}
+			// Project() may re-read canonical consent. A transient policy or DB
+			// failure must abort the *entire* batch, never look like a legitimate
+			// omitted private row to File26's snapshot/cutover consumer.
+			if ( ( class_exists( 'VWLB_R109_Rights_Consent_Replay_Guard' ) &&
+				VWLB_R109_Rights_Consent_Replay_Guard::policy_read_failed() ) ||
+				( method_exists( 'VWLB_Repository', 'read_failed' ) &&
+				VWLB_Repository::read_failed() ) ) {
+				return new WP_Error( 'file10_search_snapshot_policy_unavailable', 'Current File10 media consent or repository state could not be verified for this batch.' );
+			}
 			if ( $doc ) { $items[] = $doc; }
 			$id = max( $id, (int) $row['id'] );
 		}
