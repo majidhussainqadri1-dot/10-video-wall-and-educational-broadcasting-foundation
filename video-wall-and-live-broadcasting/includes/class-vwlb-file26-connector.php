@@ -185,9 +185,37 @@ final class VWLB_File26_Connector {
 		foreach ( self::TABLES as $table => $contract ) {
 			if ( (string) $entity_type === $contract['entity_type'] ) { $entity = $table; break; }
 		}
-		if ( null === $entity || ! is_string( $public_id ) || '' === $public_id || ctype_digit( $public_id ) ) { return null; }
-		$row = VWLB_Repository::find( $entity, $public_id );
-		return $row ? self::project( $entity, $row ) : null;
+		if ( null === $entity || ! is_string( $public_id ) || strlen( $public_id ) > 80 ||
+			! VWLB_Helpers::is_public_id( $public_id ) ) { return null; }
+		if ( ! self::ready() ) {
+			return new WP_Error( 'file10_search_owner_unavailable', 'Canonical File10 owner is not currently available.' );
+		}
+		if ( method_exists( 'VWLB_Repository', 'reset_read_failure' ) ) {
+			VWLB_Repository::reset_read_failure();
+		}
+		try {
+			$row = VWLB_Repository::find( $entity, $public_id );
+		} catch ( Throwable $e ) {
+			return new WP_Error( 'file10_search_owner_read_failed', 'Canonical owner object could not be read.' );
+		}
+		if ( method_exists( 'VWLB_Repository', 'read_failed' ) && VWLB_Repository::read_failed() ) {
+			// DB failure must not masquerade as a deletion/null in File26.
+			return new WP_Error( 'file10_search_owner_read_failed', 'Canonical owner object could not be read.' );
+		}
+		if ( null === $row ) { return null; }
+		if ( ! is_array( $row ) ) {
+			return new WP_Error( 'file10_search_owner_unverifiable', 'Canonical owner object has an invalid shape.' );
+		}
+		try {
+			$document = self::project( $entity, $row );
+		} catch ( Throwable $e ) {
+			return new WP_Error( 'file10_search_owner_policy_failed', 'Canonical owner visibility could not be verified.' );
+		}
+		if ( class_exists( 'VWLB_R109_Rights_Consent_Replay_Guard' ) &&
+			VWLB_R109_Rights_Consent_Replay_Guard::policy_read_failed() ) {
+			return new WP_Error( 'file10_search_owner_policy_failed', 'Current rights or consent policy is unavailable.' );
+		}
+		return $document;
 	}
 
 	/** Always re-check the File10 owner DB, not the stale File26 index row. */

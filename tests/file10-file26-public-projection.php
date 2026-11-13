@@ -23,13 +23,23 @@ class VWLB_Helpers {
 }
 class VWLB_Security {
     public static function can_view($row, $purpose = '') {
+        if (!empty($GLOBALS['fake_policy_outage'])) {
+            $GLOBALS['fake_policy_failed'] = true;
+            return false;
+        }
         return is_array($row) && 'public' === ($row['visibility'] ?? '');
     }
 }
+class VWLB_R109_Rights_Consent_Replay_Guard {
+    public static function policy_read_failed() { return !empty($GLOBALS['fake_policy_failed']); }
+}
 class VWLB_Repository {
     public static $owners = array();
+    public static $fake_read_failed = false;
+    public static function reset_read_failure() {}
+    public static function read_failed() { return self::$fake_read_failed; }
     public static function find($entity, $public_id) {
-        return self::$owners[$entity][(string) $public_id] ?? null;
+        return self::$fake_read_failed ? null : (self::$owners[$entity][(string) $public_id] ?? null);
     }
 }
 class File10MockDB {
@@ -103,7 +113,23 @@ check_file10(is_array($batch) && count($batch['items']) === 0, 'modern File10 re
 VWLB_Repository::$owners['videos']['f26_video_demo'] = $noncanonical;
 $bad = $doc; $bad['object_id'] = 'f26_video_demo';
 check_file10(VWLB_File26_Connector::can_view($bad) === false, 'modern File10 rejects noncanonical click reference');
+// Direct owner reads must distinguish legitimate absent/private from operational errors.
+$direct = VWLB_File26_Connector::fetch_object('video','vid_abc1');
+check_file10(is_array($direct) && $direct['object_version'] === 4, 'valid owner direct fetch remains public');
+check_file10(VWLB_File26_Connector::fetch_object('video','vid_missing123') === null, 'legitimate missing object stays null');
+VWLB_Repository::$owners['videos']['vid_abc1']=$private;
+check_file10(VWLB_File26_Connector::fetch_object('video','vid_abc1') === null, 'private object is not a public source');
+VWLB_Repository::$owners['videos']['vid_abc1']=$row;
+VWLB_Repository::$fake_read_failed=true;
+check_file10(VWLB_File26_Connector::fetch_object('video','vid_abc1') instanceof WP_Error, 'DB outage returns typed owner failure, never null');
+VWLB_Repository::$fake_read_failed=false;
+$GLOBALS['fake_policy_outage']=true;
+$GLOBALS['fake_policy_failed']=false;
+check_file10(VWLB_File26_Connector::fetch_object('video','vid_abc1') instanceof WP_Error, 'consent policy outage returns typed failure, never false deletion');
+$GLOBALS['fake_policy_outage']=false;
+$GLOBALS['fake_policy_failed']=false;
 $GLOBALS['fake_safe_mode'] = true;
 check_file10(VWLB_File26_Connector::can_view($doc) === false, 'safe mode denies cached search result');
 check_file10(VWLB_File26_Connector::list_batch('', 20) instanceof WP_Error, 'safe mode denies snapshot');
+check_file10(VWLB_File26_Connector::fetch_object('video','vid_abc1') instanceof WP_Error, 'safe mode returns owner-unavailable not hard deletion');
 echo "File26 owner-projection PHP contracts PASS" . PHP_EOL;
