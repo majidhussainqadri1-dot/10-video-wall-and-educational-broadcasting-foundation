@@ -101,7 +101,7 @@ final class VWLB_File26_Connector {
 	private static function project( $entity, $row ) {
 		if ( ! self::eligible( $entity, $row ) ) { return null; }
 		$public_id = (string) $row['public_id'];
-		if ( ! preg_match( '/^[A-Za-z0-9_-]{3,80}$/D', $public_id ) || ctype_digit( $public_id ) ) { return null; }
+		if ( strlen( $public_id ) > 80 || ! VWLB_Helpers::is_public_id( $public_id ) ) { return null; }
 		$category = self::TABLES[ $entity ];
 		$slug = sanitize_title( $row['slug'] ?? '' );
 		if ( 'videos' === $entity ) {
@@ -195,7 +195,7 @@ final class VWLB_File26_Connector {
 		if ( ! is_array( $document ) || ( $document['connector_slug'] ?? '' ) !== self::SLUG ||
 			( $document['visibility'] ?? '' ) !== 'public' ) { return false; }
 		$public_id = (string) ( $document['object_id'] ?? '' );
-		if ( '' === $public_id || ctype_digit( $public_id ) || strlen( $public_id ) > 80 ) { return false; }
+		if ( strlen( $public_id ) > 80 || ! VWLB_Helpers::is_public_id( $public_id ) ) { return false; }
 		$version = $document['object_version'] ?? null;
 		if ( ! is_int( $version ) && ( ! is_string( $version ) || ! preg_match( '/^[1-9][0-9]{0,17}$/D', $version ) ) ) { return false; }
 		if ( (int) $version < 1 ) { return false; }
