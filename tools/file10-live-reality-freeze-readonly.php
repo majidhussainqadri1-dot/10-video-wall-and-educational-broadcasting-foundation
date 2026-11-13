@@ -84,7 +84,13 @@ if ( is_dir( $root ) && is_readable( $root ) ) {
             new RecursiveDirectoryIterator( $root, FilesystemIterator::SKIP_DOTS )
         );
         foreach ( $iterator as $item ) {
-            if ( $item->isLink() || ! $item->isFile() ) { continue; }
+            if ( $item->isLink() ) {
+                // A symlink may reference deployed executable source outside
+                // this fingerprint's root. Never call that partial hash complete.
+                $truncated = true;
+                break;
+            }
+            if ( ! $item->isFile() ) { continue; }
             $path = $item->getPathname();
             $real_root = realpath( $root );
             $real_path = realpath( $path );
