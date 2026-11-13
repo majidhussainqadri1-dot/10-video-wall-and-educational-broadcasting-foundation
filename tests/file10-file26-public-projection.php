@@ -19,6 +19,7 @@ function wp_strip_all_tags($value, $remove_breaks = false) { return strip_tags((
 function home_url($path = '') { return 'https://example.test' . $path; }
 class VWLB_Helpers {
     public static function table($entity) { return 'mock_' . $entity; }
+    public static function is_public_id($value) { return is_string($value) && (bool) preg_match('/^[a-z][a-z0-9]*_[a-z0-9]+$/', $value); }
 }
 class VWLB_Security {
     public static function can_view($row, $purpose = '') {
@@ -94,6 +95,14 @@ $numeric = $row; $numeric['public_id'] = '123456';
 $wpdb->rows['videos'] = array($numeric);
 $batch = VWLB_File26_Connector::list_batch('', 20);
 check_file10(is_array($batch) && count($batch['items']) === 0, 'numeric-only public ID must not enter the index');
+$noncanonical = $row;
+$noncanonical['public_id'] = 'f26_video_demo';
+$wpdb->rows['videos'] = array($noncanonical);
+$batch = VWLB_File26_Connector::list_batch('', 20);
+check_file10(is_array($batch) && count($batch['items']) === 0, 'modern File10 rejects noncanonical source identifier');
+VWLB_Repository::$owners['videos']['f26_video_demo'] = $noncanonical;
+$bad = $doc; $bad['object_id'] = 'f26_video_demo';
+check_file10(VWLB_File26_Connector::can_view($bad) === false, 'modern File10 rejects noncanonical click reference');
 $GLOBALS['fake_safe_mode'] = true;
 check_file10(VWLB_File26_Connector::can_view($doc) === false, 'safe mode denies cached search result');
 check_file10(VWLB_File26_Connector::list_batch('', 20) instanceof WP_Error, 'safe mode denies snapshot');
