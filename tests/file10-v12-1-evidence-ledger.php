@@ -27,6 +27,18 @@ $expected['F10-CEN-01']='CEN';
 for($n=1;$n<=10;$n++) {
     $expected['V12.1-STO-'.str_pad((string)$n,2,'0',STR_PAD_LEFT)]='STO';
 }
+// Captions are a separate checked-in transcription of the original user-supplied
+// SSH Master Plan V12.1 (F10: DOCX paragraphs 1320–1373; STO: 2595–2604).
+// Existence of an ID alone does not prove that its acceptance scope is preserved.
+$captions_path = __DIR__ . '/../docs/V12.1-FILE10-AUTHORITATIVE-TITLES-20261113.json';
+$caption_raw = is_readable($captions_path) ? file_get_contents($captions_path) : false;
+$canonical_titles = false === $caption_raw ? null : json_decode($caption_raw,true);
+if(!is_array($canonical_titles) || count($canonical_titles)!==64 ||
+    array_diff(array_keys($expected),array_keys($canonical_titles)) ||
+    array_diff(array_keys($canonical_titles),array_keys($expected))) {
+    fwrite(STDERR, "V12.1 source titles are missing, stale or no longer cover all 64 IDs\n");
+    exit(1);
+}
 $seen = array();
 $priority = array('P0'=>0,'P1'=>0,'P2'=>0);
 $line = 1;
@@ -43,6 +55,9 @@ while (($raw=fgetcsv($in)) !== false) {
     if (isset($seen[$id])) { $fail('duplicate ID: '.$id); }
     $seen[$id]=true;
     if ($expected[$id] !== $row['category']) { $fail('incorrect category: '.$id); }
+    if (!is_string($canonical_titles[$id]) || $row['title'] !== $canonical_titles[$id]) {
+        $fail($id.': caption differs from the exact V12.1 master plan');
+    }
     foreach (array('title','priority','source_mapping','source_status','gate','blocking_dependency') as $k) {
         if (trim($row[$k]) === '') { $fail($id.': missing '.$k); }
     }
