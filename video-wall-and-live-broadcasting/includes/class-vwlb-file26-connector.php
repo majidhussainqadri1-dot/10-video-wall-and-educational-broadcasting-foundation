@@ -209,6 +209,93 @@ final class VWLB_File26_Connector {
 		return false;
 	}
 
+
+	/**
+	 * SOURCE-ONLY proposal. It never delivers, indexes or acknowledges an event.
+	 * An audited File26 consumer and versioned deletion/replay contract are still
+	 * mandatory before removing the proposed/tombstone-pending gate.
+	 */
+	public static function propose_outbox_reconciliation( $event, $payload = array() ) {
+		if ( ! self::ready() || ! is_array( $event ) || ! is_array( $payload ) ) {
+			return new WP_Error( 'file10_search_event_unavailable', 'Canonical File10 search owner state is not available.' );
+		}
+
+		// File10 outbox.object_id is an internal numeric primary key, never a
+		// safe public File26 document identity.
+		$event_to_entity = array(
+			'VideoPublished.v1'        => 'videos',
+			'VideoRestricted.v1'       => 'videos',
+			'VideoConsentRestricted.v1'=> 'videos',
+			'LiveEventScheduled.v1'    => 'live_events',
+			'LiveBroadcastStarted.v1'  => 'live_events',
+			'LiveBroadcastEnded.v1'    => 'live_events',
+			'LiveReplayPublished.v1'   => 'live_events',
+		);
+		$name = (string) ( $event['event_name'] ?? '' );
+		if ( ! isset( $event_to_entity[ $name ] ) ) {
+			return new WP_Error( 'file10_search_event_unsupported', 'This event has no approved public-media mapping.' );
+		}
+		$event_id = (string) ( $event['public_id'] ?? '' );
+		$public_id = (string) ( $payload['public_id'] ?? '' );
+		if ( strlen( $event_id ) > 80 || ! VWLB_Helpers::is_public_id( $event_id ) ||
+			! str_starts_with( $event_id, 'evt_' ) || strlen( $public_id ) > 80 ||
+			! VWLB_Helpers::is_public_id( $public_id ) ) {
+			return new WP_Error( 'file10_search_event_identity_invalid', 'Current public owner and event identifiers are required.' );
+		}
+
+		$entity = $event_to_entity[ $name ];
+		if ( method_exists( 'VWLB_Repository', 'reset_read_failure' ) ) {
+			VWLB_Repository::reset_read_failure();
+		}
+		try {
+			$row = VWLB_Repository::find( $entity, $public_id );
+		} catch ( Throwable $e ) {
+			return new WP_Error( 'file10_search_owner_read_unavailable', 'Canonical File10 owner read failed.' );
+		}
+		if ( ( method_exists( 'VWLB_Repository', 'read_failed' ) && VWLB_Repository::read_failed() ) ||
+			! is_array( $row ) || (string) ( $row['public_id'] ?? '' ) !== $public_id ) {
+			// A missing or hard-deleted row cannot supply a trustworthy tombstone
+			// version: returning a guessed version would permit resurrection.
+			return new WP_Error( 'file10_search_owner_unverifiable', 'Owner state or deletion version is not verifiable.' );
+		}
+		$raw_version = (string) ( $row['version'] ?? '' );
+		if ( ! preg_match( '/^[1-9][0-9]{0,17}$/D', $raw_version ) ) {
+			return new WP_Error( 'file10_search_version_unverifiable', 'Current owner version is not a valid positive integer.' );
+		}
+		$version = (int) $raw_version;
+		try {
+			$document = self::project( $entity, $row );
+		} catch ( Throwable $e ) {
+			return new WP_Error( 'file10_search_policy_unverifiable', 'Current owner publication policy could not be evaluated.' );
+		}
+		if ( class_exists( 'VWLB_R109_Rights_Consent_Replay_Guard' ) &&
+			VWLB_R109_Rights_Consent_Replay_Guard::policy_read_failed() ) {
+			// An unavailable consent database is not a verified revocation.
+			return new WP_Error( 'file10_search_consent_unverifiable', 'Current consent or rights lookup is unavailable.' );
+		}
+
+		$proposal = array(
+			'status'                => 'proposed',
+			'delivery_state'        => 'not_dispatched',
+			'connector_slug'        => self::SLUG,
+			'owner_file'            => 'File 10',
+			'event_name'            => $name,
+			'source_event_id'       => $event_id,
+			'entity_type'           => self::TABLES[ $entity ]['entity_type'],
+			'domain'                => self::TABLES[ $entity ]['domain'],
+			'object_id'             => $public_id,
+			'object_version'        => $version,
+			'source_event_sequence' => $version,
+			'action'                => $document ? 'upsert' : 'tombstone',
+		);
+		if ( $document ) {
+			$proposal['document'] = $document;
+		} else {
+			$proposal['reason_class'] = 'owner_not_public';
+		}
+		return $proposal;
+	}
+
 	public static function health() {
 		global $wpdb;
 		if ( ! self::ready() ) {
