@@ -45,7 +45,7 @@ php "$FIXTURE/cli-fixture.php" > "$FIXTURE/symlink.json"
 php -r '
   $j=json_decode(file_get_contents($argv[1]),true);
   if(!is_array($j) || ($j["plugin"]["fingerprint_status"]??"")!=="incomplete" ||
-     ($j["plugin"]["expanded_tree_sha256"]??"sentinel")!==null ||
+     !array_key_exists("expanded_tree_sha256",$j["plugin"]) || $j["plugin"]["expanded_tree_sha256"]!==null ||
      ($j["deployed_vs_repository_parity"]??"")!=="not_compared" ||
      ($j["live_verification_status"]??"")!=="snapshot_only") {
     fwrite(STDERR,"File10 G01 symlink must invalidate complete deployed SHA and parity claim\n");exit(1);
