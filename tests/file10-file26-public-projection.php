@@ -128,6 +128,17 @@ $GLOBALS['fake_policy_failed']=false;
 check_file10(VWLB_File26_Connector::fetch_object('video','vid_abc1') instanceof WP_Error, 'consent policy outage returns typed failure, never false deletion');
 $GLOBALS['fake_policy_outage']=false;
 $GLOBALS['fake_policy_failed']=false;
+$wpdb->rows['videos']=array($private);
+$private_batch=VWLB_File26_Connector::list_batch('',20);
+check_file10(is_array($private_batch) && count($private_batch['items'])===0,
+    'legitimate private source excluded without an operational failure');
+$wpdb->rows['videos']=array($row);
+$GLOBALS['fake_policy_outage']=true;
+$GLOBALS['fake_policy_failed']=false;
+check_file10(VWLB_File26_Connector::list_batch('',20) instanceof WP_Error,
+    'consent policy read outage must abort entire owner batch, not emit empty success');
+$GLOBALS['fake_policy_outage']=false;
+$GLOBALS['fake_policy_failed']=false;
 $GLOBALS['fake_safe_mode'] = true;
 check_file10(VWLB_File26_Connector::can_view($doc) === false, 'safe mode denies cached search result');
 check_file10(VWLB_File26_Connector::list_batch('', 20) instanceof WP_Error, 'safe mode denies snapshot');
