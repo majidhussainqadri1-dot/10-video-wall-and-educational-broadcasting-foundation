@@ -101,7 +101,7 @@ final class VWLB_File26_Connector {
 	private static function project( $entity, $row ) {
 		if ( ! self::eligible( $entity, $row ) ) { return null; }
 		$public_id = (string) $row['public_id'];
-		if ( ! preg_match( '/^[A-Za-z0-9_-]{3,80}$/D', $public_id ) ) { return null; }
+		if ( ! preg_match( '/^[A-Za-z0-9_-]{3,80}$/D', $public_id ) || ctype_digit( $public_id ) ) { return null; }
 		$category = self::TABLES[ $entity ];
 		$slug = sanitize_title( $row['slug'] ?? '' );
 		if ( 'videos' === $entity ) {
@@ -132,7 +132,7 @@ final class VWLB_File26_Connector {
 			'excerpt'              => $excerpt,
 			'search_text'          => $title . ' ' . $excerpt,
 			'canonical_url'        => $url,
-			'author_key'           => isset( $row['owner_id'] ) ? 'file10-owner-' . (int) $row['owner_id'] : '',
+			'author_key'           => '', // No internal File00/WordPress principal ID in public File26 documents.
 			'safety_class'         => 'general',
 			'payload'              => array(
 				'language' => substr( sanitize_text_field( $locale ), 0, 20 ),
@@ -196,11 +196,15 @@ final class VWLB_File26_Connector {
 			( $document['visibility'] ?? '' ) !== 'public' ) { return false; }
 		$public_id = (string) ( $document['object_id'] ?? '' );
 		if ( '' === $public_id || ctype_digit( $public_id ) || strlen( $public_id ) > 80 ) { return false; }
+		$version = $document['object_version'] ?? null;
+		if ( ! is_int( $version ) && ( ! is_string( $version ) || ! preg_match( '/^[1-9][0-9]{0,17}$/D', $version ) ) ) { return false; }
+		if ( (int) $version < 1 ) { return false; }
 		$entity_type = (string) ( $document['entity_type'] ?? '' );
 		foreach ( self::TABLES as $entity => $contract ) {
 			if ( $entity_type !== $contract['entity_type'] ) { continue; }
 			$row = VWLB_Repository::find( $entity, $public_id );
-			return self::eligible( $entity, $row );
+			// An old public index row cannot remain viewable after canonical metadata changes.
+			return is_array( $row ) && (int) ( $row['version'] ?? 0 ) === (int) $version && self::eligible( $entity, $row );
 		}
 		return false;
 	}
