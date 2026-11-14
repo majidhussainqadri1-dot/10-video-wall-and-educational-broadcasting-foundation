@@ -243,13 +243,13 @@
     {
       "id": "F10-FUT-008",
       "priority": "P0",
-      "master_plan_page": 164,
+      "master_plan_page": 165,
       "source_gate": "G06"
     },
     {
       "id": "F10-FUT-009",
       "priority": "P0",
-      "master_plan_page": 164,
+      "master_plan_page": 165,
       "source_gate": "G06"
     },
     {
@@ -309,7 +309,7 @@
     {
       "id": "F10-FUT-019",
       "priority": "P1",
-      "master_plan_page": 166,
+      "master_plan_page": 165,
       "source_gate": "G06"
     },
     {
@@ -345,19 +345,19 @@
     {
       "id": "V12.1-STO-01",
       "priority": "SHARED",
-      "master_plan_page": 267,
+      "master_plan_page": 266,
       "source_gate": "G08/G10"
     },
     {
       "id": "V12.1-STO-02",
       "priority": "SHARED",
-      "master_plan_page": 267,
+      "master_plan_page": 266,
       "source_gate": "G08/G10"
     },
     {
       "id": "V12.1-STO-03",
       "priority": "SHARED",
-      "master_plan_page": 267,
+      "master_plan_page": 266,
       "source_gate": "G08/G10"
     },
     {
