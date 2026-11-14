@@ -79,3 +79,16 @@ checks and package CI do not establish Staging-Accepted, Live-Deployed or
 Operational. The File26 connector remains proposed/dormant. Production
 acceptance still requires exact deployed artifact/DB/migration parity,
 provider/consumer acceptance, restore/rollback and real live re-test.
+
+
+### Additional V12.3 review depth (2026-11-14)
+
+- `docs/V12.3-FILE10-ORIGINAL-DOCX-CONTENT-DIGESTS.tsv` + `tools/file10-v12-3-verify-master-docx.py`: exactly 64 original Word paragraphs, checked by Unicode-normalized SHA256; original Word file is never shipped in this public repo. Synthetic Word tamper tests live in `tests/file10-v12-3-verify-master-docx.sh`.
+- `tools/file10-v12-3-acceptance-audit.php`: machine-readable source-only status counts for all 64 IDs and explicit NO-GO. Its adversarial test covers 10 refusal conditions and a fully fabricated 64/64 PASS record that **must not** become a live release claim.
+- `tools/file10-live-reality-freeze-readonly.php` now recognizes `video-wall/video-wall.php` (legacy) and `video-wall-and-live-broadcasting/video-wall-and-live-broadcasting.php` (modern) as distinct deployed candidates. Both are no-follow, bounded, checksum-fail-incomplete; test: `tests/file10-v12-3-dual-plugin-fingerprint.sh`. This is a collector correction, **not evidence that either exists on live**.
+- `docs/V12.3-FILE10-64-REAL-NEGATIVE-ACCEPTANCE-ORACLES.csv`: 64 distinct negative/unsafe scenarios and required evidence, all `not_run`. Both catalogue checks and seven corruption fixtures are in source QA.
+- `docs/V12.3-FILE10-DRAFT-PR-LINEAGE-SNAPSHOT-20261114.json`: 26 Draft PR ancestry records. PR25 diverges but its critical R109 source/test blob SHAs exactly match current advanced source; no auto-merge. PR20 diverges and differs.
+- `docs/V12.3-FILE10-GITHUB-RULESET-EVIDENCE-20261114.json` + `tools/file10-v12-3-ruleset-assessment.py`: exact issue #22 mismatch observable from 2026-11-14 snapshot. It correctly emits BLOCKED; admin action remains necessary.
+- `reviews/F10-V12-3-POST-CHANGE-SOURCE-REVIEW-A-20261114.md` and `-B-`: two distinct **internal** source review passes; these are not substitute evidence for the two independent File24 release reviews.
+
+**Mandatory boundary remains:** 0/64 individual real-world acceptance, Staging/Live unverified, open #13/#22/#26, GitHub protected ruleset drift, no File26 activation and no deployment. Successful source test CI is **not** Production Ready.
