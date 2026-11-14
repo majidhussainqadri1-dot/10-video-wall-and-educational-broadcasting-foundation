@@ -1,0 +1,570 @@
+{
+  "artifact": "File10V12.3SourceScopeOverlay.v1",
+  "purpose": "source planning and non-acceptance traceability; NOT a release or deployment approval",
+  "authority": {
+    "document": "Sabri-Website-Master-Plan-V12.3.docx",
+    "document_sha256": "c061d9c9964d2434b040b814120d446e9004bd3b2f853eb355df1ccc4648e1cf",
+    "review_date": "2026-11-14",
+    "page_ranges": "40;79-82;162-166;262;267"
+  },
+  "base_ledger": "docs/V12.1-FILE10-64-REQUIREMENT-EVIDENCE.csv",
+  "base_title_ledger": "docs/V12.1-FILE10-AUTHORITATIVE-TITLES-20261113.json",
+  "counts": {
+    "FR": 19,
+    "NFR": 10,
+    "CEN": 1,
+    "FUT": 24,
+    "STO": 10,
+    "total": 64
+  },
+  "source_scope": [
+    {
+      "id": "F10-FR-001",
+      "priority": "MUST",
+      "master_plan_page": 162,
+      "source_gate": "G04"
+    },
+    {
+      "id": "F10-FR-002",
+      "priority": "MUST",
+      "master_plan_page": 162,
+      "source_gate": "G04"
+    },
+    {
+      "id": "F10-FR-003",
+      "priority": "MUST",
+      "master_plan_page": 162,
+      "source_gate": "G04"
+    },
+    {
+      "id": "F10-FR-004",
+      "priority": "MUST",
+      "master_plan_page": 162,
+      "source_gate": "G04"
+    },
+    {
+      "id": "F10-FR-005",
+      "priority": "MUST",
+      "master_plan_page": 162,
+      "source_gate": "G04"
+    },
+    {
+      "id": "F10-FR-006",
+      "priority": "MUST",
+      "master_plan_page": 162,
+      "source_gate": "G04"
+    },
+    {
+      "id": "F10-FR-007",
+      "priority": "MUST",
+      "master_plan_page": 162,
+      "source_gate": "G04"
+    },
+    {
+      "id": "F10-FR-008",
+      "priority": "MUST",
+      "master_plan_page": 162,
+      "source_gate": "G04"
+    },
+    {
+      "id": "F10-FR-009",
+      "priority": "MUST",
+      "master_plan_page": 163,
+      "source_gate": "G04"
+    },
+    {
+      "id": "F10-FR-010",
+      "priority": "MUST",
+      "master_plan_page": 163,
+      "source_gate": "G05"
+    },
+    {
+      "id": "F10-FR-011",
+      "priority": "MUST",
+      "master_plan_page": 163,
+      "source_gate": "G05"
+    },
+    {
+      "id": "F10-FR-012",
+      "priority": "MUST",
+      "master_plan_page": 163,
+      "source_gate": "G05"
+    },
+    {
+      "id": "F10-FR-013",
+      "priority": "MUST",
+      "master_plan_page": 163,
+      "source_gate": "G05"
+    },
+    {
+      "id": "F10-FR-014",
+      "priority": "MUST",
+      "master_plan_page": 163,
+      "source_gate": "G05"
+    },
+    {
+      "id": "F10-FR-015",
+      "priority": "MUST",
+      "master_plan_page": 163,
+      "source_gate": "G05"
+    },
+    {
+      "id": "F10-FR-016",
+      "priority": "MUST",
+      "master_plan_page": 163,
+      "source_gate": "G05"
+    },
+    {
+      "id": "F10-FR-017",
+      "priority": "MUST",
+      "master_plan_page": 163,
+      "source_gate": "G07"
+    },
+    {
+      "id": "F10-FR-018",
+      "priority": "MUST",
+      "master_plan_page": 163,
+      "source_gate": "G07"
+    },
+    {
+      "id": "F10-FR-019",
+      "priority": "MUST",
+      "master_plan_page": 163,
+      "source_gate": "G07"
+    },
+    {
+      "id": "F10-NFR-001",
+      "priority": "MUST",
+      "master_plan_page": 163,
+      "source_gate": "G08/G09"
+    },
+    {
+      "id": "F10-NFR-002",
+      "priority": "MUST",
+      "master_plan_page": 163,
+      "source_gate": "G08/G09"
+    },
+    {
+      "id": "F10-NFR-003",
+      "priority": "MUST",
+      "master_plan_page": 163,
+      "source_gate": "G08/G09"
+    },
+    {
+      "id": "F10-NFR-004",
+      "priority": "MUST",
+      "master_plan_page": 163,
+      "source_gate": "G08/G09"
+    },
+    {
+      "id": "F10-NFR-005",
+      "priority": "MUST",
+      "master_plan_page": 163,
+      "source_gate": "G08/G09"
+    },
+    {
+      "id": "F10-NFR-006",
+      "priority": "MUST",
+      "master_plan_page": 164,
+      "source_gate": "G08/G09"
+    },
+    {
+      "id": "F10-NFR-007",
+      "priority": "MUST",
+      "master_plan_page": 164,
+      "source_gate": "G08/G09"
+    },
+    {
+      "id": "F10-NFR-008",
+      "priority": "MUST",
+      "master_plan_page": 164,
+      "source_gate": "G08/G09"
+    },
+    {
+      "id": "F10-NFR-009",
+      "priority": "MUST",
+      "master_plan_page": 164,
+      "source_gate": "G08/G09"
+    },
+    {
+      "id": "F10-NFR-010",
+      "priority": "MUST",
+      "master_plan_page": 164,
+      "source_gate": "G08/G09"
+    },
+    {
+      "id": "F10-CEN-01",
+      "priority": "MUST",
+      "master_plan_page": 164,
+      "source_gate": "G03/G07"
+    },
+    {
+      "id": "F10-FUT-001",
+      "priority": "P0",
+      "master_plan_page": 164,
+      "source_gate": "G06"
+    },
+    {
+      "id": "F10-FUT-002",
+      "priority": "P0",
+      "master_plan_page": 164,
+      "source_gate": "G06"
+    },
+    {
+      "id": "F10-FUT-003",
+      "priority": "P1",
+      "master_plan_page": 164,
+      "source_gate": "G06"
+    },
+    {
+      "id": "F10-FUT-004",
+      "priority": "P0",
+      "master_plan_page": 164,
+      "source_gate": "G06"
+    },
+    {
+      "id": "F10-FUT-005",
+      "priority": "P1",
+      "master_plan_page": 164,
+      "source_gate": "G06"
+    },
+    {
+      "id": "F10-FUT-006",
+      "priority": "P0",
+      "master_plan_page": 164,
+      "source_gate": "G06"
+    },
+    {
+      "id": "F10-FUT-007",
+      "priority": "P0",
+      "master_plan_page": 164,
+      "source_gate": "G06"
+    },
+    {
+      "id": "F10-FUT-008",
+      "priority": "P0",
+      "master_plan_page": 164,
+      "source_gate": "G06"
+    },
+    {
+      "id": "F10-FUT-009",
+      "priority": "P0",
+      "master_plan_page": 164,
+      "source_gate": "G06"
+    },
+    {
+      "id": "F10-FUT-010",
+      "priority": "P1",
+      "master_plan_page": 165,
+      "source_gate": "G06"
+    },
+    {
+      "id": "F10-FUT-011",
+      "priority": "P2",
+      "master_plan_page": 165,
+      "source_gate": "G06"
+    },
+    {
+      "id": "F10-FUT-012",
+      "priority": "P0",
+      "master_plan_page": 165,
+      "source_gate": "G06"
+    },
+    {
+      "id": "F10-FUT-013",
+      "priority": "P1",
+      "master_plan_page": 165,
+      "source_gate": "G06"
+    },
+    {
+      "id": "F10-FUT-014",
+      "priority": "P2",
+      "master_plan_page": 165,
+      "source_gate": "G06"
+    },
+    {
+      "id": "F10-FUT-015",
+      "priority": "P2",
+      "master_plan_page": 165,
+      "source_gate": "G06"
+    },
+    {
+      "id": "F10-FUT-016",
+      "priority": "P1",
+      "master_plan_page": 165,
+      "source_gate": "G06"
+    },
+    {
+      "id": "F10-FUT-017",
+      "priority": "P0",
+      "master_plan_page": 165,
+      "source_gate": "G06"
+    },
+    {
+      "id": "F10-FUT-018",
+      "priority": "P1",
+      "master_plan_page": 165,
+      "source_gate": "G06"
+    },
+    {
+      "id": "F10-FUT-019",
+      "priority": "P1",
+      "master_plan_page": 166,
+      "source_gate": "G06"
+    },
+    {
+      "id": "F10-FUT-020",
+      "priority": "P0",
+      "master_plan_page": 166,
+      "source_gate": "G06"
+    },
+    {
+      "id": "F10-FUT-021",
+      "priority": "P0",
+      "master_plan_page": 166,
+      "source_gate": "G06"
+    },
+    {
+      "id": "F10-FUT-022",
+      "priority": "P0",
+      "master_plan_page": 166,
+      "source_gate": "G06"
+    },
+    {
+      "id": "F10-FUT-023",
+      "priority": "P1",
+      "master_plan_page": 166,
+      "source_gate": "G06"
+    },
+    {
+      "id": "F10-FUT-024",
+      "priority": "P0",
+      "master_plan_page": 166,
+      "source_gate": "G06"
+    },
+    {
+      "id": "V12.1-STO-01",
+      "priority": "SHARED",
+      "master_plan_page": 267,
+      "source_gate": "G08/G10"
+    },
+    {
+      "id": "V12.1-STO-02",
+      "priority": "SHARED",
+      "master_plan_page": 267,
+      "source_gate": "G08/G10"
+    },
+    {
+      "id": "V12.1-STO-03",
+      "priority": "SHARED",
+      "master_plan_page": 267,
+      "source_gate": "G08/G10"
+    },
+    {
+      "id": "V12.1-STO-04",
+      "priority": "SHARED",
+      "master_plan_page": 267,
+      "source_gate": "G08/G10"
+    },
+    {
+      "id": "V12.1-STO-05",
+      "priority": "SHARED",
+      "master_plan_page": 267,
+      "source_gate": "G08/G10"
+    },
+    {
+      "id": "V12.1-STO-06",
+      "priority": "SHARED",
+      "master_plan_page": 267,
+      "source_gate": "G08/G10"
+    },
+    {
+      "id": "V12.1-STO-07",
+      "priority": "SHARED",
+      "master_plan_page": 267,
+      "source_gate": "G08/G10"
+    },
+    {
+      "id": "V12.1-STO-08",
+      "priority": "SHARED",
+      "master_plan_page": 267,
+      "source_gate": "G08/G10"
+    },
+    {
+      "id": "V12.1-STO-09",
+      "priority": "SHARED",
+      "master_plan_page": 267,
+      "source_gate": "G08/G10"
+    },
+    {
+      "id": "V12.1-STO-10",
+      "priority": "SHARED",
+      "master_plan_page": 267,
+      "source_gate": "G08/G10"
+    }
+  ],
+  "additional_acceptance": [
+    {
+      "id": "M09",
+      "title": "Reliable communications/media",
+      "owner": "File 10 + File 12/17/19/CF04",
+      "acceptance": "authorized resume, revocation, low-bandwidth and real notification state",
+      "related_requirement_ids": [
+        "QA-22"
+      ],
+      "status": "not_individually_accepted",
+      "evidence": null
+    },
+    {
+      "id": "M11",
+      "title": "Healthy release and recovery",
+      "owner": "File 01 B + File 24 + File 10",
+      "acceptance": "exact artifact, DB schema/migration, restore and live re-test",
+      "related_requirement_ids": [
+        "QA-24"
+      ],
+      "status": "not_individually_accepted",
+      "evidence": null
+    },
+    {
+      "id": "UX-03",
+      "title": "Video/player accessibility",
+      "owner": "File 10 / 25",
+      "acceptance": "caption keyboard controls, data-saver, visible fallback",
+      "related_requirement_ids": [
+        "AJ-15"
+      ],
+      "status": "not_individually_accepted",
+      "evidence": null
+    },
+    {
+      "id": "UX-12",
+      "title": "Failure states and user control",
+      "owner": "File 10 / 20",
+      "acceptance": "no false success, recoverable errors, controls",
+      "related_requirement_ids": [
+        "AJ-15",
+        "AJ-16"
+      ],
+      "status": "not_individually_accepted",
+      "evidence": null
+    },
+    {
+      "id": "AJ-15",
+      "title": "Recorded video acceptance",
+      "owner": "File 10 / CF04",
+      "acceptance": "real upload-scan-transcode-caption-review-publish with transcript/low-bandwidth",
+      "related_requirement_ids": [
+        "F10-FR-002",
+        "F10-FR-003",
+        "F10-FR-005",
+        "F10-FR-006"
+      ],
+      "status": "not_individually_accepted",
+      "evidence": null
+    },
+    {
+      "id": "AJ-16",
+      "title": "Live broadcast acceptance",
+      "owner": "File 10 / File 17/19",
+      "acceptance": "real schedule-reminder-waiting-room-moderation-recording-consent-replay",
+      "related_requirement_ids": [
+        "F10-FR-010",
+        "F10-FR-014",
+        "F10-FR-015"
+      ],
+      "status": "not_individually_accepted",
+      "evidence": null
+    },
+    {
+      "id": "QA-22",
+      "title": "Media notification and offline/revocation",
+      "owner": "File 10 / File 19/20/CF04",
+      "acceptance": "two devices, interrupted transfer, sign out, revoked rights, cache purge, text fallback",
+      "related_requirement_ids": [
+        "M09"
+      ],
+      "status": "not_individually_accepted",
+      "evidence": null
+    },
+    {
+      "id": "QA-24",
+      "title": "Deployment and recovery evidence",
+      "owner": "File 01 B / File 24 / File 10",
+      "acceptance": "staging before authorized limited live, actual checksum/parity, restore/rollback and re-test",
+      "related_requirement_ids": [
+        "M11"
+      ],
+      "status": "not_individually_accepted",
+      "evidence": null
+    },
+    {
+      "id": "CEN-REL-001",
+      "title": "Zero unresolved defect within active release scope",
+      "owner": "File 01 B / File 24 / File 10",
+      "acceptance": "no production-accepted claims without exact deployed proof",
+      "related_requirement_ids": [
+        "QA-24"
+      ],
+      "status": "not_individually_accepted",
+      "evidence": null
+    },
+    {
+      "id": "CEN-PUB-001",
+      "title": "Governed publication",
+      "owner": "File 21 / File 10",
+      "acceptance": "owner-source, human review, correction and removal handling",
+      "related_requirement_ids": [
+        "F10-FR-006"
+      ],
+      "status": "not_individually_accepted",
+      "evidence": null
+    },
+    {
+      "id": "V12.3-10",
+      "title": "Auditable feature and policy report",
+      "owner": "File 24 / File 10",
+      "acceptance": "individual requirement states + source/staging/live distinction",
+      "related_requirement_ids": [
+        "M09",
+        "M11"
+      ],
+      "status": "not_individually_accepted",
+      "evidence": null
+    }
+  ],
+  "current_environment_evidence": {
+    "github_main_sha": "4b8a3dda140186c01b05d998e729cb1aeeed2cf3",
+    "advanced_source_parent_sha": "d0ed9caafeb0e49d1fbe660cad345145b292d7cc",
+    "deployed_plugin_version": null,
+    "deployed_tree_sha256": null,
+    "live_db_schema_version": null,
+    "migration_state": null,
+    "staging_acceptance": null,
+    "live_verification": null,
+    "provider_acceptance": null
+  },
+  "unresolved_external_gates": [
+    {
+      "issue": 13,
+      "type": "deployed_state",
+      "status": "blocked",
+      "observation": "Jetpack site_disconnected; WPVibe returned HTTP 530 on 2026-11-14"
+    },
+    {
+      "issue": 22,
+      "type": "branch_rules",
+      "status": "open",
+      "observation": "active ruleset requires 8.3.35 and 8.4.26 while current QA workflow uses 8.3.36 and 8.4.27"
+    },
+    {
+      "issue": 26,
+      "type": "file26_tombstone_ack",
+      "status": "open",
+      "observation": "File26 adapter is proposed/dormant; delivery, consumer acknowledgement, CDN purge not accepted"
+    }
+  ],
+  "overall_release_status": "blocked_unverified",
+  "production_claim_allowed": false,
+  "completion_rule": "Release only after independent source, actual staging, exact deployed parity and live re-test evidence. Zero known unresolved defects in active scope."
+}
