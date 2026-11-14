@@ -11,7 +11,7 @@ for literal in \
   'file10-stable-source-gate:' \
   'name: File10 Source Aggregate Gate' \
   'needs: [source-package-qa]' \
-  'if: \${{ always() }}' \
+  'if: ${{ always() }}' \
   "MATRIX_RESULT: \${{ needs['source-package-qa'].result }}" \
   'test "$MATRIX_RESULT" = "success"'; do
     grep -F -- "$literal" "$WF" > /dev/null || {
