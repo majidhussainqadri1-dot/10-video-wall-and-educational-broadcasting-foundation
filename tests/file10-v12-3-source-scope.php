@@ -8,7 +8,8 @@
 declare(strict_types=1);
 
 $root = dirname(__DIR__);
-$overlayFile = $root . '/docs/V12.3-FILE10-SOURCE-ACCEPTANCE-OVERLAY-20261114.json';
+$overlayFile = getenv('FILE10_V123_OVERLAY_FIXTURE') ?: 
+    ($root . '/docs/V12.3-FILE10-SOURCE-ACCEPTANCE-OVERLAY-20261114.json');
 $ledgerFile = $root . '/docs/V12.1-FILE10-64-REQUIREMENT-EVIDENCE.csv';
 $fail = static function (string $message): void {
     fwrite(STDERR, "File10 V12.3 source gate FAIL: {$message}\n");
