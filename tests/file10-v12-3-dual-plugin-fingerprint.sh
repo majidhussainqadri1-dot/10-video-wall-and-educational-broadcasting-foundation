@@ -67,7 +67,7 @@ ACTIVE_FILE10='video-wall/video-wall.php' php "$D/fixture.php" > "$D/legacy-link
 php -r '
 $r=json_decode(file_get_contents($argv[1]),true);
 if(($r["legacy_plugin"]["fingerprint_status"]??"")!=="incomplete"||
-   ($r["legacy_plugin"]["expanded_tree_sha256"]??"not-null")!==null)exit(1);
+   (!array_key_exists("expanded_tree_sha256",$r["legacy_plugin"]) || $r["legacy_plugin"]["expanded_tree_sha256"]!==null))exit(1);
 ' "$D/legacy-link.json"
 rm "$D/plugins/video-wall/symlinked-code.php"
 
@@ -77,7 +77,7 @@ ACTIVE_FILE10='video-wall-and-live-broadcasting/video-wall-and-live-broadcasting
 php -r '
 $r=json_decode(file_get_contents($argv[1]),true);
 if(($r["plugin"]["fingerprint_status"]??"")!=="incomplete_symlink_root"||
-   ($r["plugin"]["expanded_tree_sha256"]??"not-null")!==null)exit(1);
+   (!array_key_exists("expanded_tree_sha256",$r["plugin"]) || $r["plugin"]["expanded_tree_sha256"]!==null))exit(1);
 ' "$D/modern-root-link.json"
 rm "$D/plugins/video-wall-and-live-broadcasting"
 mv "$D/modern-original" "$D/plugins/video-wall-and-live-broadcasting"
@@ -88,6 +88,6 @@ ACTIVE_FILE10='video-wall/video-wall.php' php "$D/fixture.php" > "$D/legacy-root
 php -r '
 $r=json_decode(file_get_contents($argv[1]),true);
 if(($r["legacy_plugin"]["fingerprint_status"]??"")!=="incomplete_symlink_root"||
-   ($r["legacy_plugin"]["expanded_tree_sha256"]??"not-null")!==null)exit(1);
+   (!array_key_exists("expanded_tree_sha256",$r["legacy_plugin"]) || $r["legacy_plugin"]["expanded_tree_sha256"]!==null))exit(1);
 ' "$D/legacy-root-link.json"
 echo 'File10 V12.3 dual-slug deployed snapshot fixture PASS: legacy, modern, both, neither, inner/root symlinks; no live evidence'
