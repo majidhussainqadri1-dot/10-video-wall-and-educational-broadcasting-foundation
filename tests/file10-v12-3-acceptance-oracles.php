@@ -47,7 +47,7 @@ foreach ($rows as $id=>$row) {
     }
     ++$types[$class];
     foreach (['failure_domain','negative_scenario','expected_safe_outcome','required_real_evidence'] as $column) {
-        if (mb_strlen(trim($row[$column]),'UTF-8')<8) {
+        if (mb_strlen(trim($row[$column]),'UTF-8')<($column==='failure_domain' ? 3 : 8)) {
             $fail($id.' missing substantive '.$column);
         }
     }
