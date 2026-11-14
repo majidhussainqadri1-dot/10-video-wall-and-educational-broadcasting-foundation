@@ -136,6 +136,15 @@ resetstate();
 $neutral=VWLB_Future_Intelligence::watermark_payload(['mode'=>'off'],'video', ['id'=>13,'public_id'=>'vid_abc123']);
 assertion($neutral===['mode'=>'off'],'legitimate missing watermark policy preserves original payload');
 
+resetstate();VWLB_Repository::$readFail=true;
+status(VWLB_Future_Intelligence::set_watermark_policy('video','vid_abc123',['mode'=>'both']),503,
+    'canonical video owner DB outage must not look like authorization denial');
+assertion($GLOBALS['wpdb']->inserts===0 && $GLOBALS['wpdb']->updates===0,'no write after video owner SQL outage');
+resetstate();VWLB_Repository::$readFail=true;
+status(VWLB_Future_Intelligence::set_watermark_policy('live','live_abc123',['mode'=>'both']),503,
+    'canonical live owner DB outage must not look like authorization denial');
+assertion($GLOBALS['wpdb']->inserts===0 && $GLOBALS['wpdb']->updates===0,'no write after live owner SQL outage');
+
 resetstate();$GLOBALS['wpdb']->readFail=true;
 status(VWLB_Future_Intelligence::set_watermark_policy('video','vid_abc123',['mode'=>'both']),503,
     'policy read failure must prevent insertion');
