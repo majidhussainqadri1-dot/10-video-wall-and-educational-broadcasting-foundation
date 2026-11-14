@@ -1,0 +1,65 @@
+requirement_id,category,failure_domain,negative_scenario,expected_safe_outcome,required_real_evidence,execution_status
+F10-FR-001,FR,authorization,Non-owner edits another channel,deny without mutation,channel role and audit proof,not_run
+F10-FR-002,FR,ingest,Resumable chunk hash or declared MIME disagrees,quarantine or reject; no public URL,upload session and scanner proof,not_run
+F10-FR-003,FR,processing,Transcoder unavailable during job retry,no media-ready or published false success,worker retry/dead letter + asset state,not_run
+F10-FR-004,FR,metadata,Video lacks rights or patient consent metadata,reject publish and preserve draft,metadata validation result,not_run
+F10-FR-005,FR,captions,Unreviewed caption timing is offered as verified,withhold approved caption track,track review/accessibility test,not_run
+F10-FR-006,FR,publication,Consent withdrawn before scheduled publish,block scheduled publication,current DB rights and publish state,not_run
+F10-FR-007,FR,playback,Previously valid private playback token is revoked,deny reuse without private cache,player/token and cache check,not_run
+F10-FR-008,FR,history,Signed-out viewer requests previous watch position,do not disclose or resume personal history,two-account history test,not_run
+F10-FR-009,FR,playlist,Duplicate membership or stale version edit,reject conflict and preserve order,version/unique-order SQL test,not_run
+F10-FR-010,FR,live_schedule,DST/timezone conversion changes published schedule,preserve canonical UTC and visible local timezone,DST/browser schedule evidence,not_run
+F10-FR-011,FR,broadcaster_secret,Expired or replayed stream credential,deny broadcasting and audit,credential lifecycle provider test,not_run
+F10-FR-012,FR,live_state,Out-of-order provider ended/live webhooks,do not regress state or falsely end/start,provider event sequence and CAS test,not_run
+F10-FR-013,FR,viewer_access,Entitlement revoked during active viewing,recheck authorization on renewal,grant expiry and revoked session test,not_run
+F10-FR-014,FR,live_moderation,Emergency stop and chat abuse under load,end stream safely and record moderation,provider kill confirmation and audit,not_run
+F10-FR-015,FR,recording,Recording consent revoked before finalization,block unauthorized recording/replay,segment consent and replay lineage,not_run
+F10-FR-016,FR,provider,External provider returns exception or invalid webhook,degraded/reconcile state; no fake success,real provider fault/replay fixture,not_run
+F10-FR-017,FR,reels,File11 requests 59-second or unauthorized derivative,deny with current File10 server duration/rights,File11 cross-owner contract,not_run
+F10-FR-018,FR,discovery,Duplicate like/view events or stale visibility,dedupe; do not publish private analytics,File19/21/26 consumer checks,not_run
+F10-FR-019,FR,takedown,Removed video remains in CDN or search preview,fail closed and keep purge pending until verified,takedown + purge acknowledgements,not_run
+F10-NFR-001,NFR,idor,User requests foreign video/field by guessed identifier,deny without exposing existence or fields,multi-role object-authorization test,not_run
+F10-NFR-002,NFR,privacy,Erasure/export encounters legal-hold or storage read failure,fail closed; do not claim completed erasure,privacy evidence + legal-hold scope,not_run
+F10-NFR-003,NFR,reliability,Queue worker crashes after external side effect,retry idempotently and reconcile ambiguous result,queue/DB replay/dead-letter test,not_run
+F10-NFR-004,NFR,performance,Large catalog exceeds declared pagination/query limit,bound scans and preserve correct cursor,p75/p95 load and query plan,not_run
+F10-NFR-005,NFR,accessibility,Keyboard-only RTL user changes captions and quality,controls remain operable and focus-safe,screen-reader/keyboard 320px test,not_run
+F10-NFR-006,NFR,observability,Provider exception contains token or patient metadata,redact secrets and preserve safe correlation,log redaction test,not_run
+F10-NFR-007,NFR,migration,Schema upgrade interrupted between table and option commit,no silent data loss; protected rollback,fresh/upgrade/restore SQL snapshots,not_run
+F10-NFR-008,NFR,operability,Operator repair runs during unsafe or unknown DB state,refuse unsafe mutation; show actionable state,"safe-mode, queue, repair runbook",not_run
+F10-NFR-009,NFR,compatibility,Actual WordPress/PHP below versioned requirement,block incompatible load or give truthful diagnosis,staging PHP/WP version and plugin metadata,not_run
+F10-NFR-010,NFR,localization,Urdu/Arabic bidi and timezone switch mid-session,"preserve value, ordering and text semantics",i18n/RTL/device acceptance,not_run
+F10-CEN-01,CEN,ownership,File11/File17/File26 attempts to mutate File10 canonical video,refuse duplicate ownership; consume versioned contract,registry + cross-file write audit,not_run
+F10-FUT-001,FUT,scene,Concurrent scene-switch operators race,one atomic versioned program scene; conflict denied,two-operator studio test,not_run
+F10-FUT-002,FUT,guest,Expired guest/co-host invite accepted twice,deny/revoke scoped delegation,File00 identity + invite audit,not_run
+F10-FUT-003,FUT,screen,Screen/slides source broadcast without browser consent,deny recording or unsupported source,capture consent and active policy,not_run
+F10-FUT-004,FUT,dvr,Provider reports no DVR support,disable DVR rather than fictitious rewind,provider capability and playback test,not_run
+F10-FUT-005,FUT,latency,Ultra-low-latency mode unavailable,show truthful degraded/fallback mode,provider latency contract,not_run
+F10-FUT-006,FUT,ingest_protocol,SRT/WebRTC adapter missing actual support,"reject unsupported protocol, keep RTMP fallback",provider protocol rehearsal,not_run
+F10-FUT-007,FUT,simulcast,External destination fails during multi-target start,"mark that target failed/unverified, never all succeeded",provider target retry and redaction,not_run
+F10-FUT-008,FUT,redundancy,Backup provider equals primary or fails,deny false redundancy and reconcile,independent provider stream proof,not_run
+F10-FUT-009,FUT,telemetry,Non-operator retrieves jitter/bitrate session metadata,deny or redact and limit retention,role/retention performance sample,not_run
+F10-FUT-010,FUT,encoding,Processor chooses high bitrate for weak link,always provide deterministic low-bandwidth fallback,real renditions + data saver,not_run
+F10-FUT-011,FUT,codec,AV1/HDR unavailable on device/provider,H264/low-bandwidth graceful fallback,codec/device compatibility,not_run
+F10-FUT-012,FUT,translation,AI live translation unreviewed published as exact science,candidate-only until authorized review,language/provenance review workflow,not_run
+F10-FUT-013,FUT,dubbing,Generated dubbing overwrites original audio,preserve original and require verified track approval,track rights/version,not_run
+F10-FUT-014,FUT,description,Audio description overwrites canonical audio,only optional reviewed alternate track,screen-reader/audio replay,not_run
+F10-FUT-015,FUT,sign,Companion sign track rights or PiP unavailable,"disable safely, do not misrepresent coverage",sign-language track review,not_run
+F10-FUT-016,FUT,ai_chapters,AI-generated key moments auto-publish,retain unpublished candidate until approval,human review and edit audit,not_run
+F10-FUT-017,FUT,citations,Source ownership withdrawn for timestamp reference,invalidate affected citation projection,File06/12 source-owner recheck,not_run
+F10-FUT-018,FUT,overlay,Educational overlay presents autonomous medical prescription,block unreviewed clinical instructions,medical-content moderation test,not_run
+F10-FUT-019,FUT,poll,Poll answer used as clinical diagnostic score,do not create medical decision or expose voter identity,authenticated educational poll schema,not_run
+F10-FUT-020,FUT,transcript_search,Private transcript searched by public guest,no result; refuse access before snippets,search-in-video authorization,not_run
+F10-FUT-021,FUT,correction,Stale old transcript/snippet after correction,show appended correction; purge stale previews,immutable history and search/CDN purge,not_run
+F10-FUT-022,FUT,consent,Patient-case consent expires with File26 offline,deny immediate access; durable tombstone pending,owner/consumer reconciliation and signed grants,not_run
+F10-FUT-023,FUT,watermark,Watermark leaks raw user ID or claims copy-proof,use pseudonymous bounded evidence only,session watermark privacy test,not_run
+F10-FUT-024,FUT,knowledge,Video emits direct write to File05/06/11/12 data,send owner-safe candidate handoff only,cross-file versioned contract,not_run
+V12.1-STO-01,STO,upload_intent,Unauthenticated upload intent for private object,deny token/ quota and purpose mismatch,CF04 actor/object/consent gate,not_run
+V12.1-STO-02,STO,quarantine,Interrupted chunk upload attempts public delivery,"preserve private quarantine, clean expired chunks",CF04 resumable state trace,not_run
+V12.1-STO-03,STO,scan,Malware scanner unavailable or archive bomb detected,fail closed; no ready derivative,CF04 scanner/isolation logs,not_run
+V12.1-STO-04,STO,sandbox,Converter leaks source EXIF/raw private file to public cache,isolate worker and sanitize metadata,CF04 isolated worker inspection,not_run
+V12.1-STO-05,STO,object,Stored object lacks cryptographic checksum/key version,deny READY transition until integrity known,CF04 provider manifest/integrity,not_run
+V12.1-STO-06,STO,state,Client claims complete before scan,do not mark published/ready,CF04 owner state transition audit,not_run
+V12.1-STO-07,STO,delivery,Signed download grant revoked after issuing,deny reuse at request time,CF04 short-lived token and session recheck,not_run
+V12.1-STO-08,STO,integrity,Corrupt object appears in CDN or cost monitor,quarantine and signal bounded failure,CF04 periodic checksum and alert,not_run
+V12.1-STO-09,STO,purge,Rights withdrawal while CDN and File26 are offline,pending purge with retry; no Completed claim,"CF04 tombstone, ACK, backup-expiry ledger",not_run
+V12.1-STO-10,STO,restore,Backup restore resurrects deleted/forbidden media,block production delivery pending tombstone/consent reconciliation,CF04 restore plus source version proof,not_run

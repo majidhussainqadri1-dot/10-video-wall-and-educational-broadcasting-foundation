@@ -1,0 +1,89 @@
+{
+  "kind": "File10V12.3CrossRepositoryBoundaries.v1",
+  "scope": "GitHub source-only audit",
+  "date": "2026-11-14",
+  "primary_repo": "majidhussainqadri1-dot/10-video-wall-and-educational-broadcasting-foundation",
+  "master_plan": "Sabri-Website-Master-Plan-V12.3.docx",
+  "authoritative_sha256": "c061d9c9964d2434b040b814120d446e9004bd3b2f853eb355df1ccc4648e1cf",
+  "records": [
+    {
+      "file": "File 06",
+      "repo": "06-homeopathy-encyclopedia-foundation",
+      "main_sha": "c6f44e923f2a6f2ed82d967d18422624169b2770",
+      "main_state": "baseline README only (repo truth)",
+      "candidate_pr": 17,
+      "candidate_sha": "136b067033d32962aab0c386e08a206c83f64a24",
+      "candidate_state": "draft; File06 V12.3 File26 connector; source only",
+      "file10_boundary": "timestamped source citation, validity, consent and current owner version",
+      "acceptance": "Cross-file read current File06 provider/owner rights, consent withdrawal, source deletion, preview purge, staging test",
+      "live": "unverified"
+    },
+    {
+      "file": "File 11",
+      "repo": "11-reels-and-short-video-discovery-foundation",
+      "main_sha": "c2df8e72bad76dc1a7fb83cbe039541f7aa1fd8b",
+      "main_state": "baseline README only (repo truth)",
+      "candidate_pr": 48,
+      "candidate_sha": "b966e015fae39d450e5880c143917017670397c6",
+      "candidate_state": "draft; 1.2.0-rc21 source with File10 owner integration; source only",
+      "file10_boundary": "Reels refer to authenticated canonical File10 media, 60–600 sec verified at owner; no duplicate media truth",
+      "acceptance": "Real File10→File11 rights, duration, privacy, transcode/upload outage, Reel restore/revoke tests",
+      "live": "unverified"
+    },
+    {
+      "file": "File 26",
+      "repo": "26-search-discovery-recommendations-knowledge-graph-classification",
+      "main_sha": "1b064c6ea9f81195611ed001d5457e8ced65460a",
+      "main_state": "v1.3.0 source plugin; main is not deployed truth",
+      "candidate_pr": 39,
+      "candidate_sha": "426f55044f3b765544596872d105532754665ef6",
+      "candidate_state": "draft V12.3 source review; not live",
+      "file10_boundary": "File10 must provide owner-versioned public projection and tombstone; File26 owns derivative index and query/click authorization",
+      "acceptance": "Durable owner tombstone, consumer ACK, replay/restore, version monotonicity, CDN/index purge receipts, staging & Founder activation",
+      "live": "unverified"
+    },
+    {
+      "file": "CF 04",
+      "repo": "cf-04-central-media-processing-secure-delivery",
+      "main_sha": "0294442f0fddd1ca5440d9d5ac992ba80aced972",
+      "main_state": "planning C4-A, runtime coding explicitly not authorized in this main README",
+      "candidate_pr": 5,
+      "candidate_sha": "af8098374de9aa8f7b0910f5c9cf24121a1b491f",
+      "candidate_state": "draft 1.3.0-rc.1 source runtime, default disabled/fail-closed; not staged/live",
+      "file10_boundary": "CF04 owns shared binary lifecycle, storage, delivery; File10 domain videos/live owner",
+      "acceptance": "Founder-approved CF04 activation/cutover, real quarantine/sandbox/scanner/CDN/grants/delete/restore, no duplicate File10 owner",
+      "live": "unverified"
+    }
+  ],
+  "read_rules": [
+    "Each repo main is source truth only, not necessarily its most advanced draft or deployed runtime",
+    "A draft implementation may not supersede another repo's domain ownership, authorization or approved deployment",
+    "Do not enable any File26 or CF04 adapter without owner consent, migration safety, shadow reconciliation, staging and Founder approval",
+    "All four companions require independent exact deployed WordPress/DB/schema/migration freeze before any cross-file live defect attribution",
+    "File10 may keep its own existing media functionality until CF04 explicitly approved safe shadow migration and cutover; do not imply CF04 already operational"
+  ],
+  "known_missing_evidence": [
+    {
+      "key": "FILE10-TO-FILE06-REAL-INTEGRATION",
+      "status": "unverified"
+    },
+    {
+      "key": "FILE10-TO-FILE11-REAL-INTEGRATION",
+      "status": "unverified"
+    },
+    {
+      "key": "FILE10-TO-FILE26-TOMBSTONE-ACK-AND-PURGE",
+      "status": "blocked_issue26"
+    },
+    {
+      "key": "FILE10-TO-CF04-APPROVED-CUTOVER",
+      "status": "unverified"
+    },
+    {
+      "key": "EXACT-LIVE-VERSION-PARITY",
+      "status": "blocked_issue13"
+    }
+  ],
+  "release_approved": false,
+  "site_modified": false
+}

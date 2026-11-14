@@ -39,3 +39,21 @@
 - Live verification: not performed.
 
 GitHub, staging and live are distinct realities. Repository source/package/CI evidence does not identify the code currently deployed to the website. Exact deployed code, live DB/schema and migration state remain unverified until separately frozen from the environment.
+
+
+## V12.3 source overlay (2026-11-14; unmerged Draft PR #32)
+
+The authoritative founder-supplied Word Master Plan V12.3 has been reopened and pinned by original-document SHA256. This **does not replace** the historical `1.2.25-rc1` candidate identity or imply a deployed version bump. Current additional source artifacts:
+
+- All 64 existing IDs and full original Word paragraph digests; 11 additive central UX/QA/release clauses.
+- 54 candidate code/test source pointers plus 10 separately owned CF04 storage gates; 64 distinct **unexecuted** adverse acceptance oracles.
+- Read-only actual-state dual-slug collector for modern `video-wall-and-live-broadcasting` and legacy `video-wall`; missing/symlinked/ambiguous states do not become false hashes or parity claims.
+- Machine-readable acceptance counts and ruleset drift audit; source-only synthetic tests and audit review Pass A/Pass B.
+
+**Source status:** GitHub Draft PR #32; exact-head CI must be checked for the final commit before any further disposition.
+
+**Acceptance status:** individual 0/64; Staging not accepted; Live not verified; Provider/CF04/other-file consumers not accepted. Jetpack remains disconnected in fresh read-only check. Github ruleset issue #22 is unresolved, and File26 owner tombstone/ACK/purge issue #26 remains open. Source fixes to the audit tools do not imply any runtime remediation.
+
+**Live Final Report fields:** Repository HEAD: `4b8a3dda140186c01b05d998e729cb1aeeed2cf3` (legacy main); Deployed Version: UNVERIFIED; DB Version: UNVERIFIED; Migration State: UNVERIFIED; Live Verification: NOT PERFORMED. Independent final File24 reviews/Founder approval are still required.
+
+**Exact deployed code ابھی unverified ہے؛ repository-based diagnosis provisional ہے۔**

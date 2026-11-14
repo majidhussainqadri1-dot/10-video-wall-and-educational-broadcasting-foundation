@@ -1,0 +1,42 @@
+{
+  "kind": "File10V12.3GithubRulesetSnapshot.v1",
+  "date": "2026-11-14",
+  "repository": "majidhussainqadri1-dot/10-video-wall-and-educational-broadcasting-foundation",
+  "snapshot_only": true,
+  "source_live_parity": false,
+  "ruleset_id": 25451533,
+  "ruleset_name": "File10-Release-QA-Protection",
+  "enforcement": "active",
+  "ref_conditions": {
+    "exclude": [],
+    "include": [
+      "~DEFAULT_BRANCH",
+      "refs/heads/fix/file10-r270-r309-ingest-worker-postupdate-20261019"
+    ]
+  },
+  "required_status_checks": [
+    {
+      "context": "source-package-qa (8.3.35)",
+      "integration_id": 15368
+    },
+    {
+      "context": "source-package-qa (8.4.26)",
+      "integration_id": 15368
+    }
+  ],
+  "exact_sha_jobs": {
+    "sha": "e859e5d197de8ab02cb4b728877dc8c8bddb205d",
+    "workflow_run_id": 43615227981,
+    "check_contexts": [
+      "source-package-qa (8.3.36)",
+      "source-package-qa (8.4.27)"
+    ],
+    "conclusions": [
+      "success",
+      "success"
+    ]
+  },
+  "candidate_branch": "codex/file10-v12-3-evidence-first-20261114",
+  "governance_acceptance": "unverified_blocked",
+  "admin_required": "Change approved release-branch coverage and required check contexts; verify effective protection on same exact branch SHA. Do not weaken other branch protections or treat CI as live."
+}

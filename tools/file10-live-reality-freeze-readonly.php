@@ -73,7 +73,11 @@ if ( is_readable( $entry ) && function_exists( 'get_file_data' ) ) {
 
 // A deterministic deployed-file-tree fingerprint is NOT an installed ZIP SHA.
 // Never follow symlinks or output file contents; cap files/bytes scanned.
-if ( is_dir( $root ) && is_readable( $root ) ) {
+if ( is_link( $root ) ) {
+    // Even if the expanded files are readable, the deployment root itself must
+    // not silently redirect the collector to a different release artifact.
+    $report['plugin']['fingerprint_status'] = 'incomplete_symlink_root';
+} elseif ( is_dir( $root ) && is_readable( $root ) ) {
     $files = array();
     $bytes_scanned = 0;
     $limit_files = 1000;
@@ -125,6 +129,107 @@ if ( is_dir( $root ) && is_readable( $root ) ) {
         $report['plugin']['fingerprint_status'] = 'filesystem_read_error';
     }
 }
+
+
+// V12.3: File 10's legacy main branch uses video-wall/video-wall.php.
+// Its identity is distinct from the modern candidate above. Never describe an
+// active legacy install as "File 10 not installed" merely because a new slug is
+// absent. Every checksum is for that candidate's expanded tree, NOT an ZIP.
+$legacy_slug = 'video-wall';
+$legacy_relative = $legacy_slug . '/video-wall.php';
+$legacy_root = WP_PLUGIN_DIR . '/' . $legacy_slug;
+$legacy_entry = $legacy_root . '/video-wall.php';
+$report['legacy_plugin'] = array(
+    'slug' => $legacy_slug,
+    'entry_exists' => is_readable( $legacy_entry ),
+    'active' => false,
+    'network_active' => false,
+    'header_version' => 'unverified',
+    'expanded_tree_sha256' => null,
+    'expanded_tree_file_count' => 0,
+    'fingerprint_status' => 'not_collected',
+    'file_fingerprints' => array(),
+);
+if ( function_exists( 'is_plugin_active' ) ) {
+    $report['legacy_plugin']['active'] = (bool) is_plugin_active( $legacy_relative );
+}
+if ( function_exists( 'is_plugin_active_for_network' ) ) {
+    $report['legacy_plugin']['network_active'] = (bool) is_plugin_active_for_network( $legacy_relative );
+}
+if ( is_readable( $legacy_entry ) && function_exists( 'get_file_data' ) ) {
+    $header = get_file_data( $legacy_entry, array( 'Version' => 'Version' ), 'plugin' );
+    $report['legacy_plugin']['header_version'] =
+        substr( (string) ( $header['Version'] ?? '' ), 0, 80 );
+}
+if ( is_link( $legacy_root ) ) {
+    $report['legacy_plugin']['fingerprint_status'] = 'incomplete_symlink_root';
+} elseif ( is_dir( $legacy_root ) && is_readable( $legacy_root ) ) {
+    // The legacy artifact uses the same no-follow, bounded, reproducible policy.
+    $legacy_files = array();
+    $legacy_bytes = 0;
+    $legacy_incomplete = false;
+    $legacy_max_files = 1000;
+    $legacy_max_bytes = 50 * 1024 * 1024;
+    try {
+        $legacy_root_real = realpath( $legacy_root );
+        $legacy_iterator = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator( $legacy_root, FilesystemIterator::SKIP_DOTS )
+        );
+        foreach ( $legacy_iterator as $item ) {
+            if ( $item->isLink() ) {
+                $legacy_incomplete = true;
+                break;
+            }
+            if ( ! $item->isFile() ) {
+                continue;
+            }
+            $absolute = $item->getPathname();
+            $real = realpath( $absolute );
+            if ( false === $legacy_root_real || false === $real ||
+                ! str_starts_with( $real, rtrim( $legacy_root_real, DIRECTORY_SEPARATOR ) . DIRECTORY_SEPARATOR ) ) {
+                $legacy_incomplete = true;
+                break;
+            }
+            $relative = substr( $absolute, strlen( $legacy_root ) + 1 );
+            $bytes = (int) $item->getSize();
+            if ( count( $legacy_files ) >= $legacy_max_files || $bytes < 0 ||
+                $legacy_bytes + $bytes > $legacy_max_bytes ) {
+                $legacy_incomplete = true;
+                break;
+            }
+            $file_sha = hash_file( 'sha256', $absolute );
+            if ( false === $file_sha ) {
+                $legacy_incomplete = true;
+                break;
+            }
+            $legacy_files[$relative] = array( 'bytes' => $bytes, 'sha256' => $file_sha );
+            $legacy_bytes += $bytes;
+        }
+        ksort( $legacy_files, SORT_STRING );
+        $manifest = array();
+        foreach ( $legacy_files as $name => $entry ) {
+            $manifest[] = $name . '|' . $entry['bytes'] . '|' . $entry['sha256'];
+        }
+        $report['legacy_plugin']['fingerprint_status'] = $legacy_incomplete ? 'incomplete' : 'complete';
+        $report['legacy_plugin']['expanded_tree_sha256'] = $legacy_incomplete
+            ? null : hash( 'sha256', implode( "\n", $manifest ) );
+        $report['legacy_plugin']['expanded_tree_file_count'] = count( $legacy_files );
+        $report['legacy_plugin']['bytes_fingerprinted'] = $legacy_bytes;
+        $report['legacy_plugin']['file_fingerprints'] = $legacy_files;
+    } catch ( Throwable $e ) {
+        $report['legacy_plugin']['fingerprint_status'] = 'filesystem_read_error';
+    }
+}
+if ( function_exists( 'is_plugin_active' ) ) {
+    $modern_is_active = $report['plugin']['active'] || $report['plugin']['network_active'];
+    $legacy_is_active = $report['legacy_plugin']['active'] || $report['legacy_plugin']['network_active'];
+    $report['file10_active_plugin_identity'] = $modern_is_active && $legacy_is_active
+        ? 'ambiguous_both_active' : ( $modern_is_active ? 'modern' : ( $legacy_is_active ? 'legacy' : 'none_active' ) );
+} else {
+    $report['file10_active_plugin_identity'] = 'activity_unverified';
+}
+// Neither the collector nor source metadata may promote any candidate to
+// deployed parity: only a separately checked package/tree comparison can.
 
 // Only nonsecret schema/version/flag options. Never reveal migration-lock tokens,
 // serialized option payloads, provider credentials, signed URLs or identities.

@@ -73,3 +73,18 @@ jobs:
           path: |
             packages/video-wall-and-live-broadcasting-1.2.25-rc1.zip
             packages/video-wall-and-live-broadcasting-1.2.25-rc1.zip.sha256
+
+  # Stable branch-protection target: independent of patch-level PHP matrix labels.
+  # Must depend on the full matrix. Source CI is not Staging/Live acceptance.
+  file10-stable-source-gate:
+    name: File10 Source Aggregate Gate
+    needs: [source-package-qa]
+    if: ${{ always() }}
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Require the full PHP source and packaging matrix to succeed
+        env:
+          MATRIX_RESULT: ${{ needs['source-package-qa'].result }}
+        run: |
+          test "$MATRIX_RESULT" = "success"
+          echo "File10 exact-head SOURCE matrix passed; Staging/Live gates remain separate"
