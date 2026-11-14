@@ -49,3 +49,33 @@ R111 completed its read-only public REST read-integrity review from the exact R1
 
 ### R112 correction candidate
 R112 completed its full read-only authenticated creator/operational read-integrity review from the exact R111 Green baseline `4194d1daf1f6b7ef835f11c0448211c6714c464d`. Four findings were frozen in `docs/FILE-10-R112-FROZEN-FINDINGS-2026-09-08.md`. The `1.2.25-rc1` correction fails closed on Creator Studio, observability, podcast series resolution and privileged admin operational reads. Exact-head QA must be Green before R113 begins.
+
+
+## V12.3 — source-only acceptance gate (2026-11-14)
+
+The user-supplied **Sabri Website Master Plan V12.3** is now a separately pinned
+source-of-requirements baseline; it does not retroactively make V12.1 CI or the
+advanced Draft candidate a deployed release. See:
+
+- `docs/V12.3-FILE10-SOURCE-ACCEPTANCE-OVERLAY-20261114.json`: exact original
+  64 File10/storage identifiers, source page anchors, 11 additive central
+  UX/QA/release clauses, and explicit unverified environment state.
+- `docs/V12.3-FILE10-CODE-AND-ACCEPTANCE-GAPS.csv`: 54 candidate
+  source/test pointers plus 10 independently owned CF04 storage gates.
+- `docs/V12.3-FILE10-EXECUTION-RELEASE-GATES-20261114.md`: dependency-ordered
+  completion plan, no-go conditions, source/staging/live proof requirements.
+- `reviews/F10-V12-3-SOURCE-EVIDENCE-AUDIT-20261114.md`: scoped source audit
+  with known blockers and exact correction counts.
+- `tests/file10-v12-3-source-scope.php`,
+  `tests/file10-v12-3-code-gap-matrix.php`, and
+  `tests/file10-v12-3-negative.sh`: automated provenance, scope,
+  non-acceptance and negative controls, invoked by `tests/run-all.sh`.
+
+**Status:** source-level control improvement only. No File10 application runtime
+or live WordPress code was changed by this new branch. The historic 64-row
+ledger remains **0 individually accepted**, with all Staging/Live gates
+unverified. Current external blockers are Issues #13, #22 and #26. Source
+checks and package CI do not establish Staging-Accepted, Live-Deployed or
+Operational. The File26 connector remains proposed/dormant. Production
+acceptance still requires exact deployed artifact/DB/migration parity,
+provider/consumer acceptance, restore/rollback and real live re-test.
