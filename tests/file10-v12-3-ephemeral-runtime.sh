@@ -74,5 +74,24 @@ echo "F10-EPHEMERAL SOURCE PARITY PASS: file entry SHA256 $local_sha"
 docker exec -e QA_F10_ADMIN_PASSWORD="$ADMIN_PWD" "$WP" \
   php /tmp/file10-v123-ephemeral.php install
 docker exec "$WP" php /tmp/file10-v123-ephemeral.php activate
-docker exec "$WP" php /tmp/file10-v123-ephemeral.php verify
+# Capture repeated WordPress loads to distinguish a merely present table from
+# clean idempotent schema upgrade behavior. A WordPress DB warning is a QA failure
+# even if the application mistakenly returns a 200/green version option.
+for pass in 1 2;do
+  QA_LOG="$(mktemp)"
+  if ! docker exec "$WP" php /tmp/file10-v123-ephemeral.php verify > "$QA_LOG" 2>&1;then
+    grep -E 'F10-EPHEMERAL|WordPress database error|PHP Fatal' "$QA_LOG" | head -n 12 >&2 || true
+    rm -f "$QA_LOG"
+    echo "F10-EPHEMERAL FAIL: WordPress verify pass $pass did not complete" >&2
+    exit 1
+  fi
+  if grep -F 'WordPress database error' "$QA_LOG" >/dev/null;then
+    grep -F 'WordPress database error' "$QA_LOG" | head -n 3 | cut -c 1-500 >&2
+    rm -f "$QA_LOG"
+    echo "F10-EPHEMERAL FAIL: SQL warning detected during repeat WordPress pass $pass" >&2
+    exit 1
+  fi
+  cat "$QA_LOG"
+  rm -f "$QA_LOG"
+done
 echo 'F10-EPHEMERAL QA COMPLETE: real isolated WP/MySQL integration; NEVER a deployed/Staging/Live claim'
