@@ -116,6 +116,36 @@ $must(is_array($indexed)&&($indexed['object_id']??'')==='vid_ephem1'
     && ($indexed['visibility']??'')==='public',
     'canonical public video was not projected by proposed File26 owner callback');
 
+// Disposable MySQL source outage: all three File26 boundaries must fail
+// closed. Schema is restored in finally; suppressed deliberate SQL failure
+// must never become a fabricated 404, accepted click or tombstone proposal.
+$offline=$videos.'_test_held';
+$oldSuppress=$wpdb->suppress_errors(true);
+$renamed=$wpdb->query("RENAME TABLE $videos TO $offline");
+$must(false!==$renamed,'could not isolate synthetic canonical video table for owner-outage fixture');
+try{
+    VWLB_Repository::reset_read_failure();
+    $missingSource=VWLB_File26_Connector::fetch_object('video','vid_ephem1');
+    $must(is_wp_error($missingSource),'real owner SQL outage must be typed, not a missing video/null');
+    VWLB_Repository::reset_read_failure();
+    $must(VWLB_File26_Connector::can_view($indexed)===false,
+        'cached public File26 document must be denied during real owner DB outage');
+    VWLB_Repository::reset_read_failure();
+    $proposed=VWLB_File26_Connector::propose_outbox_reconciliation(
+        array('public_id'=>'evt_ephemeral1','event_name'=>'VideoPublished.v1'),
+        array('public_id'=>'vid_ephem1')
+    );
+    $must(is_wp_error($proposed),'real owner SQL outage must not fabricate an upsert or tombstone');
+}finally{
+    $restored=$wpdb->query("RENAME TABLE $offline TO $videos");
+    $wpdb->suppress_errors($oldSuppress);
+    VWLB_Repository::reset_read_failure();
+    $must(false!==$restored,'canonical synthetic table was not restored after outage fixture');
+}
+$must(is_array(VWLB_File26_Connector::fetch_object('video','vid_ephem1')),
+    'restored owner table must recover its valid public document');
+
+
 // The current authoritative source must suppress private/restricted search
 // immediately on read, even before File26/CDN eventual downstream cleanup.
 $changed=$wpdb->update($videos,array('status'=>'restricted'),array('public_id'=>'vid_ephem1'));
