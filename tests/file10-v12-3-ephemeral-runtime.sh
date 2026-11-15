@@ -65,6 +65,7 @@ if [[ "$ready" != true ]];then
   exit 1
 fi
 docker cp "$ROOT/tests/file10-v12-3-ephemeral-wordpress.php" "$WP:/tmp/file10-v123-ephemeral.php"
+docker cp "$ROOT/tests/file10-v12-3-ephemeral-domain.php" "$WP:/tmp/file10-v123-domain.php"
 
 # Verify exact GitHub source mounting before touching the isolated database.
 local_sha="$(sha256sum "$ENTRY" | awk '{print $1}')"
@@ -99,4 +100,21 @@ for pass in 1 2;do
   cat "$QA_LOG"
   rm -f "$QA_LOG"
 done
+# Separate real-domain pass exercises synthetic review, transcript search,
+# consent-safe restriction, poll persistence and invalid-option nonmutation.
+DOMAIN_LOG="$(mktemp)"
+if ! docker exec "$WP" php /tmp/file10-v123-domain.php > "$DOMAIN_LOG" 2>&1;then
+  grep -E 'F10-EPHEMERAL|WordPress database error|PHP Fatal' "$DOMAIN_LOG" | head -n 12 >&2 || true
+  rm -f "$DOMAIN_LOG"
+  echo 'F10-EPHEMERAL FAIL: real synthetic domain journey failed' >&2
+  exit 1
+fi
+if grep -F 'WordPress database error' "$DOMAIN_LOG" >/dev/null;then
+  grep -F 'WordPress database error' "$DOMAIN_LOG" | head -n 3 | cut -c 1-500 >&2
+  rm -f "$DOMAIN_LOG"
+  echo 'F10-EPHEMERAL FAIL: SQL warning during domain journey' >&2
+  exit 1
+fi
+cat "$DOMAIN_LOG"
+rm -f "$DOMAIN_LOG"
 echo 'F10-EPHEMERAL QA COMPLETE: real isolated WP/MySQL integration; NEVER a deployed/Staging/Live claim'
