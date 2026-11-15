@@ -2,7 +2,12 @@
 # Fully disposable, isolated WordPress/MariaDB test; not Staging/Live.
 set -Eeuo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-RUN_TAG="f10ci-$(date +%s)-$$"
+PHP_VARIANT="$(printenv F10_EPHEMERAL_PHP || printf '8.3')"
+case "$PHP_VARIANT" in
+  8.3|8.4) ;;
+  *) echo 'F10-EPHEMERAL FAIL: unsupported PHP variant' >&2;exit 1 ;;
+esac
+RUN_TAG="f10ci-$(date +%s)-$"
 NET="f10-ci-net-$RUN_TAG"
 DB="f10-ci-db-$RUN_TAG"
 WP="f10-ci-wp-$RUN_TAG"
@@ -46,7 +51,7 @@ docker run -d --name "$WP" --network "$NET" \
   -e WORDPRESS_DB_PASSWORD="$DB_PWD" \
   -e WORDPRESS_DB_NAME=wordpress \
   -v "$PLUGIN:/var/www/html/wp-content/plugins/video-wall-and-live-broadcasting:ro" \
-  wordpress:7.1.4-php8.3-apache >/dev/null
+  wordpress:7.1.4-php$PHP_VARIANT-apache >/dev/null
 ready=false
 for attempt in $(seq 1 75);do
   if docker exec "$WP" sh -c 'test -s /var/www/html/wp-config.php && test -s /var/www/html/wp-load.php' >/dev/null 2>&1;then
