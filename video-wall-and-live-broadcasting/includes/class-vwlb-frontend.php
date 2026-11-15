@@ -29,7 +29,29 @@ final class VWLB_Frontend {
 	public function video(){
 		$this->enqueue();$id=get_query_var('vwlb_video_id');if(!$id&&isset($_GET['video']))$id=sanitize_text_field(wp_unslash($_GET['video']));if($id&&!VWLB_Helpers::is_public_id((string)$id))$id='';
 		$payload=$id?VWLB_Videos::playback($id):null;if(is_wp_error($payload)||!$payload)return $this->state('restricted',__('Video unavailable',VWLB_TEXT_DOMAIN),__('The video is unavailable or you do not have access.',VWLB_TEXT_DOMAIN));
-		$v=$payload['video'];$p=$payload['playback'];$raw=VWLB_Repository::find('videos',$v['public_id']);$chapters=$raw?VWLB_Extensions::chapters('video',$raw['id']):array();if(is_wp_error($chapters))return $this->state('restricted',__('Video service unavailable',VWLB_TEXT_DOMAIN),__('Video chapter state could not be read safely. Please retry later.',VWLB_TEXT_DOMAIN),503);$low='';if($raw&&!empty($raw['asset_id'])&&'iframe'!==($p['type']??'')){$asset=VWLB_Repository::find('media_assets',$raw['asset_id']);if($asset&&'ready'===$asset['status']&&'passed'===$asset['scan_status']){$derivatives=VWLB_Helpers::json($asset['derivatives_json']??'{}');$candidate=$derivatives['mp4_low']??$derivatives['low_bandwidth']??'';if(is_array($candidate))$candidate=$candidate['url']??'';$low=esc_url_raw((string)$candidate,array('https'));}}
+		$v=$payload['video'];
+		$p=$payload['playback'];
+		$raw=VWLB_Repository::find('videos',$v['public_id']);
+		if(VWLB_Repository::read_failed()||!is_array($raw))return $this->state('restricted',__('Video service unavailable',VWLB_TEXT_DOMAIN),__('Canonical video state could not be read safely. Please retry later.',VWLB_TEXT_DOMAIN),503);
+		$chapters=VWLB_Extensions::chapters('video',$raw['id']);
+		if(is_wp_error($chapters))return $this->state('restricted',__('Video service unavailable',VWLB_TEXT_DOMAIN),__('Video chapter state could not be read safely. Please retry later.',VWLB_TEXT_DOMAIN),503);
+		$low='';
+		// Never emit a raw secondary storage URL for protected or patient-case media.
+		// The normal playback service already issued a separate authorized grant;
+		// a low-bitrate variant needs its own revocable provider grant, not raw JSON.
+		if(!empty($raw['asset_id'])&&'iframe'!==($p['type']??'')
+			&&'public'===($v['visibility']??'')
+			&&'public'===($raw['visibility']??'')
+			&&'not_patient_case'===($raw['consent_status']??'')){
+			$asset=VWLB_Repository::find('media_assets',$raw['asset_id']);
+			if(VWLB_Repository::read_failed())return $this->state('restricted',__('Video service unavailable',VWLB_TEXT_DOMAIN),__('Video rendition state could not be read safely. Please retry later.',VWLB_TEXT_DOMAIN),503);
+			if($asset&&'ready'===$asset['status']&&'passed'===$asset['scan_status']){
+				$derivatives=VWLB_Helpers::json($asset['derivatives_json']??'{}');
+				$candidate=$derivatives['mp4_low']??$derivatives['low_bandwidth']??'';
+				if(is_array($candidate))$candidate=$candidate['url']??'';
+				$low=esc_url_raw((string)$candidate,array('https'));
+			}
+		}
 		ob_start();?><main class="vwlb-shell vwlb-player-page" data-vwlb-video="<?php echo esc_attr($v['public_id']);?>" data-vwlb-session-minutes="45"><?php echo $this->nav();?><article><h1><?php echo esc_html($v['title']);?></h1>
 		<div class="vwlb-player-tools" role="group" aria-label="<?php esc_attr_e('Playback preferences',VWLB_TEXT_DOMAIN);?>"><button type="button" data-vwlb-bandwidth aria-pressed="false"><?php esc_html_e('Low bandwidth mode',VWLB_TEXT_DOMAIN);?></button><button type="button" data-vwlb-transcript-toggle aria-expanded="false"><?php esc_html_e('Transcript',VWLB_TEXT_DOMAIN);?></button></div>
 		<?php if('iframe'===$p['type']):?><div class="vwlb-player-frame"><iframe src="<?php echo esc_url($p['url']);?>" title="<?php echo esc_attr($v['title']);?>" loading="lazy" allow="fullscreen; picture-in-picture" sandbox="<?php echo esc_attr($p['sandbox']);?>" allowfullscreen></iframe></div><?php else:?><video class="vwlb-player" controls playsinline preload="metadata" src="<?php echo esc_url($p['url']);?>" data-standard-src="<?php echo esc_url($p['url']);?>" data-low-bandwidth-src="<?php echo esc_url($low);?>" data-resume="<?php echo esc_attr($payload['session']['resume_seconds']??0);?>" data-no-autoplay="1"><?php foreach($v['captions'] as $c):?><track kind="<?php echo esc_attr('captions'===$c['kind']?'captions':'subtitles');?>" srclang="<?php echo esc_attr($c['language']);?>" label="<?php echo esc_attr($c['language']);?>" src="<?php echo esc_url(rest_url(VWLB_Contracts::CANONICAL_API_NAMESPACE.'/captions/'.$c['public_id']));?>"><?php endforeach;?><?php esc_html_e('Your browser does not support video playback.',VWLB_TEXT_DOMAIN);?></video><?php endif;?>
@@ -51,7 +73,7 @@ final class VWLB_Frontend {
 	}
 	public function channel(){
 		$this->enqueue();$slug=get_query_var('vwlb_channel_slug');if(!$slug&&isset($_GET['channel']))$slug=sanitize_title(wp_unslash($_GET['channel']));
-		global $wpdb;$channel=$slug?VWLB_DB::read_row($wpdb->prepare('SELECT * FROM '.VWLB_Helpers::table('channels').' WHERE slug=%s AND status=%s LIMIT 1',$slug,'active'),'frontend_channel'):null;if(is_wp_error($channel))return $this->state('restricted',__('Channel service unavailable',VWLB_TEXT_DOMAIN),__('Channel state could not be read safely. Please retry later.',VWLB_TEXT_DOMAIN),503);
+		global $wpdb;$channel=$slug?VWLB_DB::read_row($wpdb->prepare('SELECT * FROM '.VWLB_Helpers::table('channels')." WHERE slug=%s AND status=%s AND visibility='public' LIMIT 1",$slug,'active'),'frontend_channel'):null;if(is_wp_error($channel))return $this->state('restricted',__('Channel service unavailable',VWLB_TEXT_DOMAIN),__('Channel state could not be read safely. Please retry later.',VWLB_TEXT_DOMAIN),503);
 		if(!$channel)return $this->state('empty',__('Channel unavailable',VWLB_TEXT_DOMAIN),__('This channel is not public or does not exist.',VWLB_TEXT_DOMAIN));
 		VWLB_Repository::reset_read_failure();$videos=VWLB_Repository::browse_videos(array('per_page'=>24,'channel_id'=>$channel['id']));if(VWLB_Repository::read_failed())return $this->state('restricted',__('Channel service unavailable',VWLB_TEXT_DOMAIN),__('Channel videos could not be read safely. Please retry later.',VWLB_TEXT_DOMAIN),503);
 		ob_start();?><main class="vwlb-shell"><?php echo $this->nav();?><header><h1><?php echo esc_html($channel['title']);?></h1><p><?php echo esc_html($channel['description']);?></p></header><div class="vwlb-grid" role="list"><?php foreach($videos['items'] as $item):?><article class="vwlb-card" role="listitem"><a href="<?php echo esc_url($item['url']);?>"><h2><?php echo esc_html($item['title']);?></h2><p><?php echo esc_html($item['excerpt']);?></p></a></article><?php endforeach;?></div></main><?php return ob_get_clean();
@@ -66,6 +88,31 @@ final class VWLB_Frontend {
 	}
 	public function studio_video(){VWLB_Helpers::no_cache_private();if(!VWLB_Security::can(VWLB_Contracts::CAP_SUBMIT))return $this->state('restricted',__('Sign in required',VWLB_TEXT_DOMAIN),__('Only approved publishers can use Video Studio.',VWLB_TEXT_DOMAIN));$this->enqueue();return '<main class="vwlb-shell">'.$this->nav().'<h1>'.esc_html__('Video Studio',VWLB_TEXT_DOMAIN).'</h1><div id="vwlb-studio-video" data-vwlb-studio="video"><p>'.esc_html__('Create, resumably upload, scan, transcode, caption, chapter, review and publish recorded video or podcast media through File 10.',VWLB_TEXT_DOMAIN).'</p></div></main>';}
 	public function studio_live(){VWLB_Helpers::no_cache_private();if(!VWLB_Security::can(VWLB_Contracts::CAP_BROADCAST))return $this->state('restricted',__('Access restricted',VWLB_TEXT_DOMAIN),__('Live Studio requires broadcaster authorization.',VWLB_TEXT_DOMAIN));$this->enqueue();return '<main class="vwlb-shell">'.$this->nav().'<h1>'.esc_html__('Live Studio',VWLB_TEXT_DOMAIN).'</h1><div id="vwlb-studio-live" data-vwlb-studio="live"><p>'.esc_html__('Schedule, set reminders/capacity/waiting room, rehearse, issue a one-time stream key, moderate Q&A, collect recording consent, end and publish replay.',VWLB_TEXT_DOMAIN).'</p></div></main>';}
-	public function history(){VWLB_Helpers::no_cache_private();if(!is_user_logged_in())return $this->state('restricted',__('Sign in required',VWLB_TEXT_DOMAIN),__('Sign in to view private watch history.',VWLB_TEXT_DOMAIN));global $wpdb;$rows=VWLB_DB::read_results($wpdb->prepare('SELECT s.progress_seconds,s.completed,s.updated_at,v.public_id,v.slug,v.title FROM '.VWLB_Helpers::table('playback_sessions').' s JOIN '.VWLB_Helpers::table('videos').' v ON v.id=s.object_id WHERE s.user_id=%d AND s.object_type=%s ORDER BY s.updated_at DESC LIMIT 100',get_current_user_id(),'video'),'frontend_history');if(is_wp_error($rows))return $this->state('restricted',__('History unavailable',VWLB_TEXT_DOMAIN),__('Watch history could not be read safely. Please retry later.',VWLB_TEXT_DOMAIN),503);ob_start();?><main class="vwlb-shell"><?php echo $this->nav();?><h1><?php esc_html_e('Video History',VWLB_TEXT_DOMAIN);?></h1><button type="button" data-vwlb-clear-history><?php esc_html_e('Clear watch history',VWLB_TEXT_DOMAIN);?></button><?php if(!$rows):echo $this->state('empty',__('No history yet',VWLB_TEXT_DOMAIN),__('Videos you watch while signed in will appear here.',VWLB_TEXT_DOMAIN));else:?><ol class="vwlb-history"><?php foreach($rows as $r):?><li><a href="<?php echo esc_url(home_url('/video/'.$r['public_id'].'/'.$r['slug'].'/'));?>"><?php echo esc_html($r['title']);?></a> <span><?php echo esc_html(gmdate('H:i:s',(int)$r['progress_seconds']));?></span></li><?php endforeach;?></ol><?php endif;?><div class="vwlb-status" role="status" aria-live="polite"></div></main><?php return ob_get_clean();}
+	public function history(){
+		VWLB_Helpers::no_cache_private();
+		if(!is_user_logged_in())return $this->state('restricted',__('Sign in required',VWLB_TEXT_DOMAIN),__('Sign in to view private watch history.',VWLB_TEXT_DOMAIN));
+		global $wpdb;
+		$rows=VWLB_DB::read_results($wpdb->prepare(
+			'SELECT s.progress_seconds,s.completed,s.updated_at AS watch_updated_at,v.id,v.public_id,v.slug,v.title,v.owner_id,v.visibility,v.status,v.deleted_at,v.published_at,v.consent_status,v.rights_status,v.rights_json,v.access_policy_json FROM '
+			.VWLB_Helpers::table('playback_sessions').' s JOIN '.VWLB_Helpers::table('videos')
+			.' v ON v.id=s.object_id WHERE s.user_id=%d AND s.object_type=%s ORDER BY s.updated_at DESC LIMIT 100',
+			get_current_user_id(),'video'
+		),'frontend_history');
+		if(is_wp_error($rows))return $this->state('restricted',__('History unavailable',VWLB_TEXT_DOMAIN),__('Watch history could not be read safely. Please retry later.',VWLB_TEXT_DOMAIN),503);
+		// History is a projection of *current* owner authorization. A historic
+		// playback record never grants ongoing permission to view its title.
+		$visible=array();
+		foreach($rows as $entry){
+			try{$allowed=VWLB_Security::can_view($entry,'history');}
+			catch(Throwable $e){return $this->state('restricted',__('History unavailable',VWLB_TEXT_DOMAIN),__('Current video rights could not be checked safely.',VWLB_TEXT_DOMAIN),503);}
+			if((class_exists('VWLB_R109_Rights_Consent_Replay_Guard')&&VWLB_R109_Rights_Consent_Replay_Guard::policy_read_failed())
+				||(method_exists('VWLB_Repository','read_failed')&&VWLB_Repository::read_failed())){
+				return $this->state('restricted',__('History unavailable',VWLB_TEXT_DOMAIN),__('Current video rights could not be checked safely.',VWLB_TEXT_DOMAIN),503);
+			}
+			if($allowed)$visible[]=array_intersect_key($entry,array_flip(array('public_id','slug','title','progress_seconds')));
+		}
+		$rows=$visible;
+		ob_start();?><main class="vwlb-shell"><?php echo $this->nav();?><h1><?php esc_html_e('Video History',VWLB_TEXT_DOMAIN);?></h1><button type="button" data-vwlb-clear-history><?php esc_html_e('Clear watch history',VWLB_TEXT_DOMAIN);?></button><?php if(!$rows):echo $this->state('empty',__('No history yet',VWLB_TEXT_DOMAIN),__('Videos you watch while signed in will appear here.',VWLB_TEXT_DOMAIN));else:?><ol class="vwlb-history"><?php foreach($rows as $r):?><li><a href="<?php echo esc_url(home_url('/video/'.$r['public_id'].'/'.$r['slug'].'/'));?>"><?php echo esc_html($r['title']);?></a> <span><?php echo esc_html(gmdate('H:i:s',(int)$r['progress_seconds']));?></span></li><?php endforeach;?></ol><?php endif;?><div class="vwlb-status" role="status" aria-live="polite"></div></main><?php return ob_get_clean();
+	}
 	private function state($class,$title,$message,$status=0){if(!$status&&'restricted'===$class)$status=404;if($status)status_header((int)$status);return '<section class="vwlb-state vwlb-state-'.esc_attr($class).'" role="status"><h2>'.esc_html($title).'</h2><p>'.esc_html($message).'</p><p><a href="'.esc_url(home_url('/')).'">'.esc_html__('Home',VWLB_TEXT_DOMAIN).'</a></p></section>';}
 }
