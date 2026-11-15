@@ -31,7 +31,8 @@ function get_current_user_id() { return 77; }
 function status_header($status) { $GLOBALS['latest_http_status']=(int)$status; }
 function wp_strip_all_tags($s) { return strip_tags((string)$s); }
 function sanitize_title($s) { return (string)$s; }
-function get_option($key,$fallback=null) {return $fallback;}
+function get_option($key,$fallback=null) {return $key==='date_format'?'Y-m-d':($key==='time_format'?'H:i':$fallback);}
+function get_date_from_gmt($date,$format='') { return (string)$date; }
 
 class VWLB_Helpers {
     public static function is_public_id($id) {return preg_match('/^[a-z][a-z0-9]*_[a-z0-9]+$/D',(string)$id)===1;}
@@ -55,6 +56,7 @@ class VWLB_Repository {
     }
     public static function read_failed() {return self::$readError;}
     public static function reset_read_failure() {self::$readError=false;}
+    public static function browse_videos($args=[]) {return ['items'=>[],'next_cursor'=>''];}
 }
 class VWLB_Videos {
     public static function playback($public_id) {return $GLOBALS['mock_playback'];}
@@ -79,7 +81,17 @@ class VWLB_Security {
     }
 }
 class VWLB_DB {
-    public static function read_results($query,$context) {return $GLOBALS['mock_history_rows']??[];}
+    public static function read_results($query,$context) {
+        if(str_contains((string)$query,'wp_vwlb_live_events')) {
+            $GLOBALS['wall_live_sql']=(string)$query;
+            $rows=$GLOBALS['mock_live_rows']??[];
+            if(str_contains((string)$query,'kill_switch=0')) {
+                return array_values(array_filter($rows,static fn($row)=>empty($row['kill_switch'])));
+            }
+            return $rows;
+        }
+        return $GLOBALS['mock_history_rows']??[];
+    }
     public static function read_row($query,$context) {
         $GLOBALS['channel_sql']=$query;
         // This fake DB faithfully applies the public+not-deleted predicate.
@@ -142,6 +154,13 @@ check_privacy($GLOBALS['latest_http_status']===503 && !str_contains($html,$low),
     'failed secondary asset read is not presented as successful private/public source');
 VWLB_Repository::$failOn='';
 VWLB_Repository::$readError=false;
+VWLB_Repository::$failOn='videos';
+$GLOBALS['latest_http_status']=0;
+$html=$frontend->video();
+check_privacy($GLOBALS['latest_http_status']===503 && !str_contains($html,$low),
+    'failed canonical owner video read must not render a playable success page');
+VWLB_Repository::$failOn='';
+VWLB_Repository::$readError=false;
 
 // Historic progress must not disclose metadata from now-restricted videos.
 $GLOBALS['mock_history_rows']=[
@@ -178,4 +197,23 @@ check_privacy(!str_contains($channel,'Confidential scholarly circle')
 check_privacy(str_contains((string)($GLOBALS['channel_sql']??''),"visibility='public'")
     && !str_contains((string)($GLOBALS['channel_sql']??''),'deleted_at'),
     'channel must bind public visibility without referencing nonexistent deleted_at column');
+$GLOBALS['mock_channel']['visibility']='public';
+$channel=$frontend->channel();
+check_privacy(str_contains($channel,'Confidential scholarly circle'),
+    'explicitly public active channel remains readable');
+// Emergency-stopped Live sessions must never remain in public Wall discovery.
+$GLOBALS['mock_live_rows']=[
+ ['public_id'=>'live_active123','title'=>'Approved scheduled public broadcast',
+  'scheduled_start'=>'2026-11-16 08:00:00','status'=>'scheduled','kill_switch'=>0],
+ ['public_id'=>'live_stopped123','title'=>'Emergency-ended sensitive session',
+  'scheduled_start'=>'2026-11-16 09:00:00','status'=>'live','kill_switch'=>1],
+];
+$wall=$frontend->wall();
+check_privacy(!str_contains($wall,'Emergency-ended sensitive session'),
+ 'emergency kill must prevent stale Live-now public discovery');
+check_privacy(str_contains($wall,'Approved scheduled public broadcast'),
+ 'eligible scheduled event remains discoverable');
+check_privacy(str_contains((string)($GLOBALS['wall_live_sql']??''),'kill_switch=0'),
+ 'public live discovery must require active kill-switch state in canonical SQL');
+
 echo "F10 FRONTEND PRIVACY PASS: {$checks} synthetic checks; no real WordPress/Live inferred.\n";
