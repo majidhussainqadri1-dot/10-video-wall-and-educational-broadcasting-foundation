@@ -25,7 +25,8 @@ jobs:
           docker version
           bash -n tests/file10-v12-3-ephemeral-runtime.sh
           php -l tests/file10-v12-3-ephemeral-wordpress.php
-      - name: Fresh WordPress 7.1.4, PHP 8.3, MariaDB 11.8 and File10 V12.3 smoke
+          php -l tests/file10-v12-3-ephemeral-domain.php
+      - name: Fresh WordPress 7.1.4, PHP matrix, MariaDB 11.8 and File10 V12.3 smoke
         env:
           F10_EPHEMERAL_PHP: ${{ matrix.php }}
         run: bash tests/file10-v12-3-ephemeral-runtime.sh
