@@ -11,7 +11,11 @@ permissions:
   contents: read
 jobs:
   disposable-wordpress-mariadb:
-    name: File10 Ephemeral WP MySQL Smoke
+    name: File10 Ephemeral WP MySQL Smoke PHP ${{ matrix.php }}
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.3','8.4']
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
@@ -22,4 +26,6 @@ jobs:
           bash -n tests/file10-v12-3-ephemeral-runtime.sh
           php -l tests/file10-v12-3-ephemeral-wordpress.php
       - name: Fresh WordPress 7.1.4, PHP 8.3, MariaDB 11.8 and File10 V12.3 smoke
+        env:
+          F10_EPHEMERAL_PHP: ${{ matrix.php }}
         run: bash tests/file10-v12-3-ephemeral-runtime.sh
