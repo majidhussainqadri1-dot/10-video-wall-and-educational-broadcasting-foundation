@@ -7,7 +7,7 @@ case "$PHP_VARIANT" in
   8.3|8.4) ;;
   *) echo 'F10-EPHEMERAL FAIL: unsupported PHP variant' >&2;exit 1 ;;
 esac
-RUN_TAG="f10ci-$(date +%s)-$"
+RUN_TAG="f10ci-$(date +%s)-$(openssl rand -hex 5)"
 NET="f10-ci-net-$RUN_TAG"
 DB="f10-ci-db-$RUN_TAG"
 WP="f10-ci-wp-$RUN_TAG"
