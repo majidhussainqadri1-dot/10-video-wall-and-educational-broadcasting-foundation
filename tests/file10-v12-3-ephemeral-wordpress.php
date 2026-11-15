@@ -104,7 +104,12 @@ $confirm(($payload['runtime_readiness']['overall'] ?? '') === 'unverified',
     'ephemeral QA must never report real external provider readiness');
 
 $protected = '/'.VWLB_Contracts::CANONICAL_API_NAMESPACE.'/live-events/live_abc123/polls';
-$rejected = rest_do_request(new WP_REST_Request('POST', $protected));
+$before_polls = (int)$wpdb->get_var('SELECT COUNT(*) FROM '.$wpdb->prefix.'vwlb_live_polls');
+$denial_request = new WP_REST_Request('POST', $protected);
+$denial_request->set_header('Idempotency-Key','file10_ephemeral_unauthorized_denial_v1');
+$rejected = rest_do_request($denial_request);
+$after_polls = (int)$wpdb->get_var('SELECT COUNT(*) FROM '.$wpdb->prefix.'vwlb_live_polls');
+$confirm($before_polls === $after_polls, 'unauthorized poll create changed the canonical poll table');
 $denied_status = $rejected instanceof WP_REST_Response ? $rejected->get_status() : 0;
 $denied_data = $rejected instanceof WP_REST_Response ? $rejected->get_data() : array();
 $denied_code = is_array($denied_data) ? sanitize_key((string)($denied_data['code'] ?? '')) : '';
