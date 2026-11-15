@@ -105,8 +105,11 @@ $confirm(($payload['runtime_readiness']['overall'] ?? '') === 'unverified',
 
 $protected = '/'.VWLB_Contracts::CANONICAL_API_NAMESPACE.'/live-events/live_abc123/polls';
 $rejected = rest_do_request(new WP_REST_Request('POST', $protected));
-$confirm($rejected instanceof WP_REST_Response && in_array($rejected->get_status(), array(401,403), true),
-    'anonymous user was not denied on a protected poll creation route');
+$denied_status = $rejected instanceof WP_REST_Response ? $rejected->get_status() : 0;
+$denied_data = $rejected instanceof WP_REST_Response ? $rejected->get_data() : array();
+$denied_code = is_array($denied_data) ? sanitize_key((string)($denied_data['code'] ?? '')) : '';
+$confirm($rejected instanceof WP_REST_Response && in_array($denied_status, array(401,403), true),
+    'anonymous poll creation returned '.$denied_status.' / '.$denied_code.' instead of a permission denial');
 
 // True missing objects and unauthenticated users remain correctly classified.
 $notFound = VWLB_Future_Intelligence::search_transcript('vid_absent', 'source');
