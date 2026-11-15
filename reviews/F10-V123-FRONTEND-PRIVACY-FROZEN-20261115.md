@@ -32,3 +32,7 @@ Related source-read hygiene: `video()` performs second direct owner/asset reads 
 Changes apply to a source candidate only; NO live incident root cause, no schema migration, no new media grant provider, no production deployment. Real provider integration and correct signed low-bandwidth grants remain a separate gate. Existing Live access issue #13, repository ruleset issue #22, File26 purge/ACK issue #26 remain open. `0/64` individually Staging/Live accepted.
 
 **Exact deployed code ابھی unverified ہے؛ repository-based diagnosis provisional ہے۔**
+
+## Source-schema correction before implementation (same 2026-11-15 review)
+
+Read-only inspection of `VWLB_DB::schema_sql()` established that the `channels` table has `status` and `visibility` but **no `deleted_at` column**. The original finding above correctly identifies missing public visibility filtering but incorrectly suggested a channel soft-delete predicate. Do **not** add `channels.deleted_at IS NULL` to the SQL; it would be an invalid query and a new bug. Instead, require `status='active'` and `visibility='public'` only. This correction was recorded before modifying application code. The corresponding synthetic fixture must assert public visibility without inventing schema columns.
