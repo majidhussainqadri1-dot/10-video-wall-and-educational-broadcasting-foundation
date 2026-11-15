@@ -154,6 +154,13 @@ check_privacy($GLOBALS['latest_http_status']===503 && !str_contains($html,$low),
     'failed secondary asset read is not presented as successful private/public source');
 VWLB_Repository::$failOn='';
 VWLB_Repository::$readError=false;
+VWLB_Repository::$failOn='videos';
+$GLOBALS['latest_http_status']=0;
+$html=$frontend->video();
+check_privacy($GLOBALS['latest_http_status']===503 && !str_contains($html,$low),
+    'failed canonical owner video read must not render a playable success page');
+VWLB_Repository::$failOn='';
+VWLB_Repository::$readError=false;
 
 // Historic progress must not disclose metadata from now-restricted videos.
 $GLOBALS['mock_history_rows']=[
@@ -190,6 +197,10 @@ check_privacy(!str_contains($channel,'Confidential scholarly circle')
 check_privacy(str_contains((string)($GLOBALS['channel_sql']??''),"visibility='public'")
     && !str_contains((string)($GLOBALS['channel_sql']??''),'deleted_at'),
     'channel must bind public visibility without referencing nonexistent deleted_at column');
+$GLOBALS['mock_channel']['visibility']='public';
+$channel=$frontend->channel();
+check_privacy(str_contains($channel,'Confidential scholarly circle'),
+    'explicitly public active channel remains readable');
 // Emergency-stopped Live sessions must never remain in public Wall discovery.
 $GLOBALS['mock_live_rows']=[
  ['public_id'=>'live_active123','title'=>'Approved scheduled public broadcast',
