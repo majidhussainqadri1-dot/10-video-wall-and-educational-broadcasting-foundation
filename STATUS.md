@@ -57,3 +57,12 @@ The authoritative founder-supplied Word Master Plan V12.3 has been reopened and 
 **Live Final Report fields:** Repository HEAD: `4b8a3dda140186c01b05d998e729cb1aeeed2cf3` (legacy main); Deployed Version: UNVERIFIED; DB Version: UNVERIFIED; Migration State: UNVERIFIED; Live Verification: NOT PERFORMED. Independent final File24 reviews/Founder approval are still required.
 
 **Exact deployed code ابھی unverified ہے؛ repository-based diagnosis provisional ہے۔**
+
+## 2026-11-15 — V12.3 advanced source fixes + actual disposable WordPress QA (Draft PR #34)
+
+- **Source defect count for this iteration:** 9 identified; 9 corrected; 9 source/disposable regression checked; 0 verified fixed on the actual Live system. Includes eight timestamp-correction/transcript/poll integrity groups and one real *isolated* WordPress `dbDelta` migration grammar group. Harness/configuration problems corrected during CI are separate from plugin defects.
+- **Source-only:** branch `fix/file10-v123-transcript-poll-integrity-20261115`, Draft PR #34, base Draft PR #33. WordPress version/options tests do **not** establish the active deployed plugin or database state.
+- **QA proof prior to doc closeout:** `43667329424` PHP 8.3/8.4 Source/Package/Aggregate success; `43667329376` real *disposable* WP 7.1.4 + MariaDB 11.8 synthetic end-to-end, each PHP success, SHA256 plugin-entry parity, clean two-pass WordPress boot, 11 required tables, 3 schema options and fake-data transcription/poll/revoke behavior.
+- **Blocked:** original File10 64 acceptance IDs remain **0/64 independently accepted**; official Staging/Founder File24 independent reviews, provider/CF04/companion and Live not tested; GitHub #13/#22/#26 OPEN; DO NOT MERGE/DEPLOY.
+- **Live final report:** Repository main HEAD `4b8a3dda140186c01b05d998e729cb1aeeed2cf3`; Deployed Version UNVERIFIED; DB Version UNVERIFIED; Migration State UNVERIFIED; Live Verification Status NOT PERFORMED.
+- **Exact deployed code ابھی unverified ہے؛ repository-based diagnosis provisional ہے۔**
