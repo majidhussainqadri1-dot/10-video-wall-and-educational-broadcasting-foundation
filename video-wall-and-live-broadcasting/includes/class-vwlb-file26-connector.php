@@ -224,9 +224,13 @@ final class VWLB_File26_Connector {
 		} catch ( Throwable $e ) {
 			return new WP_Error( 'file10_search_owner_policy_failed', 'Canonical owner visibility could not be verified.' );
 		}
-		if ( class_exists( 'VWLB_R109_Rights_Consent_Replay_Guard' ) &&
-			VWLB_R109_Rights_Consent_Replay_Guard::policy_read_failed() ) {
-			return new WP_Error( 'file10_search_owner_policy_failed', 'Current rights or consent policy is unavailable.' );
+		if ( ( class_exists( 'VWLB_R109_Rights_Consent_Replay_Guard' ) &&
+			VWLB_R109_Rights_Consent_Replay_Guard::policy_read_failed() ) ||
+			( method_exists( 'VWLB_Repository', 'read_failed' ) &&
+			VWLB_Repository::read_failed() ) ) {
+			// The projection itself may perform additional owner/relation reads.
+			// Their failure cannot be mistaken for successful public discovery.
+			return new WP_Error( 'file10_search_owner_policy_failed', 'Current rights, consent or owner state is unavailable.' );
 		}
 		return $document;
 	}
@@ -240,12 +244,30 @@ final class VWLB_File26_Connector {
 		$version = $document['object_version'] ?? null;
 		if ( ! is_int( $version ) && ( ! is_string( $version ) || ! preg_match( '/^[1-9][0-9]{0,17}$/D', $version ) ) ) { return false; }
 		if ( (int) $version < 1 ) { return false; }
+		// A search-result click is an authorization boundary, not a best-effort
+		// preview. Never read the owner in safe mode or without the active owner.
+		if ( ! self::ready() ||
+			( method_exists( 'VWLB_Repository', 'read_failed' ) && VWLB_Repository::read_failed() ) ) {
+			return false;
+		}
 		$entity_type = (string) ( $document['entity_type'] ?? '' );
 		foreach ( self::TABLES as $entity => $contract ) {
 			if ( $entity_type !== $contract['entity_type'] ) { continue; }
-			$row = VWLB_Repository::find( $entity, $public_id );
-			// An old public index row cannot remain viewable after canonical metadata changes.
-			return is_array( $row ) && (int) ( $row['version'] ?? 0 ) === (int) $version && self::eligible( $entity, $row );
+			try {
+				$row = VWLB_Repository::find( $entity, $public_id );
+				if ( ( method_exists( 'VWLB_Repository', 'read_failed' ) && VWLB_Repository::read_failed() ) ||
+					! is_array( $row ) || (int) ( $row['version'] ?? 0 ) !== (int) $version ||
+					! self::eligible( $entity, $row ) ) {
+					return false;
+				}
+				// The security projection may itself consult current consent or
+				// owner data. A late fault must fail closed as well.
+				return ! ( ( method_exists( 'VWLB_Repository', 'read_failed' ) && VWLB_Repository::read_failed() ) ||
+					( class_exists( 'VWLB_R109_Rights_Consent_Replay_Guard' ) &&
+						VWLB_R109_Rights_Consent_Replay_Guard::policy_read_failed() ) );
+			} catch ( Throwable $e ) {
+				return false;
+			}
 		}
 		return false;
 	}
@@ -313,6 +335,11 @@ final class VWLB_File26_Connector {
 			VWLB_R109_Rights_Consent_Replay_Guard::policy_read_failed() ) {
 			// An unavailable consent database is not a verified revocation.
 			return new WP_Error( 'file10_search_consent_unverifiable', 'Current consent or rights lookup is unavailable.' );
+		}
+		if ( method_exists( 'VWLB_Repository', 'read_failed' ) && VWLB_Repository::read_failed() ) {
+			// A later owner lookup in projection must not fabricate an upsert,
+			// a tombstone, or a successful owner-to-consumer reconciliation.
+			return new WP_Error( 'file10_search_owner_read_unavailable', 'Canonical owner policy or relation read failed.' );
 		}
 
 		$proposal = array(
