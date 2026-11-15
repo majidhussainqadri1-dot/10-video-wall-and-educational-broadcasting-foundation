@@ -83,8 +83,8 @@ class VWLB_DB {
     public static function read_row($query,$context) {
         $GLOBALS['channel_sql']=$query;
         // This fake DB faithfully applies the public+not-deleted predicate.
-        if(str_contains($query,"visibility='public'")&&str_contains($query,'deleted_at IS NULL')){
-            return (($GLOBALS['mock_channel']['visibility']??'')==='public' && empty($GLOBALS['mock_channel']['deleted_at']))
+        if(str_contains($query,"visibility='public'") && !str_contains($query,'deleted_at')){
+            return (($GLOBALS['mock_channel']['visibility']??'')==='public')
                 ? $GLOBALS['mock_channel'] : null;
         }
         return $GLOBALS['mock_channel'];
@@ -176,6 +176,6 @@ check_privacy(!str_contains($channel,'Confidential scholarly circle')
     && !str_contains($channel,'secret channel description'),
     'active private channel slug does not expose private metadata');
 check_privacy(str_contains((string)($GLOBALS['channel_sql']??''),"visibility='public'")
-    && str_contains((string)($GLOBALS['channel_sql']??''),'deleted_at IS NULL'),
-    'channel owner query must bind public, undeleted state');
+    && !str_contains((string)($GLOBALS['channel_sql']??''),'deleted_at'),
+    'channel must bind public visibility without referencing nonexistent deleted_at column');
 echo "F10 FRONTEND PRIVACY PASS: {$checks} synthetic checks; no real WordPress/Live inferred.\n";
