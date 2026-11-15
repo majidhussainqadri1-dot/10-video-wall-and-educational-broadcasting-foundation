@@ -23,6 +23,7 @@ class VWLB_Helpers {
 }
 class VWLB_Security {
     public static function can_view($row, $purpose = '') {
+        if (!empty($GLOBALS['fake_nested_repository_outage'])) { VWLB_Repository::$fake_read_failed = true; }
         if (!empty($GLOBALS['fake_policy_outage'])) {
             $GLOBALS['fake_policy_failed'] = true;
             return false;
@@ -36,10 +37,17 @@ class VWLB_R109_Rights_Consent_Replay_Guard {
 class VWLB_Repository {
     public static $owners = array();
     public static $fake_read_failed = false;
+    public static $throw_on_find = false;
+    public static $return_row_and_flag_failure = false;
+    public static $find_calls = 0;
     public static function reset_read_failure() {}
     public static function read_failed() { return self::$fake_read_failed; }
     public static function find($entity, $public_id) {
-        return self::$fake_read_failed ? null : (self::$owners[$entity][(string) $public_id] ?? null);
+        ++self::$find_calls;
+        if (self::$throw_on_find) { throw new RuntimeException('simulated owner read exception'); }
+        $row = self::$owners[$entity][(string) $public_id] ?? null;
+        if (self::$return_row_and_flag_failure) { self::$fake_read_failed = true; return $row; }
+        return self::$fake_read_failed ? null : $row;
     }
 }
 class File10MockDB {
@@ -128,6 +136,33 @@ $GLOBALS['fake_policy_failed']=false;
 check_file10(VWLB_File26_Connector::fetch_object('video','vid_abc1') instanceof WP_Error, 'consent policy outage returns typed failure, never false deletion');
 $GLOBALS['fake_policy_outage']=false;
 $GLOBALS['fake_policy_failed']=false;
+
+// Regression: a later repository read triggered within the authorization projection
+// must not look like a verified public document.
+$GLOBALS['fake_nested_repository_outage'] = true;
+VWLB_Repository::$fake_read_failed = false;
+$late_direct = VWLB_File26_Connector::fetch_object('video','vid_abc1');
+check_file10($late_direct instanceof WP_Error, 'late repository read failure in direct projection must be typed, not public success');
+$GLOBALS['fake_nested_repository_outage'] = false;
+VWLB_Repository::$fake_read_failed = false;
+
+// Regression: search click authorization must remain boolean and fail closed.
+VWLB_Repository::$throw_on_find = true;
+try { $throw_guarded = VWLB_File26_Connector::can_view($doc); }
+catch (Throwable $e) { $throw_guarded = 'uncaught_exception'; }
+check_file10($throw_guarded === false, 'owner exception must not escape can_view boolean guard');
+VWLB_Repository::$throw_on_find = false;
+VWLB_Repository::$return_row_and_flag_failure = true;
+VWLB_Repository::$fake_read_failed = false;
+check_file10(VWLB_File26_Connector::can_view($doc) === false, 'owner row with failed repository read must not be public');
+VWLB_Repository::$return_row_and_flag_failure = false;
+VWLB_Repository::$fake_read_failed = false;
+$find_calls_before = VWLB_Repository::$find_calls;
+$GLOBALS['fake_safe_mode'] = true;
+check_file10(VWLB_File26_Connector::can_view($doc) === false, 'safe mode must fail closed');
+check_file10(VWLB_Repository::$find_calls === $find_calls_before, 'safe mode must not read owner DB on unregistered candidate');
+$GLOBALS['fake_safe_mode'] = false;
+
 $wpdb->rows['videos']=array($private);
 $private_batch=VWLB_File26_Connector::list_batch('',20);
 check_file10(is_array($private_batch) && count($private_batch['items'])===0,

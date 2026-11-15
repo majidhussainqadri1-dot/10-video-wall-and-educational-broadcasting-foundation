@@ -30,6 +30,7 @@ class VWLB_Security {
             $GLOBALS['policy_read_failed'] = true;
             return false;
         }
+        if (!empty($GLOBALS['simulate_project_repo_outage'])) { VWLB_Repository::$read_outage = true; }
         return is_array($row) && 'public' === ($row['visibility'] ?? '') &&
             !in_array($row['status'] ?? '', array('restricted', 'removed', 'deleted'), true);
     }
@@ -111,6 +112,15 @@ $GLOBALS['policy_read_failed']=false;
 check_reconcile(VWLB_File26_Connector::propose_outbox_reconciliation($ev,array('public_id'=>'vid_abc123')) instanceof WP_Error, 'consent policy outage cannot fabricate tombstone');
 $GLOBALS['simulate_consent_read_failure']=false;
 $GLOBALS['policy_read_failed']=false;
+
+// Failure inside the public projection happens after the initial owner SELECT.
+// It must stop proposed upsert/tombstone, not silently become a verified owner event.
+$GLOBALS['simulate_project_repo_outage'] = true;
+VWLB_Repository::$read_outage = false;
+$late_proposal = VWLB_File26_Connector::propose_outbox_reconciliation($ev,array('public_id'=>'vid_abc123'));
+check_reconcile($late_proposal instanceof WP_Error, 'post-projection repository outage may not emit search reconciliation proposal');
+$GLOBALS['simulate_project_repo_outage'] = false;
+VWLB_Repository::$read_outage = false;
 
 unset(VWLB_Repository::$rows['videos']['vid_abc123']);
 check_reconcile(VWLB_File26_Connector::propose_outbox_reconciliation($ev,array('public_id'=>'vid_abc123')) instanceof WP_Error, 'hard-delete without owner version cannot fabricate tombstone');
