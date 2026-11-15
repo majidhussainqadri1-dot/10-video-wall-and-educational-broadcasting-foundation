@@ -302,6 +302,21 @@ final class VWLB_Future_Intelligence {
 		return $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $t WHERE public_id=%s", VWLB_Helpers::text( $id, 64 ) ), ARRAY_A );
 	}
 
+	/**
+	 * Read-sensitive Future owner/cross-reference resolution.
+	 * NULL means a genuinely missing row; WP_Error means SQL was not reliable.
+	 */
+	private static function verified_public_row( $table, $id, $context ) {
+		global $wpdb;
+		$name = VWLB_Helpers::table( $table );
+		if ( is_numeric( $id ) ) {
+			$query = $wpdb->prepare( "SELECT * FROM $name WHERE id=%d LIMIT 1", absint( $id ) );
+		} else {
+			$query = $wpdb->prepare( "SELECT * FROM $name WHERE public_id=%s LIMIT 1", VWLB_Helpers::text( $id, 64 ) );
+		}
+		return VWLB_DB::read_row( $query, $context );
+	}
+
 	private static function require_live_control( $event, $purpose ) {
 		return $event && VWLB_Security::can( VWLB_Contracts::CAP_BROADCAST, $event, $purpose );
 	}
@@ -524,17 +539,79 @@ final class VWLB_Future_Intelligence {
 
 	/** F10-FUT-020 — transcript index write and bounded search. */
 	public static function index_transcript_segment( $video_id, $data ) {
-		$video=self::video($video_id);if(!$video||!VWLB_Security::can(VWLB_Contracts::CAP_REVIEW,$video,'future_transcript_index'))return VWLB_Helpers::error('vwlb_forbidden',__('You cannot index this transcript.',VWLB_TEXT_DOMAIN),403);$text=trim(wp_strip_all_tags((string)($data['text']??'')));if(!$text)return VWLB_Helpers::error('vwlb_segment_text_required',__('Transcript segment text is required.',VWLB_TEXT_DOMAIN),422);
-		$track_id=absint($data['track_id']??0);if($track_id){$track=self::public_row('media_tracks',$track_id);if(!$track||'video'!==$track['object_type']||(int)$track['object_id']!==(int)$video['id']||!in_array($track['status'],array('reviewed','published'),true))return VWLB_Helpers::error('vwlb_transcript_track_invalid',__('Transcript track must be a reviewed track belonging to this video.',VWLB_TEXT_DOMAIN),422);}
-		$start=max(0,(int)($data['start_ms']??0));$end=max(0,(int)($data['end_ms']??0));if($end&&$end<$start)return VWLB_Helpers::error('vwlb_transcript_time_invalid',__('Transcript segment end cannot precede its start.',VWLB_TEXT_DOMAIN),422);$duration=max(0,(int)($video['duration_seconds']??0))*1000;if($duration&&($start>$duration||($end&&$end>$duration)))return VWLB_Helpers::error('vwlb_transcript_time_invalid',__('Transcript segment must remain within the verified video duration.',VWLB_TEXT_DOMAIN),422);
-		global $wpdb;$row=array('video_id'=>(int)$video['id'],'track_id'=>$track_id,'language'=>VWLB_Helpers::text($data['language']??'',32),'start_ms'=>$start,'end_ms'=>$end,'segment_text'=>mb_substr($text,0,4000),'status'=>VWLB_Helpers::enum($data['status']??'reviewed',array('candidate','reviewed','removed'),'reviewed'),'created_at'=>VWLB_Helpers::now(),'updated_at'=>VWLB_Helpers::now());if(!$wpdb->insert(VWLB_Helpers::table('transcript_segments'),$row))return VWLB_Helpers::error('vwlb_database_error',__('Transcript segment could not be indexed.',VWLB_TEXT_DOMAIN),500);return array('video_public_id'=>$video['public_id'],'track_public_id'=>$track_id?($track['public_id']??''):'','language'=>$row['language'],'start_ms'=>$start,'end_ms'=>$end,'status'=>$row['status']);
+		VWLB_Repository::reset_read_failure();
+		$video = self::video( $video_id );
+		if ( VWLB_Repository::read_failed() )
+			return VWLB_Helpers::error( 'vwlb_database_read_failed', __( 'Transcript owner could not be verified safely.', VWLB_TEXT_DOMAIN ), 503 );
+		if ( ! $video || ! VWLB_Security::can( VWLB_Contracts::CAP_REVIEW, $video, 'future_transcript_index' ) )
+			return VWLB_Helpers::error( 'vwlb_forbidden', __( 'You cannot index this transcript.', VWLB_TEXT_DOMAIN ), 403 );
+		$text = trim( wp_strip_all_tags( (string) ( $data['text'] ?? '' ) ) );
+		if ( ! $text )
+			return VWLB_Helpers::error( 'vwlb_segment_text_required', __( 'Transcript segment text is required.', VWLB_TEXT_DOMAIN ), 422 );
+		$track_id = absint( $data['track_id'] ?? 0 );
+		$track = null;
+		if ( $track_id ) {
+			$track = self::verified_public_row( 'media_tracks', $track_id, 'future_transcript_track' );
+			if ( is_wp_error( $track ) ) return $track;
+			if ( ! $track || 'video' !== $track['object_type'] ||
+				(int) $track['object_id'] !== (int) $video['id'] ||
+				! in_array( $track['status'], array( 'reviewed', 'published' ), true ) )
+				return VWLB_Helpers::error( 'vwlb_transcript_track_invalid', __( 'Transcript track must be a reviewed track belonging to this video.', VWLB_TEXT_DOMAIN ), 422 );
+		}
+		$start = max( 0, (int) ( $data['start_ms'] ?? 0 ) );
+		$end = max( 0, (int) ( $data['end_ms'] ?? 0 ) );
+		if ( $end && $end < $start )
+			return VWLB_Helpers::error( 'vwlb_transcript_time_invalid', __( 'Transcript segment end cannot precede its start.', VWLB_TEXT_DOMAIN ), 422 );
+		$duration = max( 0, (int) ( $video['duration_seconds'] ?? 0 ) ) * 1000;
+		if ( $duration && ( $start > $duration || ( $end && $end > $duration ) ) )
+			return VWLB_Helpers::error( 'vwlb_transcript_time_invalid', __( 'Transcript segment must remain within the verified video duration.', VWLB_TEXT_DOMAIN ), 422 );
+		global $wpdb;
+		$row = array(
+			'video_id'=>(int)$video['id'], 'track_id'=>$track_id,
+			'language'=>VWLB_Helpers::text( $data['language'] ?? '', 32 ),
+			'start_ms'=>$start, 'end_ms'=>$end, 'segment_text'=>mb_substr( $text, 0, 4000 ),
+			'status'=>VWLB_Helpers::enum( $data['status'] ?? 'reviewed', array( 'candidate', 'reviewed', 'removed' ), 'reviewed' ),
+			'created_at'=>VWLB_Helpers::now(), 'updated_at'=>VWLB_Helpers::now()
+		);
+		if ( ! $wpdb->insert( VWLB_Helpers::table( 'transcript_segments' ), $row ) )
+			return VWLB_Helpers::error( 'vwlb_database_error', __( 'Transcript segment could not be indexed.', VWLB_TEXT_DOMAIN ), 500 );
+		return array(
+			'video_public_id'=>$video['public_id'], 'track_public_id'=>$track_id ? ( $track['public_id'] ?? '' ) : '',
+			'language'=>$row['language'], 'start_ms'=>$start, 'end_ms'=>$end, 'status'=>$row['status']
+		);
 	}
-
 	public static function search_transcript( $video_id, $query, $language='' ) {
-		$video=self::video($video_id);if(!$video||!VWLB_Security::can_view($video))return VWLB_Helpers::error('vwlb_not_found',__('Video not found.',VWLB_TEXT_DOMAIN),404);$query=trim(wp_strip_all_tags((string)$query));$len=mb_strlen($query);if($len<2)return VWLB_Helpers::error('vwlb_search_too_short',__('Search query is too short.',VWLB_TEXT_DOMAIN),422);if($len>200)return VWLB_Helpers::error('vwlb_search_too_long',__('Search query is too long.',VWLB_TEXT_DOMAIN),422);global $wpdb;$table=VWLB_Helpers::table('transcript_segments');$like='%'.$wpdb->esc_like($query).'%';$language=VWLB_Helpers::text($language,32);if($language)$items=$wpdb->get_results($wpdb->prepare("SELECT start_ms,end_ms,language,segment_text FROM $table WHERE video_id=%d AND status='reviewed' AND language=%s AND segment_text LIKE %s ORDER BY start_ms ASC LIMIT 50",$video['id'],$language,$like),ARRAY_A);else$items=$wpdb->get_results($wpdb->prepare("SELECT start_ms,end_ms,language,segment_text FROM $table WHERE video_id=%d AND status='reviewed' AND segment_text LIKE %s ORDER BY start_ms ASC LIMIT 50",$video['id'],$like),ARRAY_A);return array('query'=>$query,'items'=>$items);
+		VWLB_Repository::reset_read_failure();
+		$video = self::video( $video_id );
+		if ( VWLB_Repository::read_failed() )
+			return VWLB_Helpers::error( 'vwlb_database_read_failed', __( 'Video transcript owner could not be verified safely.', VWLB_TEXT_DOMAIN ), 503 );
+		if ( ! $video || ! VWLB_Security::can_view( $video ) )
+			return VWLB_Helpers::error( 'vwlb_not_found', __( 'Video not found.', VWLB_TEXT_DOMAIN ), 404 );
+		$query = trim( wp_strip_all_tags( (string) $query ) );
+		$len = mb_strlen( $query );
+		if ( $len < 2 )
+			return VWLB_Helpers::error( 'vwlb_search_too_short', __( 'Search query is too short.', VWLB_TEXT_DOMAIN ), 422 );
+		if ( $len > 200 )
+			return VWLB_Helpers::error( 'vwlb_search_too_long', __( 'Search query is too long.', VWLB_TEXT_DOMAIN ), 422 );
+		global $wpdb;
+		$table = VWLB_Helpers::table( 'transcript_segments' );
+		$like = '%' . $wpdb->esc_like( $query ) . '%';
+		$language = VWLB_Helpers::text( $language, 32 );
+		if ( $language ) {
+			$sql = $wpdb->prepare(
+				"SELECT start_ms,end_ms,language,segment_text FROM $table WHERE video_id=%d AND status='reviewed' AND language=%s AND segment_text LIKE %s ORDER BY start_ms ASC LIMIT 50",
+				$video['id'], $language, $like
+			);
+		} else {
+			$sql = $wpdb->prepare(
+				"SELECT start_ms,end_ms,language,segment_text FROM $table WHERE video_id=%d AND status='reviewed' AND segment_text LIKE %s ORDER BY start_ms ASC LIMIT 50",
+				$video['id'], $like
+			);
+		}
+		$items = VWLB_DB::read_results( $sql, 'future_transcript_search' );
+		if ( is_wp_error( $items ) ) return $items;
+		return array( 'query'=>$query, 'items'=>$items );
 	}
-
-	/** F10-FUT-019 — educational poll/knowledge check, no diagnostic scoring. */
 	public static function create_poll( $live_id, $data ) {
 		$event=self::live($live_id);if(!self::require_live_control($event,'future_live_poll'))return VWLB_Helpers::error('vwlb_forbidden',__('You cannot create this poll.',VWLB_TEXT_DOMAIN),403);$q=VWLB_Helpers::textarea($data['question']??'');$options=array_values(array_filter(array_map(function($v){return VWLB_Helpers::text(is_array($v)?($v['text']??''):$v,255);},(array)($data['options']??array()))));if(!$q||count($options)<2)return VWLB_Helpers::error('vwlb_poll_fields_required',__('A question and at least two options are required.',VWLB_TEXT_DOMAIN),422);
 		$tz=$data['timezone']??'UTC';$opens=!empty($data['opens_at'])?VWLB_Helpers::datetime_in_timezone($data['opens_at'],$tz):null;$closes=!empty($data['closes_at'])?VWLB_Helpers::datetime_in_timezone($data['closes_at'],$tz):null;if(!empty($data['opens_at'])&&!$opens||!empty($data['closes_at'])&&!$closes)return VWLB_Helpers::error('vwlb_poll_time_invalid',__('Poll opening or closing time is invalid.',VWLB_TEXT_DOMAIN),422);if($opens&&$closes&&strtotime($closes.' UTC')<=strtotime($opens.' UTC'))return VWLB_Helpers::error('vwlb_poll_time_invalid',__('Poll closing time must be after its opening time.',VWLB_TEXT_DOMAIN),422);
@@ -542,16 +619,101 @@ final class VWLB_Future_Intelligence {
 	}
 
 	public static function poll( $poll_id, $include_answers=false ) {
-		$poll=self::public_row('live_polls',$poll_id);if(!$poll)return null;$event=self::live($poll['live_event_id']);if(!$event||!VWLB_Security::can_view($event))return null;if(!in_array($poll['status'],array('open','closed'),true)&&!VWLB_Security::can(VWLB_Contracts::CAP_BROADCAST,$event,'future_poll_preview'))return null;global $wpdb;$options=VWLB_DB::read_results($wpdb->prepare('SELECT id,public_id,option_text,is_correct,sort_order FROM '.VWLB_Helpers::table('live_poll_options').' WHERE poll_id=%d ORDER BY sort_order ASC,id ASC',$poll['id']),'future_poll_options');if(is_wp_error($options))return $options;$can_answers=$include_answers&&VWLB_Security::can(VWLB_Contracts::CAP_BROADCAST,$event,'future_poll_answers');foreach($options as &$o){if(!$can_answers)unset($o['is_correct']);$responses=VWLB_DB::read_var($wpdb->prepare('SELECT COUNT(DISTINCT user_id) FROM '.VWLB_Helpers::table('live_poll_responses').' WHERE poll_id=%d AND option_id=%d',$poll['id'],$o['id']),'future_poll_responses');if(is_wp_error($responses))return $responses;$o['responses']=(int)$responses;unset($o['id']);}
-		$dto=array('public_id'=>$poll['public_id'],'question'=>$poll['question'],'poll_type'=>$poll['poll_type'],'status'=>$poll['status'],'opens_at'=>VWLB_Helpers::iso_utc($poll['opens_at']),'closes_at'=>VWLB_Helpers::iso_utc($poll['closes_at']),'version'=>(int)$poll['version'],'not_diagnostic'=>true,'options'=>$options);return $dto;
+		$poll = self::verified_public_row( 'live_polls', $poll_id, 'future_poll_state' );
+		if ( is_wp_error( $poll ) ) return $poll;
+		if ( ! $poll ) return null;
+		VWLB_Repository::reset_read_failure();
+		$event = self::live( $poll['live_event_id'] );
+		if ( VWLB_Repository::read_failed() )
+			return VWLB_Helpers::error( 'vwlb_database_read_failed', __( 'Poll live-event owner could not be verified safely.', VWLB_TEXT_DOMAIN ), 503 );
+		if ( ! $event || ! VWLB_Security::can_view( $event ) ) return null;
+		if ( ! in_array( $poll['status'], array( 'open','closed' ), true ) &&
+			! VWLB_Security::can( VWLB_Contracts::CAP_BROADCAST, $event, 'future_poll_preview' ) ) return null;
+		global $wpdb;
+		$options = VWLB_DB::read_results(
+			$wpdb->prepare( 'SELECT id,public_id,option_text,is_correct,sort_order FROM ' .
+				VWLB_Helpers::table( 'live_poll_options' ) .
+				' WHERE poll_id=%d ORDER BY sort_order ASC,id ASC', $poll['id'] ),
+			'future_poll_options'
+		);
+		if ( is_wp_error( $options ) ) return $options;
+		$can_answers = $include_answers && VWLB_Security::can( VWLB_Contracts::CAP_BROADCAST, $event, 'future_poll_answers' );
+		foreach ( $options as &$option ) {
+			if ( ! $can_answers ) unset( $option['is_correct'] );
+			$responses = VWLB_DB::read_var(
+				$wpdb->prepare( 'SELECT COUNT(DISTINCT user_id) FROM ' . VWLB_Helpers::table( 'live_poll_responses' ) .
+					' WHERE poll_id=%d AND option_id=%d', $poll['id'], $option['id'] ),
+				'future_poll_responses'
+			);
+			if ( is_wp_error( $responses ) ) return $responses;
+			$option['responses'] = (int) $responses;
+			unset( $option['id'] );
+		}
+		unset( $option );
+		return array(
+			'public_id'=>$poll['public_id'], 'question'=>$poll['question'],
+			'poll_type'=>$poll['poll_type'], 'status'=>$poll['status'],
+			'opens_at'=>VWLB_Helpers::iso_utc( $poll['opens_at'] ),
+			'closes_at'=>VWLB_Helpers::iso_utc( $poll['closes_at'] ),
+			'version'=>(int)$poll['version'], 'not_diagnostic'=>true, 'options'=>$options
+		);
 	}
-
 	public static function answer_poll( $poll_id, $option_ids ) {
-		if(!is_user_logged_in())return VWLB_Helpers::error('vwlb_login_required',__('Login is required.',VWLB_TEXT_DOMAIN),401);$poll=self::public_row('live_polls',$poll_id);if(!$poll||'open'!==$poll['status'])return VWLB_Helpers::error('vwlb_poll_unavailable',__('Poll is not open.',VWLB_TEXT_DOMAIN),409);$now=time();if($poll['opens_at']&&strtotime($poll['opens_at'].' UTC')>$now||$poll['closes_at']&&strtotime($poll['closes_at'].' UTC')<=$now)return VWLB_Helpers::error('vwlb_poll_unavailable',__('Poll is outside its active response window.',VWLB_TEXT_DOMAIN),409);$event=self::live($poll['live_event_id']);if(!$event||!VWLB_Security::can_view($event))return VWLB_Helpers::error('vwlb_not_found',__('Poll not found.',VWLB_TEXT_DOMAIN),404);$raw_ids=array_values(array_unique(array_filter(array_map(function($v){return VWLB_Helpers::text($v,64);},(array)$option_ids))));if('single'===$poll['poll_type']&&count($raw_ids)>1)return VWLB_Helpers::error('vwlb_poll_single_choice',__('Only one option may be selected.',VWLB_TEXT_DOMAIN),422);global $wpdb;$option_table=VWLB_Helpers::table('live_poll_options');$ids=array();foreach($raw_ids as $raw){$id=(int)$wpdb->get_var($wpdb->prepare("SELECT id FROM $option_table WHERE poll_id=%d AND public_id=%s",$poll['id'],$raw));if($id)$ids[]=$id;}$ids=array_values(array_unique($ids));if(!$ids)return VWLB_Helpers::error('vwlb_poll_option_invalid',__('Selected option is invalid.',VWLB_TEXT_DOMAIN),422);
-		return VWLB_DB::transaction(function()use($wpdb,$poll,$ids){$deleted=$wpdb->delete(VWLB_Helpers::table('live_poll_responses'),array('poll_id'=>$poll['id'],'user_id'=>get_current_user_id()));if(false===$deleted)return VWLB_Helpers::error('vwlb_database_error',__('Previous poll response could not be replaced.',VWLB_TEXT_DOMAIN),500);foreach($ids as $id){$saved=$wpdb->insert(VWLB_Helpers::table('live_poll_responses'),array('poll_id'=>$poll['id'],'user_id'=>get_current_user_id(),'option_id'=>$id,'created_at'=>VWLB_Helpers::now()));if(!$saved)return VWLB_Helpers::error('vwlb_database_error',__('Poll response could not be saved.',VWLB_TEXT_DOMAIN),500);}return array('accepted'=>true,'poll_public_id'=>$poll['public_id']);});
+		if ( ! is_user_logged_in() )
+			return VWLB_Helpers::error( 'vwlb_login_required', __( 'Login is required.', VWLB_TEXT_DOMAIN ), 401 );
+		$poll = self::verified_public_row( 'live_polls', $poll_id, 'future_poll_answer_state' );
+		if ( is_wp_error( $poll ) ) return $poll;
+		if ( ! $poll || 'open' !== $poll['status'] )
+			return VWLB_Helpers::error( 'vwlb_poll_unavailable', __( 'Poll is not open.', VWLB_TEXT_DOMAIN ), 409 );
+		$now = time();
+		if ( ( $poll['opens_at'] && strtotime( $poll['opens_at'] . ' UTC' ) > $now ) ||
+			( $poll['closes_at'] && strtotime( $poll['closes_at'] . ' UTC' ) <= $now ) )
+			return VWLB_Helpers::error( 'vwlb_poll_unavailable', __( 'Poll is outside its active response window.', VWLB_TEXT_DOMAIN ), 409 );
+		VWLB_Repository::reset_read_failure();
+		$event = self::live( $poll['live_event_id'] );
+		if ( VWLB_Repository::read_failed() )
+			return VWLB_Helpers::error( 'vwlb_database_read_failed', __( 'Poll live-event owner could not be verified safely.', VWLB_TEXT_DOMAIN ), 503 );
+		if ( ! $event || ! VWLB_Security::can_view( $event ) )
+			return VWLB_Helpers::error( 'vwlb_not_found', __( 'Poll not found.', VWLB_TEXT_DOMAIN ), 404 );
+		$raw_ids = array_values( array_unique( array_filter( array_map(
+			function( $v ) { return VWLB_Helpers::text( $v, 64 ); }, (array) $option_ids
+		) ) ) );
+		if ( 'single' === $poll['poll_type'] && count( $raw_ids ) > 1 )
+			return VWLB_Helpers::error( 'vwlb_poll_single_choice', __( 'Only one option may be selected.', VWLB_TEXT_DOMAIN ), 422 );
+		if ( ! $raw_ids )
+			return VWLB_Helpers::error( 'vwlb_poll_option_invalid', __( 'At least one valid option is required.', VWLB_TEXT_DOMAIN ), 422 );
+		global $wpdb;
+		$option_table = VWLB_Helpers::table( 'live_poll_options' );
+		$ids = array();
+		// Resolve the complete submitted set *before* deleting/replacing any vote.
+		// An unknown ID, or a single failed SQL lookup, invalidates the entire answer.
+		foreach ( $raw_ids as $raw ) {
+			$id = VWLB_DB::read_var(
+				$wpdb->prepare( "SELECT id FROM $option_table WHERE poll_id=%d AND public_id=%s", $poll['id'], $raw ),
+				'future_poll_option_owner'
+			);
+			if ( is_wp_error( $id ) ) return $id;
+			if ( ! $id )
+				return VWLB_Helpers::error( 'vwlb_poll_option_invalid', __( 'Selected option is invalid.', VWLB_TEXT_DOMAIN ), 422 );
+			$ids[] = absint( $id );
+		}
+		$ids = array_values( array_unique( $ids ) );
+		return VWLB_DB::transaction( function() use( $wpdb, $poll, $ids ) {
+			$deleted = $wpdb->delete( VWLB_Helpers::table( 'live_poll_responses' ),
+				array( 'poll_id'=>$poll['id'], 'user_id'=>get_current_user_id() ) );
+			if ( false === $deleted )
+				return VWLB_Helpers::error( 'vwlb_database_error', __( 'Previous poll response could not be replaced.', VWLB_TEXT_DOMAIN ), 500 );
+			foreach ( $ids as $id ) {
+				$saved = $wpdb->insert( VWLB_Helpers::table( 'live_poll_responses' ), array(
+					'poll_id'=>$poll['id'], 'user_id'=>get_current_user_id(),
+					'option_id'=>$id, 'created_at'=>VWLB_Helpers::now()
+				) );
+				if ( ! $saved )
+					return VWLB_Helpers::error( 'vwlb_database_error', __( 'Poll response could not be saved.', VWLB_TEXT_DOMAIN ), 500 );
+			}
+			return array( 'accepted'=>true, 'poll_public_id'=>$poll['public_id'] );
+		} );
 	}
-
-	/** F10-FUT-022 — consent lifecycle linked to a video. */
 	public static function upsert_consent_link( $video_id, $data ) {
 		$video=self::video($video_id);if(!$video||!VWLB_Security::can(VWLB_Contracts::CAP_REVIEW,$video,'future_consent_link'))return VWLB_Helpers::error('vwlb_forbidden',__('You cannot manage consent for this video.',VWLB_TEXT_DOMAIN),403);$ref=VWLB_Helpers::text($data['consent_ref']??'',191);if(!$ref)return VWLB_Helpers::error('vwlb_consent_ref_required',__('Consent reference is required.',VWLB_TEXT_DOMAIN),422);$status=VWLB_Helpers::enum($data['status']??'active',array('active','expired','withdrawn','superseded'),'active');$expires=!empty($data['expires_at'])?VWLB_Helpers::datetime_in_timezone($data['expires_at'],$data['timezone']??'UTC'):null;if(!empty($data['expires_at'])&&!$expires)return VWLB_Helpers::error('vwlb_consent_time_invalid',__('Consent expiry time is invalid.',VWLB_TEXT_DOMAIN),422);if('active'===$status&&$expires&&strtotime($expires.' UTC')<=time())return VWLB_Helpers::error('vwlb_consent_time_invalid',__('Active consent expiry must be in the future.',VWLB_TEXT_DOMAIN),422);$metadata=(array)($data['metadata']??array());if(self::contains_raw_secret($metadata))return VWLB_Helpers::error('vwlb_consent_secret_forbidden',__('Raw credentials cannot be stored in consent metadata.',VWLB_TEXT_DOMAIN),422);
 		global $wpdb;$table=VWLB_Helpers::table('consent_links');$result=VWLB_DB::transaction(function()use($wpdb,$table,$video,$ref,$status,$expires,$data,$metadata){$locked=VWLB_Repository::find('videos',$video['id'],true);if(!$locked)return VWLB_Helpers::error('vwlb_video_missing',__('Video not found.',VWLB_TEXT_DOMAIN),404);$wpdb->last_error='';$current=$wpdb->get_row($wpdb->prepare("SELECT * FROM $table WHERE video_id=%d AND consent_ref=%s FOR UPDATE",$locked['id'],$ref),ARRAY_A);if(''!==(string)$wpdb->last_error)return VWLB_Helpers::error('vwlb_consent_read_failed',__('Consent history could not be verified safely.',VWLB_TEXT_DOMAIN),503);$allowed=VWLB_R109_Rights_Consent_Replay_Guard::assert_consent_transition($current,$status);if(is_wp_error($allowed))return $allowed;$before=is_array($current)?sanitize_key((string)$current['status']):'';$row=array('subject_ref'=>VWLB_Helpers::text($data['subject_ref']??'',191),'status'=>$status,'expires_at'=>$expires,'withdrawn_at'=>VWLB_R109_Rights_Consent_Replay_Guard::withdrawn_at($current,$status),'metadata_json'=>VWLB_Helpers::json_encode($metadata),'updated_at'=>VWLB_Helpers::now());if($current){$expected=absint($data['version']??0);if(!$expected||$expected!==(int)$current['version'])return VWLB_Helpers::error('vwlb_version_conflict',__('Consent record changed. Refresh and submit its current version.',VWLB_TEXT_DOMAIN),409);$row['version']=$expected+1;$changed=$wpdb->update($table,$row,array('id'=>$current['id'],'version'=>$expected));if(1!==$changed)return VWLB_Helpers::error('vwlb_version_conflict',__('Consent record changed concurrently.',VWLB_TEXT_DOMAIN),409);$id=(int)$current['id'];}else{$row+=array('video_id'=>(int)$locked['id'],'consent_ref'=>$ref,'version'=>1,'created_by'=>get_current_user_id(),'created_at'=>VWLB_Helpers::now());if(!$wpdb->insert($table,$row))return VWLB_Helpers::error('vwlb_database_error',__('Consent link could not be saved.',VWLB_TEXT_DOMAIN),500);$id=(int)$wpdb->insert_id;}
