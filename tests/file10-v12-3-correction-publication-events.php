@@ -107,4 +107,37 @@ $duplicate=VWLB_Future_Intelligence::transition_annotation(31,'publish',2);
 expected_error($duplicate,409,'cannot publish an already published correction');
 check(count($GLOBALS['events'])===2&&$GLOBALS['wpdb']->writes===2,
     'duplicate transition emits no extra event and causes no write');
+
+// AI-assisted correction: mere creation by a reviewer cannot substitute for a
+// separate content review; imported corrections follow the same candidate path.
+$GLOBALS['wpdb']=new MockDB();
+$GLOBALS['events']=[];
+$ai=VWLB_Future_Intelligence::create_annotation('vid_source',[
+    'kind'=>'correction','source'=>'ai_assisted','start_ms'=>5000,
+    'title'=>'AI suggested correction','body'=>'Candidate requiring a human reviewer'
+]);
+check(is_array($ai)&&($ai['status']??'')==='candidate'&&($ai['reviewed_by']??-1)===0,
+    'AI-generated correction must begin as unreviewed candidate');
+check($GLOBALS['events']===[]&&$GLOBALS['wpdb']->writes===1,
+    'AI candidate creation must not issue publication events');
+$tooEarly=VWLB_Future_Intelligence::transition_annotation(31,'publish',1);
+expected_error($tooEarly,409,'AI correction cannot publish without explicit content review');
+check($GLOBALS['wpdb']->writes===1&&$GLOBALS['events']===[],
+    'early AI publication denial caused no writes or outbox events');
+$reviewedAI=VWLB_Future_Intelligence::transition_annotation(31,'review',1);
+check(is_array($reviewedAI)&&($reviewedAI['status']??'')==='reviewed'&&
+    $GLOBALS['events']===[],'explicit human review advances AI candidate without publishing');
+$publishedAI=VWLB_Future_Intelligence::transition_annotation(31,'publish',2);
+check(is_array($publishedAI)&&($publishedAI['status']??'')==='published'&&
+    $GLOBALS['events']===['VideoAnnotationPublished','VideoTimestampCorrectionPublished'],
+    'separately reviewed AI correction publishes once at actual transition');
+
+$GLOBALS['wpdb']=new MockDB();$GLOBALS['events']=[];
+$imported=VWLB_Future_Intelligence::create_annotation('vid_source',[
+    'kind'=>'correction','source'=>'imported','start_ms'=>7000,
+    'title'=>'Imported amendment','body'=>'External text awaiting review'
+]);
+check(is_array($imported)&&($imported['status']??'')==='candidate'&&
+    $GLOBALS['events']===[],'imported correction cannot bypass human review');
+
 echo "File10 V12.3 correction publish boundary PASS: {$GLOBALS['assert_count']} assertions; source mock only".PHP_EOL;
