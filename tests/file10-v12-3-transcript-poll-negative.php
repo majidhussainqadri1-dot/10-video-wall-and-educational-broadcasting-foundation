@@ -27,15 +27,33 @@ function wp_strip_all_tags($s): string{return strip_tags((string)$s);}
 function do_action(...$args): void {}
 function apply_filters($tag,$value,...$args){return $value;}
 
+
+final class WP_REST_Request implements ArrayAccess {
+    public function __construct(private array $args,private array $data,
+        private string $route='/sabri/v2/file-10/live-events/live_mock/polls',
+        private string $method='POST'){}
+    public function get_method(): string{return $this->method;}
+    public function get_route(): string{return $this->route;}
+    public function get_json_params(): array{return $this->data;}
+    public function offsetExists(mixed $offset): bool{return isset($this->args[$offset]);}
+    public function offsetGet(mixed $offset): mixed{return $this->args[$offset]??null;}
+    public function offsetSet(mixed $offset,mixed $value): void{$this->args[$offset]=$value;}
+    public function offsetUnset(mixed $offset): void{unset($this->args[$offset]);}
+}
+
 final class VWLB_Contracts{
     public const CAP_REVIEW='review';
     public const CAP_BROADCAST='broadcast';
+    public static function namespaces(): array{return ['sabri/v2/file-10'];}
 }
 final class VWLB_Helpers{
     public static function error($code,$message,$status=400,$extra=[]): WP_Error{
         return new WP_Error($code,$message,array_merge(['status'=>$status],$extra));
     }
     public static function text($value,$max=191): string{return mb_substr((string)$value,0,$max);}
+    public static function textarea($value,$max=100000): string{return mb_substr((string)$value,0,$max);}
+    public static function audit(...$args): void{}
+    public static function outbox(...$args): void{}
     public static function table($name): string{return 'wp_vwlb_'.$name;}
     public static function now(): string{return '2026-11-15 00:00:00';}
     public static function public_id($prefix): string{return $prefix.'_mock';}
@@ -142,6 +160,7 @@ final class VWLB_DB{
     public static function transaction($callback){return $callback();}
 }
 require dirname(__DIR__).'/video-wall-and-live-broadcasting/includes/class-vwlb-future-intelligence.php';
+require dirname(__DIR__).'/video-wall-and-live-broadcasting/includes/class-vwlb-r77-poll-integrity.php';
 
 $GLOBALS['checks']=0;
 function check(bool $condition,string $label): void{
@@ -217,4 +236,23 @@ reset_state();check_err(VWLB_Future_Intelligence::answer_poll('poll_mock',[]),42
 reset_state();
 $answer=VWLB_Future_Intelligence::answer_poll('poll_mock',['opt_one','opt_two']);
 check(is_array($answer)&&($answer['accepted']??false)===true&&$GLOBALS['wpdb']->writes===3,'two valid options atomically replace previous answer');
+
+// Actual R77 pre-callback path owns poll creation; SQL failure must not become 403.
+function create_req(): WP_REST_Request {
+    return new WP_REST_Request(['id'=>'live_mock'],[
+        'question'=>'Are these educational sources reviewed?',
+        'options'=>[['text'=>'Yes'],['text'=>'No']],
+        'poll_type'=>'multiple'
+    ]);
+}
+reset_state();VWLB_Repository::$outage=true;
+check_err(VWLB_R77_Poll_Integrity::guard(null,[],create_req()),503,'R77 poll-creation owner SQL failure');
+check($GLOBALS['wpdb']->writes===0,'R77 did not create poll on unknown canonical owner');
+reset_state();VWLB_Repository::$missing=true;
+check_err(VWLB_R77_Poll_Integrity::guard(null,[],create_req()),403,'R77 true absent live event remains permission denial');
+reset_state();
+$created=VWLB_R77_Poll_Integrity::guard(null,[],create_req());
+check(is_array($created)&&($created['public_id']??'')==='poll_mock'&&$GLOBALS['wpdb']->writes===3,
+    'R77 valid creation still inserts one poll and two options');
+
 echo 'File10 V12.3 transcript/poll actual class source QA PASS: '.$GLOBALS['checks'].' assertions; Staging/Live NOT tested'.PHP_EOL;
