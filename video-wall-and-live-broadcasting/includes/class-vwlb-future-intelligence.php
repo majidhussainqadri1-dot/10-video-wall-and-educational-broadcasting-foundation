@@ -627,7 +627,7 @@ final class VWLB_Future_Intelligence {
 		if ( VWLB_Repository::read_failed() )
 			return VWLB_Helpers::error( 'vwlb_database_read_failed', __( 'Poll live-event owner could not be verified safely.', VWLB_TEXT_DOMAIN ), 503 );
 		if ( ! $event || ! VWLB_Security::can_view( $event ) ) return null;
-		if ( ! in_array( $poll['status'], array( 'open','closed' ), true ) &&
+		if ( ! in_array( $poll['status'], array('open','closed'), true ) &&
 			! VWLB_Security::can( VWLB_Contracts::CAP_BROADCAST, $event, 'future_poll_preview' ) ) return null;
 		global $wpdb;
 		$options = VWLB_DB::read_results(
