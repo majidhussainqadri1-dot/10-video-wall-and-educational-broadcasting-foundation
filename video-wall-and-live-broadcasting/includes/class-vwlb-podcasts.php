@@ -4,7 +4,7 @@ defined( 'ABSPATH' ) || exit;
 final class VWLB_Podcasts {
 	public static function install_schema() {
 		global $wpdb;require_once ABSPATH.'wp-admin/includes/upgrade.php';$c=$wpdb->get_charset_collate();
-		dbDelta("CREATE TABLE ".VWLB_Helpers::table('podcast_series')." (
+		$ddl=VWLB_DB::dbdelta_sql("CREATE TABLE ".VWLB_Helpers::table('podcast_series')." (
 			id bigint unsigned NOT NULL AUTO_INCREMENT, public_id varchar(64) NOT NULL, owner_id bigint unsigned NOT NULL,
 			channel_id bigint unsigned NOT NULL DEFAULT 0, title varchar(255) NOT NULL, slug varchar(191) NOT NULL,
 			description longtext NULL, language varchar(20) NOT NULL DEFAULT 'en-US', artwork_id bigint unsigned NOT NULL DEFAULT 0,
@@ -13,7 +13,9 @@ final class VWLB_Podcasts {
 			created_at datetime NOT NULL, updated_at datetime NOT NULL, deleted_at datetime NULL,
 			PRIMARY KEY(id), UNIQUE KEY public_id(public_id), UNIQUE KEY slug(slug), KEY owner_status(owner_id,status)
 		) $c");
-		dbDelta("CREATE TABLE ".VWLB_Helpers::table('podcast_episodes')." (
+		if(is_wp_error($ddl))return $ddl;
+		dbDelta($ddl);
+		$ddl=VWLB_DB::dbdelta_sql("CREATE TABLE ".VWLB_Helpers::table('podcast_episodes')." (
 			id bigint unsigned NOT NULL AUTO_INCREMENT, public_id varchar(64) NOT NULL, series_id bigint unsigned NOT NULL DEFAULT 0,
 			owner_id bigint unsigned NOT NULL, asset_id bigint unsigned NOT NULL, title varchar(255) NOT NULL, slug varchar(191) NOT NULL,
 			description longtext NULL, language varchar(20) NOT NULL DEFAULT 'en-US', duration_seconds int unsigned NOT NULL DEFAULT 0,
@@ -25,6 +27,8 @@ final class VWLB_Podcasts {
 			PRIMARY KEY(id), UNIQUE KEY public_id(public_id), UNIQUE KEY series_slug(series_id,slug),
 			KEY owner_status(owner_id,status), KEY asset_id(asset_id), KEY published_at(published_at)
 		) $c");
+		if(is_wp_error($ddl))return $ddl;
+		dbDelta($ddl);
 	}
 
 	public static function create_series($data){
