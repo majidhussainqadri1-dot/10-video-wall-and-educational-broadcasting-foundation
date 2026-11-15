@@ -68,6 +68,54 @@ final class VWLB_DB {
 		"CREATE TABLE {$p}rollback_snapshots (id bigint unsigned NOT NULL AUTO_INCREMENT,public_id varchar(80) NOT NULL,snapshot_type varchar(64) NOT NULL,object_type varchar(32) NULL,object_id varchar(80) NULL,payload_json longtext NOT NULL,created_by bigint unsigned NOT NULL DEFAULT 0,created_at datetime NOT NULL,expires_at datetime NULL,PRIMARY KEY(id),UNIQUE KEY public_id(public_id),KEY object_ref(object_type,object_id),KEY expiry(expires_at)) $c"
 		);
 	}
+	/**
+	 * Convert canonical CREATE TABLE DDL to dbDelta's line-oriented grammar.
+	 * No schema/data mutation: comma splits occur only at table-body depth;
+	 * never inside DECIMAL(5,2), composite indexes or quoted defaults.
+	 */
+	public static function dbdelta_sql( $statement ) {
+		$statement=trim((string)$statement);
+		if(!preg_match('/^CREATE\s+TABLE\s+\x60?[A-Za-z0-9_]+\x60?\s*\(/i',$statement))
+			return VWLB_Helpers::error('vwlb_dbdelta_unsupported_sql',__('Only canonical CREATE TABLE statements are accepted for dbDelta.',VWLB_TEXT_DOMAIN),500);
+		$open=strpos($statement,'(');
+		if(false===$open)return VWLB_Helpers::error('vwlb_dbdelta_invalid_sql',__('Invalid table schema statement.',VWLB_TEXT_DOMAIN),500);
+		$parts=array();$buffer='';$depth=1;$quote='';$escaped=false;$close=null;
+		$len=strlen($statement);
+		for($i=$open+1;$i<$len;$i++){
+			$ch=$statement[$i];
+			if(''!==$quote){
+				$buffer.=$ch;
+				if($escaped){$escaped=false;continue;}
+				if('\\'===$ch){$escaped=true;continue;}
+				if($ch===$quote)$quote='';
+				continue;
+			}
+			if("'"===$ch||'"'===$ch||"\x60"===$ch){$quote=$ch;$buffer.=$ch;continue;}
+			if('('===$ch){$depth++;$buffer.=$ch;continue;}
+			if(')'===$ch){
+				$depth--;
+				if(0===$depth){$close=$i;break;}
+				if($depth<0)return VWLB_Helpers::error('vwlb_dbdelta_invalid_sql',__('Invalid table schema closing parenthesis.',VWLB_TEXT_DOMAIN),500);
+				$buffer.=$ch;continue;
+			}
+			if(','===$ch&&1===$depth){
+				if(''===trim($buffer))return VWLB_Helpers::error('vwlb_dbdelta_invalid_sql',__('Empty table schema definition.',VWLB_TEXT_DOMAIN),500);
+				$parts[]=trim($buffer);$buffer='';continue;
+			}
+			$buffer.=$ch;
+		}
+		if(null===$close||''!==$quote||0!==$depth||''===trim($buffer)||preg_match('/^\s*\)/',substr($statement,$close+1)))
+			return VWLB_Helpers::error('vwlb_dbdelta_invalid_sql',__('Unbalanced or incomplete table schema statement.',VWLB_TEXT_DOMAIN),500);
+		$parts[]=trim($buffer);
+		if(count($parts)<2)return VWLB_Helpers::error('vwlb_dbdelta_invalid_sql',__('Table schema lacks definitions.',VWLB_TEXT_DOMAIN),500);
+		foreach($parts as &$definition){
+			$definition=preg_replace('/^PRIMARY\s+KEY\s*\(/i','PRIMARY KEY  (',$definition);
+			$definition=preg_replace('/^((?:UNIQUE\s+|FULLTEXT\s+)?KEY|INDEX)\s+(\x60?[A-Za-z0-9_]+\x60?)\s*\(/i','$1 $2 (',$definition);
+		}
+		unset($definition);
+		return substr($statement,0,$open+1)."\n\t".implode(",\n\t",$parts)."\n".substr($statement,$close);
+	}
+
 	public static function verify_schema_sql($sql){
 		global $wpdb;
 		$split=function($body){$parts=array();$buf='';$depth=0;$len=strlen((string)$body);for($i=0;$i<$len;$i++){$ch=$body[$i];if('('===$ch)$depth++;elseif(')'===$ch&&$depth>0)$depth--;if(','===$ch&&0===$depth){$parts[]=trim($buf);$buf='';continue;}$buf.=$ch;}if(''!==trim($buf))$parts[]=trim($buf);return $parts;};
@@ -82,7 +130,7 @@ final class VWLB_DB {
 		}
 		return true;
 	}
-	public static function install_schema() { require_once ABSPATH.'wp-admin/includes/upgrade.php'; $sql=self::schema_sql(); foreach($sql as $statement){ dbDelta($statement); } $verified=self::verify_schema_sql($sql);if(is_wp_error($verified))return $verified;if(!update_option('vwlb_schema_version',VWLB_SCHEMA_VERSION,false)&&get_option('vwlb_schema_version')!==VWLB_SCHEMA_VERSION)return VWLB_Helpers::error('vwlb_schema_version_persist_failed',__('File 10 schema version could not be recorded.',VWLB_TEXT_DOMAIN),500);return true; }
+	public static function install_schema() { require_once ABSPATH.'wp-admin/includes/upgrade.php'; $sql=self::schema_sql(); foreach($sql as $statement){ $formatted=self::dbdelta_sql($statement);if(is_wp_error($formatted))return $formatted;dbDelta($formatted); } $verified=self::verify_schema_sql($sql);if(is_wp_error($verified))return $verified;if(!update_option('vwlb_schema_version',VWLB_SCHEMA_VERSION,false)&&get_option('vwlb_schema_version')!==VWLB_SCHEMA_VERSION)return VWLB_Helpers::error('vwlb_schema_version_persist_failed',__('File 10 schema version could not be recorded.',VWLB_TEXT_DOMAIN),500);return true; }
 	public static function snapshot( $type, $payload, $object_type='', $object_id='' ) {
 		global $wpdb;
 		$inserted = $wpdb->insert(
