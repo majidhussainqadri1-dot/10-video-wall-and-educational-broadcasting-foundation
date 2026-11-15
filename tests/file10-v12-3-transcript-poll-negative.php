@@ -237,6 +237,24 @@ reset_state();
 $answer=VWLB_Future_Intelligence::answer_poll('poll_mock',['opt_one','opt_two']);
 check(is_array($answer)&&($answer['accepted']??false)===true&&$GLOBALS['wpdb']->writes===3,'two valid options atomically replace previous answer');
 
+// The domain layer itself must enforce <=20 options/answers, even when an
+// alternative internal caller does not pass through the R77 REST pre-callback.
+reset_state();
+$overlongOptions=array_map(static fn($n)=>'Option '.$n,range(1,21));
+$tooMany=VWLB_Future_Intelligence::create_poll('live_mock',[
+    'question'=>'Bounded educational poll', 'options'=>$overlongOptions
+]);
+check_err($tooMany,422,'domain poll creation denies 21 distinct options');
+check($GLOBALS['wpdb']->writes===0,
+    'domain poll creation refuses extra options before any SQL mutation');
+
+reset_state();
+$overlongAnswer=array_map(static fn($n)=>'opt_bulk_'.str_pad((string)$n,3,'0',STR_PAD_LEFT),range(1,21));
+$answerTooMany=VWLB_Future_Intelligence::answer_poll('poll_mock',$overlongAnswer);
+check_err($answerTooMany,422,'domain poll answer denies 21 distinct opaque IDs');
+check($GLOBALS['wpdb']->optionReadCount===0 && $GLOBALS['wpdb']->writes===0,
+    'domain poll answer rejects excess size before option SQL reads or writes');
+
 // Actual R77 pre-callback path owns poll creation; SQL failure must not become 403.
 function create_req(): WP_REST_Request {
     return new WP_REST_Request(['id'=>'live_mock'],[
