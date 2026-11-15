@@ -104,16 +104,43 @@ $unchanged=$wpdb->get_var($wpdb->prepare(
 ));
 $must((int)$unchanged===2,'invalid poll option altered the prior response');
 
+// The proposed File26 adapter must be verifiable against genuine WP/MariaDB
+// owner rows without being registered or activated on the production bus.
+require_once WP_PLUGIN_DIR.'/video-wall-and-live-broadcasting/includes/class-vwlb-file26-connector.php';
+$manifest=VWLB_File26_Connector::manifest();
+$must(($manifest['status']??'')==='proposed'
+    && ($manifest['deletion_semantics']??'')==='owner_outbox_tombstone_gate_pending',
+    'File26 search connector may not claim live cutover');
+$indexed=VWLB_File26_Connector::fetch_object('video','vid_ephem1');
+$must(is_array($indexed)&&($indexed['object_id']??'')==='vid_ephem1'
+    && ($indexed['visibility']??'')==='public',
+    'canonical public video was not projected by proposed File26 owner callback');
+
 // The current authoritative source must suppress private/restricted search
 // immediately on read, even before File26/CDN eventual downstream cleanup.
 $changed=$wpdb->update($videos,array('status'=>'restricted'),array('public_id'=>'vid_ephem1'));
 $must(1===$changed,'synthetic video restriction did not persist');
 $restricted=VWLB_Future_Intelligence::search_transcript('vid_ephem1','علم','ur');
 $check_error($restricted,404,'restricted video was still searchable by a former viewer');
+$must(VWLB_File26_Connector::fetch_object('video','vid_ephem1')===null,
+    'proposed File26 source fetch must hide restricted canonical video');
+$must(VWLB_File26_Connector::can_view($indexed)===false,
+    'old public File26 projection must be denied after canonical owner restriction');
 $pollTooLong=VWLB_Future_Intelligence::create_poll('live_ephem1',array(
     'question'=>'Invalid oversized poll','status'=>'open',
     'options'=>array_fill(0,21,'Unbounded choice')
 ));
 $check_error($pollTooLong,422,'oversized poll bypassed canonical 20-option rule');
+// Real WordPress/DB Video Wall: an emergency kill hides an otherwise public
+// live row even while its lifecycle status is still live.
+$frontend=new VWLB_Frontend();
+$wall=$frontend->wall();
+$must(is_string($wall)&&str_contains($wall,'Ephemeral Teaching Session'),
+    'eligible real public live session absent from Video Wall');
+$must(1===$wpdb->update($live,array('kill_switch'=>1),array('public_id'=>'live_ephem1')),
+    'synthetic emergency kill state did not persist in MariaDB');
+$wall=$frontend->wall();
+$must(is_string($wall)&&!str_contains($wall,'Ephemeral Teaching Session'),
+    'real MariaDB emergency-killed session leaked via Video Wall');
 
 echo 'F10-EPHEMERAL DOMAIN PASS: real MariaDB video/transcript/restriction/poll/create/answer/invalid rollback; synthetic File00 claims; NOT STAGING/LIVE'.PHP_EOL;
