@@ -1,0 +1,25 @@
+name: File 10 Ephemeral WordPress Integration QA
+on:
+  push:
+    branches: ['fix/file10-v123-transcript-poll-integrity-20261115']
+  pull_request:
+    paths:
+      - 'video-wall-and-live-broadcasting/**'
+      - 'tests/file10-v12-3-ephemeral-*'
+      - '.github/workflows/file10-ephemeral-wp.yml'
+permissions:
+  contents: read
+jobs:
+  disposable-wordpress-mariadb:
+    name: File10 Ephemeral WP MySQL Smoke
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Verify runner and no-credential source contract
+        run: |
+          docker version
+          bash -n tests/file10-v12-3-ephemeral-runtime.sh
+          php -l tests/file10-v12-3-ephemeral-wordpress.php
+      - name: Fresh WordPress 7.1.4, PHP 8.3, MariaDB 11.8 and File10 V12.3 smoke
+        run: bash tests/file10-v12-3-ephemeral-runtime.sh
